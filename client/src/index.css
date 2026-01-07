@@ -43,39 +43,40 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  /* Editorial aesthetic - cream background with high contrast */
+  --primary: oklch(0.25 0.03 30);
+  --primary-foreground: oklch(0.98 0.01 85);
+  --sidebar-primary: oklch(0.25 0.03 30);
+  --sidebar-primary-foreground: oklch(0.98 0.01 85);
+  --chart-1: oklch(0.45 0.15 250);
+  --chart-2: oklch(0.55 0.15 180);
+  --chart-3: oklch(0.65 0.15 120);
+  --chart-4: oklch(0.50 0.15 60);
+  --chart-5: oklch(0.60 0.15 30);
+  --radius: 0.5rem;
+  --background: oklch(0.98 0.01 85);
+  --foreground: oklch(0.15 0.02 30);
+  --card: oklch(0.99 0.005 85);
+  --card-foreground: oklch(0.15 0.02 30);
+  --popover: oklch(0.99 0.005 85);
+  --popover-foreground: oklch(0.15 0.02 30);
+  --secondary: oklch(0.92 0.01 85);
+  --secondary-foreground: oklch(0.15 0.02 30);
+  --muted: oklch(0.95 0.01 85);
+  --muted-foreground: oklch(0.45 0.02 30);
+  --accent: oklch(0.88 0.02 50);
+  --accent-foreground: oklch(0.15 0.02 30);
+  --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: oklch(0.98 0.01 85);
+  --border: oklch(0.88 0.01 85);
+  --input: oklch(0.88 0.01 85);
+  --ring: oklch(0.25 0.03 30);
+  --sidebar: oklch(0.99 0.005 85);
+  --sidebar-foreground: oklch(0.15 0.02 30);
+  --sidebar-accent: oklch(0.92 0.01 85);
+  --sidebar-accent-foreground: oklch(0.15 0.02 30);
+  --sidebar-border: oklch(0.88 0.01 85);
+  --sidebar-ring: oklch(0.25 0.03 30);
 }
 
 .dark {
@@ -119,6 +120,36 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Editorial typography hierarchy */
+  h1 {
+    @apply text-5xl md:text-7xl font-bold tracking-tight;
+    font-family: 'Playfair Display', serif;
+    letter-spacing: -0.02em;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-5xl font-semibold tracking-tight;
+    font-family: 'Playfair Display', serif;
+    letter-spacing: -0.01em;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl font-medium;
+    font-family: 'Playfair Display', serif;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl font-medium;
+    font-family: 'Playfair Display', serif;
+  }
+  
+  /* Body text with refined sans-serif */
+  p, span, div {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    letter-spacing: -0.01em;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -171,7 +202,82 @@
     .container {
       padding-left: 2rem; /* 32px - desktop padding */
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1600px; /* Wider for dashboard */
     }
+  }
+  
+  /* Editorial utility classes */
+  .label-text {
+    @apply text-xs tracking-wider uppercase;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+  }
+  
+  .divider-line {
+    @apply border-t border-border;
+    opacity: 0.3;
+  }
+  
+  .editorial-card {
+    @apply bg-card border border-border rounded-lg;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+  
+  /* Status indicators */
+  .status-hot {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+  
+  .status-warm {
+    @apply bg-amber-100 text-amber-800 border-amber-200;
+  }
+  
+  .status-cold {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
+  }
+  
+  .status-overdue {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+  
+  .status-pending {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+  }
+  
+  .status-paid {
+    @apply bg-green-50 text-green-700 border-green-200;
+  }
+  
+  /* Priority indicators */
+  .priority-high {
+    @apply bg-red-50 text-red-700;
+  }
+  
+  .priority-medium {
+    @apply bg-amber-50 text-amber-700;
+  }
+  
+  .priority-low {
+    @apply bg-blue-50 text-blue-700;
+  }
+  
+  /* Kanban board styling */
+  .kanban-column {
+    @apply bg-muted/30 rounded-lg p-4 min-h-[500px];
+  }
+  
+  .kanban-card {
+    @apply bg-card border border-border rounded-md p-4 mb-3 cursor-move;
+    transition: all 0.2s ease;
+  }
+  
+  .kanban-card:hover {
+    @apply shadow-md;
+    transform: translateY(-2px);
+  }
+  
+  /* Insight card with emphasis */
+  .insight-card {
+    @apply bg-primary/5 border-l-4 border-primary p-6 rounded-r-lg;
   }
 }
