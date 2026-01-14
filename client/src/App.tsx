@@ -11,6 +11,8 @@ import Projects from "./pages/Projects";
 import Customers from "./pages/Customers";
 import Team from "./pages/Team";
 import Ideas from "./pages/Ideas";
+import Sales from "./pages/Sales";
+import Users from "./pages/Users";
 
 function Router() {
   return (
@@ -43,6 +45,16 @@ function Router() {
       <Route path={"/ideas"}>
         <DashboardLayout>
           <Ideas />
+        </DashboardLayout>
+      </Route>
+      <Route path={"/sales"}>
+        <DashboardLayout>
+          <Sales />
+        </DashboardLayout>
+      </Route>
+      <Route path={"/users"}>
+        <DashboardLayout>
+          <Users />
         </DashboardLayout>
       </Route>
       <Route path={"/404"} component={NotFound} />

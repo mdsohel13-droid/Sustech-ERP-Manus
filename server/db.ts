@@ -13,7 +13,9 @@ import {
   leaveRequests, InsertLeaveRequest,
   ideaNotes, InsertIdeaNote,
   dashboardInsights, InsertDashboardInsight,
-  notificationLog, InsertNotificationLog
+  notificationLog, InsertNotificationLog,
+  salesProducts, InsertSalesProduct,
+  salesTracking, InsertSalesTracking
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -68,9 +70,15 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
+    }
+
+    // Set owner as admin, preserve existing roles for others
+    if (user.openId === ENV.ownerOpenId) {
       values.role = 'admin';
       updateSet.role = 'admin';
+    } else if (user.role === undefined) {
+      // New users default to viewer
+      values.role = 'viewer';
     }
 
     if (!values.lastSignedIn) {
@@ -400,12 +408,88 @@ export async function updateIdeaNote(id: number, data: Partial<InsertIdeaNote>) 
   return await db.update(ideaNotes).set(data).where(eq(ideaNotes.id, id));
 }
 
-export async function deleteIdeaNote(id: number) {
+export async function deleteIdeaNote(id: number): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.delete(ideaNotes).where(eq(ideaNotes.id, id));
+  await db.delete(ideaNotes).where(eq(ideaNotes.id, id));
 }
 
+// ============ Sales Tracking Functions ============
+
+export async function getAllSalesProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(salesProducts).where(eq(salesProducts.isActive, 1));
+}
+
+export async function createSalesProduct(data: InsertSalesProduct) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(salesProducts).values(data);
+}
+
+export async function updateSalesProduct(id: number, data: Partial<InsertSalesProduct>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(salesProducts).set(data).where(eq(salesProducts.id, id));
+}
+
+export async function deleteSalesProduct(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(salesProducts).set({ isActive: 0 }).where(eq(salesProducts.id, id));
+}
+
+export async function getAllSalesTracking() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(salesTracking).orderBy(desc(salesTracking.weekStartDate));
+}
+
+export async function getSalesTrackingByDateRange(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(salesTracking)
+    .where(and(gte(salesTracking.weekStartDate, startDate), lte(salesTracking.weekEndDate, endDate)))
+    .orderBy(desc(salesTracking.weekStartDate));
+}
+
+export async function createSalesTracking(data: InsertSalesTracking) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(salesTracking).values(data);
+}
+
+export async function updateSalesTracking(id: number, data: Partial<InsertSalesTracking>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(salesTracking).set(data).where(eq(salesTracking.id, id));
+}
+
+export async function deleteSalesTracking(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(salesTracking).where(eq(salesTracking.id, id));
+}
+
+export async function getSalesPerformanceSummary() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const results = await db
+    .select({
+      productId: salesTracking.productId,
+      totalTarget: sql<string>`SUM(${salesTracking.target})`,
+      totalActual: sql<string>`SUM(${salesTracking.actual})`,
+      achievementRate: sql<string>`(SUM(${salesTracking.actual}) / SUM(${salesTracking.target})) * 100`,
+    })
+    .from(salesTracking)
+    .groupBy(salesTracking.productId);
+  
+  return results;
+}
 // ============ Dashboard Insights ============
 export async function createInsight(data: InsertDashboardInsight) {
   const db = await getDb();
@@ -430,4 +514,25 @@ export async function getRecentNotifications(limit: number = 20) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.select().from(notificationLog).orderBy(desc(notificationLog.sentAt)).limit(limit);
+}
+
+
+// ============ User Management Functions ============
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+export async function updateUserRole(userId: number, role: "admin" | "manager" | "viewer" | "user") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function deleteUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(users).where(eq(users.id, userId));
 }

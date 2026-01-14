@@ -1,0 +1,1 @@
+ALTER TABLE `dashboard_insights` MODIFY COLUMN `insightType` enum('financial','project','customer','team','general','pattern','trend','alert') NOT NULL;

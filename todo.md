@@ -68,3 +68,50 @@
 - [x] Write and run vitest tests for core functionality
 - [ ] Create checkpoint
 - [ ] Deliver dashboard to user
+
+
+## Enhancement Phase 1: Sales Product Tracking Module
+- [x] Extend database schema with sales tracking tables (products, weekly targets, actuals)
+- [x] Create tRPC procedures for sales CRUD operations
+- [x] Build sales dashboard page with product cards
+- [x] Implement weekly target vs actual entry forms
+- [x] Add trend visualizations (line charts, bar charts)
+- [x] Create product performance comparison views
+## Enhancement Phase 2: Export Functionality
+
+- [x] Install PDF generation libraries (jsPDF, html2canvas)
+- [x] Create PDF export utility functions
+- [x] Create CSV export utility functions
+- [x] Add export buttons to Financial page
+- [ ] Implement project pipeline export (PDF snapshot)
+- [ ] Add customer list export (CSV with all fields)
+- [ ] Add export to Sales and Team pages
+
+## Enhancement Phase 3: Date Range Filtering
+- [x] Create DateRangeFilter component with calendar picker
+- [x] Add quick filters (Today, This Week/Month/Quarter/Year, Last 7/30/90 Days, Custom)
+- [x] Integrate date filtering into dashboard homepage
+- [ ] Implement backend filtering for financial data by date range
+- [ ] Add date filtering to project pipeline
+- [ ] Implement date filtering for customer interactions
+- [ ] Add period comparison functionality (compare two date ranges)
+
+
+## Enhancement Phase 2.5: Role-Based Access Control & Security
+- [x] Extend user schema with role field (admin, manager, viewer, user)
+- [x] Create user management page for admins
+- [x] Implement permission middleware for sensitive operations
+- [x] Add role-based UI restrictions (hide/show Users menu by role)
+- [ ] Create access control for financial data (admin/manager only)
+- [ ] Implement audit logging for critical actions
+- [ ] Add user invitation and role assignment system
+
+
+## Bug Fixes
+- [x] Fix insightType enum in database schema to include 'pattern' value
+- [x] Implement proper edit dialogs for Financial (AR/AP) entries
+- [x] Implement proper edit dialogs for Projects
+- [ ] Implement proper edit dialogs for Customers
+- [ ] Implement proper edit dialogs for Sales tracking
+- [ ] Implement proper edit dialogs for Team attendance
+- [ ] Test all CRUD operations (Create, Read, Update, Delete)

@@ -25,6 +25,7 @@ const stageLabels: Record<ProjectStage, string> = {
 export default function Projects() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draggedProject, setDraggedProject] = useState<number | null>(null);
+  const [editingProject, setEditingProject] = useState<any>(null);
 
   const utils = trpc.useUtils();
   const { data: projects } = trpc.projects.getAll.useQuery();
@@ -78,14 +79,29 @@ export default function Projects() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    createMutation.mutate({
-      name: formData.get("name") as string,
-      customerName: formData.get("customerName") as string,
-      value: formData.get("value") as string,
-      description: formData.get("description") as string,
-      expectedCloseDate: formData.get("expectedCloseDate") as string,
-      priority: formData.get("priority") as any,
-    });
+    
+    if (editingProject) {
+      updateMutation.mutate({
+        id: editingProject.id,
+        name: formData.get("name") as string,
+        customerName: formData.get("customerName") as string,
+        description: formData.get("description") as string,
+        value: formData.get("value") as string,
+        priority: formData.get("priority") as "high" | "medium" | "low",
+        stage: formData.get("stage") as ProjectStage,
+        expectedCloseDate: formData.get("expectedCloseDate") as string,
+      });
+      setEditingProject(null);
+    } else {
+      createMutation.mutate({
+        name: formData.get("name") as string,
+        customerName: formData.get("customerName") as string,
+        description: formData.get("description") as string,
+        value: formData.get("value") as string,
+        priority: formData.get("priority") as "high" | "medium" | "low",
+        expectedCloseDate: formData.get("expectedCloseDate") as string,
+      });
+    }
   };
 
   const getProjectsByStage = (stage: ProjectStage) => {
@@ -108,38 +124,38 @@ export default function Projects() {
           <h1>Project Pipeline</h1>
           <p className="text-muted-foreground text-lg mt-2">Track projects through stages from lead to completion</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingProject(null); }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />New Project</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
-                <DialogDescription>Add a new project to the pipeline</DialogDescription>
+                <DialogTitle>{editingProject ? "Edit" : "Create New"} Project</DialogTitle>
+                <DialogDescription>{editingProject ? "Update" : "Add a new"} project {editingProject ? "details" : "to the pipeline"}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Project Name</Label>
-                  <Input id="name" name="name" required />
+                  <Input id="name" name="name" defaultValue={editingProject?.name} required />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="customerName">Customer Name</Label>
-                  <Input id="customerName" name="customerName" required />
+                  <Input id="customerName" name="customerName" defaultValue={editingProject?.customerName} required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="value">Project Value ($)</Label>
-                    <Input id="value" name="value" type="number" step="0.01" />
+                    <Input id="value" name="value" type="number" step="0.01" defaultValue={editingProject?.value} />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="expectedCloseDate">Expected Close Date</Label>
-                    <Input id="expectedCloseDate" name="expectedCloseDate" type="date" />
+                    <Input id="expectedCloseDate" name="expectedCloseDate" type="date" defaultValue={editingProject?.expectedCloseDate ? format(new Date(editingProject.expectedCloseDate), "yyyy-MM-dd") : ""} />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="priority">Priority</Label>
-                  <Select name="priority" defaultValue="medium">
+                  <Select name="priority" defaultValue={editingProject?.priority || "medium"}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="low">Low</SelectItem>
@@ -148,14 +164,29 @@ export default function Projects() {
                     </SelectContent>
                   </Select>
                 </div>
+                {editingProject && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="stage">Stage</Label>
+                    <Select name="stage" defaultValue={editingProject?.stage}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lead">Leads/Inquiry</SelectItem>
+                        <SelectItem value="proposal">Proposal Submitted</SelectItem>
+                        <SelectItem value="won">Won/Contracted</SelectItem>
+                        <SelectItem value="execution">Execution Phase</SelectItem>
+                        <SelectItem value="testing">Testing/Handover</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="grid gap-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" name="description" rows={3} />
+                  <Textarea id="description" name="description" rows={3} defaultValue={editingProject?.description || ""} />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Creating..." : "Create Project"}
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingProject ? (updateMutation.isPending ? "Updating..." : "Update Project") : (createMutation.isPending ? "Creating..." : "Create Project")}
                 </Button>
               </DialogFooter>
             </form>
@@ -208,7 +239,10 @@ export default function Projects() {
                   )}
                   <div className="flex items-center justify-between mt-2">
                     <Badge className={`text-xs ${getPriorityColor(project.priority)}`}>{project.priority}</Badge>
-                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => { if (confirm("Delete this project?")) { deleteMutation.mutate({ id: project.id }); } }}>Delete</Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setEditingProject(project); setDialogOpen(true); }}>Edit</Button>
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); if (confirm("Delete this project?")) { deleteMutation.mutate({ id: project.id }); } }}>Delete</Button>
+                    </div>
                   </div>
                 </div>
               ))}

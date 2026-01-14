@@ -3,6 +3,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import * as db from "./db";
@@ -549,6 +550,145 @@ Provide insights in JSON format:
 
       return { success: true, alertsSent: 0 };
     }),
+  }),
+
+  // ============ Sales Tracking Module ============
+  sales: router({
+    // Products
+    getAllProducts: protectedProcedure.query(async () => {
+      return await db.getAllSalesProducts();
+    }),
+
+    createProduct: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        category: z.enum(["fan", "ess", "solar_pv", "epc_project", "testing", "installation", "other"]),
+        unit: z.string().default("units"),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createSalesProduct(input);
+        return { success: true };
+      }),
+
+    updateProduct: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        category: z.enum(["fan", "ess", "solar_pv", "epc_project", "testing", "installation", "other"]).optional(),
+        unit: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateSalesProduct(id, data);
+        return { success: true };
+      }),
+
+    deleteProduct: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteSalesProduct(input.id);
+        return { success: true };
+      }),
+
+    // Tracking
+    getAllTracking: protectedProcedure.query(async () => {
+      return await db.getAllSalesTracking();
+    }),
+
+    getTrackingByDateRange: protectedProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getSalesTrackingByDateRange(new Date(input.startDate), new Date(input.endDate));
+      }),
+
+    createTracking: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        weekStartDate: z.string(),
+        weekEndDate: z.string(),
+        target: z.string(),
+        actual: z.string(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createSalesTracking({
+          ...input,
+          weekStartDate: new Date(input.weekStartDate),
+          weekEndDate: new Date(input.weekEndDate),
+        });
+        return { success: true };
+      }),
+
+    updateTracking: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        productId: z.number().optional(),
+        weekStartDate: z.string().optional(),
+        weekEndDate: z.string().optional(),
+        target: z.string().optional(),
+        actual: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, weekStartDate, weekEndDate, ...rest } = input;
+        const data: any = { ...rest };
+        if (weekStartDate) data.weekStartDate = new Date(weekStartDate);
+        if (weekEndDate) data.weekEndDate = new Date(weekEndDate);
+        await db.updateSalesTracking(id, data);
+        return { success: true };
+      }),
+
+    deleteTracking: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteSalesTracking(input.id);
+        return { success: true };
+      }),
+
+    getPerformanceSummary: protectedProcedure.query(async () => {
+      return await db.getSalesPerformanceSummary();
+    }),
+  }),
+
+  // ============ User Management Module (Admin Only) ============
+  users: router({
+    getAll: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+      }
+      return await db.getAllUsers();
+    }),
+
+    updateRole: protectedProcedure
+      .input(z.object({
+        userId: z.number(),
+        role: z.enum(["admin", "manager", "viewer", "user"]),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        await db.updateUserRole(input.userId, input.role);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        if (input.userId === ctx.user.id) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot delete your own account' });
+        }
+        await db.deleteUser(input.userId);
+        return { success: true };
+      }),
   }),
 });
 

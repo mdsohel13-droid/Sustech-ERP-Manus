@@ -21,20 +21,29 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Briefcase, Lightbulb, UsersRound } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Briefcase, Lightbulb, UsersRound, TrendingUp, Shield } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: DollarSign, label: "Financial", path: "/financial" },
-  { icon: Briefcase, label: "Projects", path: "/projects" },
-  { icon: Users, label: "Customers", path: "/customers" },
-  { icon: UsersRound, label: "Team", path: "/team" },
-  { icon: Lightbulb, label: "Ideas", path: "/ideas" },
-];
+const getMenuItems = (userRole?: string) => {
+  const baseItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: DollarSign, label: "Financial", path: "/financial" },
+    { icon: TrendingUp, label: "Sales", path: "/sales" },
+    { icon: Briefcase, label: "Projects", path: "/projects" },
+    { icon: Users, label: "Customers", path: "/customers" },
+    { icon: UsersRound, label: "Team", path: "/team" },
+    { icon: Lightbulb, label: "Ideas", path: "/ideas" },
+  ];
+  
+  if (userRole === 'admin') {
+    baseItems.push({ icon: Shield, label: "Users", path: "/users" });
+  }
+  
+  return baseItems;
+};
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -116,6 +125,7 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const menuItems = getMenuItems(user?.role);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 

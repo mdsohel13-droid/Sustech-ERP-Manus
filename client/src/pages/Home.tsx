@@ -14,8 +14,15 @@ import {
   Lightbulb
 } from "lucide-react";
 import { Link } from "wouter";
+import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
+import { startOfMonth, endOfMonth } from "date-fns";
+import { useState } from "react";
 
 export default function Home() {
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
   const { data: overview, isLoading } = trpc.dashboard.getOverview.useQuery();
   const { data: insights } = trpc.dashboard.getInsights.useQuery();
 
@@ -52,13 +59,16 @@ export default function Home() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-          Operations Dashboard
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Comprehensive view of business health, projects, and team performance
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div className="space-y-2">
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
+            Operations Dashboard
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Comprehensive view of business health, projects, and team performance
+          </p>
+        </div>
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
       </div>
 
       {/* Key Metrics Grid */}

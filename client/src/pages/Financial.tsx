@@ -34,11 +34,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DollarSign, TrendingUp, TrendingDown, Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { Download } from "lucide-react";
 
 export default function Financial() {
   const [arDialogOpen, setArDialogOpen] = useState(false);
   const [apDialogOpen, setApDialogOpen] = useState(false);
   const [salesDialogOpen, setSalesDialogOpen] = useState(false);
+  const [editingAR, setEditingAR] = useState<any>(null);
+  const [editingAP, setEditingAP] = useState<any>(null);
 
   const utils = trpc.useUtils();
   const { data: arList } = trpc.financial.getAllAR.useQuery();
@@ -101,25 +105,53 @@ export default function Financial() {
   const handleARSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    createARMutation.mutate({
-      customerName: formData.get("customerName") as string,
-      amount: formData.get("amount") as string,
-      dueDate: formData.get("dueDate") as string,
-      invoiceNumber: formData.get("invoiceNumber") as string,
-      notes: formData.get("notes") as string,
-    });
+    
+    if (editingAR) {
+      updateARMutation.mutate({
+        id: editingAR.id,
+        customerName: formData.get("customerName") as string,
+        amount: formData.get("amount") as string,
+        dueDate: formData.get("dueDate") as string,
+        invoiceNumber: formData.get("invoiceNumber") as string,
+        notes: formData.get("notes") as string,
+        status: formData.get("status") as "pending" | "overdue" | "paid",
+      });
+      setEditingAR(null);
+    } else {
+      createARMutation.mutate({
+        customerName: formData.get("customerName") as string,
+        amount: formData.get("amount") as string,
+        dueDate: formData.get("dueDate") as string,
+        invoiceNumber: formData.get("invoiceNumber") as string,
+        notes: formData.get("notes") as string,
+      });
+    }
   };
 
   const handleAPSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    createAPMutation.mutate({
-      vendorName: formData.get("vendorName") as string,
-      amount: formData.get("amount") as string,
-      dueDate: formData.get("dueDate") as string,
-      invoiceNumber: formData.get("invoiceNumber") as string,
-      notes: formData.get("notes") as string,
-    });
+    
+    if (editingAP) {
+      updateAPMutation.mutate({
+        id: editingAP.id,
+        vendorName: formData.get("vendorName") as string,
+        amount: formData.get("amount") as string,
+        dueDate: formData.get("dueDate") as string,
+        invoiceNumber: formData.get("invoiceNumber") as string,
+        notes: formData.get("notes") as string,
+        status: formData.get("status") as "pending" | "overdue" | "paid",
+      });
+      setEditingAP(null);
+    } else {
+      createAPMutation.mutate({
+        vendorName: formData.get("vendorName") as string,
+        amount: formData.get("amount") as string,
+        dueDate: formData.get("dueDate") as string,
+        invoiceNumber: formData.get("invoiceNumber") as string,
+        notes: formData.get("notes") as string,
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -132,7 +164,7 @@ export default function Financial() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" id="financial-dashboard">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -140,6 +172,49 @@ export default function Financial() {
           <p className="text-muted-foreground text-lg mt-2">
             Manage accounts receivable, payable, and sales performance
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const arData = arList?.map(ar => ({
+                Customer: ar.customerName,
+                Amount: ar.amount,
+                "Due Date": format(new Date(ar.dueDate), "MMM dd, yyyy"),
+                Status: ar.status,
+                Invoice: ar.invoiceNumber || "",
+              })) || [];
+              const apData = apList?.map(ap => ({
+                Vendor: ap.vendorName,
+                Amount: ap.amount,
+                "Due Date": format(new Date(ap.dueDate), "MMM dd, yyyy"),
+                Status: ap.status,
+                Invoice: ap.invoiceNumber || "",
+              })) || [];
+              
+              exportToCSV([...arData, ...apData], `financial-report-${format(new Date(), "yyyy-MM-dd")}`);
+              toast.success("Financial data exported to CSV");
+            }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                await exportToPDF("financial-dashboard", `financial-report-${format(new Date(), "yyyy-MM-dd")}`, {
+                  orientation: "landscape",
+                });
+                toast.success("Financial report exported to PDF");
+              } catch (error) {
+                toast.error("Failed to export PDF");
+              }
+            }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
         </div>
       </div>
 
@@ -215,7 +290,7 @@ export default function Financial() {
         <TabsContent value="ar" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-medium">Receivables</h3>
-            <Dialog open={arDialogOpen} onOpenChange={setArDialogOpen}>
+            <Dialog open={arDialogOpen} onOpenChange={(open) => { setArDialogOpen(open); if (!open) setEditingAR(null); }}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
@@ -225,34 +300,49 @@ export default function Financial() {
               <DialogContent>
                 <form onSubmit={handleARSubmit}>
                   <DialogHeader>
-                    <DialogTitle>New Accounts Receivable</DialogTitle>
-                    <DialogDescription>Add a new receivable entry</DialogDescription>
+                    <DialogTitle>{editingAR ? "Edit" : "New"} Accounts Receivable</DialogTitle>
+                    <DialogDescription>{editingAR ? "Update" : "Add a new"} receivable entry</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                       <Label htmlFor="customerName">Customer Name</Label>
-                      <Input id="customerName" name="customerName" required />
+                      <Input id="customerName" name="customerName" defaultValue={editingAR?.customerName} required />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="amount">Amount</Label>
-                      <Input id="amount" name="amount" type="number" step="0.01" required />
+                      <Input id="amount" name="amount" type="number" step="0.01" defaultValue={editingAR?.amount} required />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="dueDate">Due Date</Label>
-                      <Input id="dueDate" name="dueDate" type="date" required />
+                      <Input id="dueDate" name="dueDate" type="date" defaultValue={editingAR?.dueDate ? format(new Date(editingAR.dueDate), "yyyy-MM-dd") : ""} required />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                      <Input id="invoiceNumber" name="invoiceNumber" />
+                      <Input id="invoiceNumber" name="invoiceNumber" defaultValue={editingAR?.invoiceNumber || ""} />
                     </div>
+                    {editingAR && (
+                      <div className="grid gap-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select name="status" defaultValue={editingAR?.status || "pending"}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="overdue">Overdue</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <div className="grid gap-2">
                       <Label htmlFor="notes">Notes</Label>
-                      <Textarea id="notes" name="notes" />
+                      <Textarea id="notes" name="notes" defaultValue={editingAR?.notes || ""} />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit" disabled={createARMutation.isPending}>
-                      {createARMutation.isPending ? "Creating..." : "Create Entry"}
+                    <Button type="submit" disabled={createARMutation.isPending || updateARMutation.isPending}>
+                      {editingAR ? (updateARMutation.isPending ? "Updating..." : "Update Entry") : (createARMutation.isPending ? "Creating..." : "Create Entry")}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -287,8 +377,8 @@ export default function Financial() {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              const newStatus = ar.status === "paid" ? "pending" : "paid";
-                              updateARMutation.mutate({ id: ar.id, status: newStatus });
+                              setEditingAR(ar);
+                              setArDialogOpen(true);
                             }}
                           >
                             <Edit className="h-4 w-4" />
@@ -323,7 +413,7 @@ export default function Financial() {
         <TabsContent value="ap" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-medium">Payables</h3>
-            <Dialog open={apDialogOpen} onOpenChange={setApDialogOpen}>
+            <Dialog open={apDialogOpen} onOpenChange={(open) => { setApDialogOpen(open); if (!open) setEditingAP(null); }}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
@@ -333,34 +423,49 @@ export default function Financial() {
               <DialogContent>
                 <form onSubmit={handleAPSubmit}>
                   <DialogHeader>
-                    <DialogTitle>New Accounts Payable</DialogTitle>
-                    <DialogDescription>Add a new payable entry</DialogDescription>
+                    <DialogTitle>{editingAP ? "Edit" : "New"} Accounts Payable</DialogTitle>
+                    <DialogDescription>{editingAP ? "Update" : "Add a new"} payable entry</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                       <Label htmlFor="vendorName">Vendor Name</Label>
-                      <Input id="vendorName" name="vendorName" required />
+                      <Input id="vendorName" name="vendorName" defaultValue={editingAP?.vendorName} required />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="amount">Amount</Label>
-                      <Input id="amount" name="amount" type="number" step="0.01" required />
+                      <Input id="amount" name="amount" type="number" step="0.01" defaultValue={editingAP?.amount} required />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="dueDate">Due Date</Label>
-                      <Input id="dueDate" name="dueDate" type="date" required />
+                      <Input id="dueDate" name="dueDate" type="date" defaultValue={editingAP?.dueDate ? format(new Date(editingAP.dueDate), "yyyy-MM-dd") : ""} required />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                      <Input id="invoiceNumber" name="invoiceNumber" />
+                      <Input id="invoiceNumber" name="invoiceNumber" defaultValue={editingAP?.invoiceNumber || ""} />
                     </div>
+                    {editingAP && (
+                      <div className="grid gap-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select name="status" defaultValue={editingAP?.status || "pending"}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="overdue">Overdue</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <div className="grid gap-2">
                       <Label htmlFor="notes">Notes</Label>
-                      <Textarea id="notes" name="notes" />
+                      <Textarea id="notes" name="notes" defaultValue={editingAP?.notes || ""} />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit" disabled={createAPMutation.isPending}>
-                      {createAPMutation.isPending ? "Creating..." : "Create Entry"}
+                    <Button type="submit" disabled={createAPMutation.isPending || updateAPMutation.isPending}>
+                      {editingAP ? (updateAPMutation.isPending ? "Updating..." : "Update Entry") : (createAPMutation.isPending ? "Creating..." : "Create Entry")}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -395,8 +500,8 @@ export default function Financial() {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              const newStatus = ap.status === "paid" ? "pending" : "paid";
-                              updateAPMutation.mutate({ id: ap.id, status: newStatus });
+                              setEditingAP(ap);
+                              setApDialogOpen(true);
                             }}
                           >
                             <Edit className="h-4 w-4" />
