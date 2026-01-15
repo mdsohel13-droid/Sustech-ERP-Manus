@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown } from "lucide-react";
+import { formatCurrency } from "@/lib/currencyUtils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -156,10 +157,23 @@ export default function Projects() {
                   <Label htmlFor="customerName">Customer Name</Label>
                   <Input id="customerName" name="customerName" defaultValue={editingProject?.customerName} required />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="value">Project Value ($)</Label>
+                    <Label htmlFor="value">Project Value</Label>
                     <Input id="value" name="value" type="number" step="0.01" defaultValue={editingProject?.value} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select name="currency" defaultValue={editingProject?.currency || "BDT"}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BDT">BDT (৳)</SelectItem>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="EUR">EUR (€)</SelectItem>
+                        <SelectItem value="CNY">CNY (¥)</SelectItem>
+                        <SelectItem value="INR">INR (₹)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="expectedCloseDate">Expected Close Date</Label>
@@ -312,7 +326,7 @@ export default function Projects() {
                       }`}>
                         <td className="p-4 font-medium">{project.name}</td>
                         <td className="p-4">{project.customerName}</td>
-                        <td className="p-4">${Number(project.value || 0).toLocaleString()}</td>
+                        <td className="p-4">{formatCurrency(project.value, project.currency)}</td>
                         <td className="p-4">
                           <Badge variant="outline">{stageLabels[project.stage as ProjectStage]}</Badge>
                         </td>

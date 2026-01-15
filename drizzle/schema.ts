@@ -25,6 +25,7 @@ export const accountsReceivable = mysqlTable("accounts_receivable", {
   id: int("id").autoincrement().primaryKey(),
   customerName: varchar("customerName", { length: 255 }).notNull(),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
   dueDate: date("dueDate").notNull(),
   status: mysqlEnum("status", ["pending", "overdue", "paid"]).default("pending").notNull(),
   invoiceNumber: varchar("invoiceNumber", { length: 100 }),
@@ -44,6 +45,7 @@ export const accountsPayable = mysqlTable("accounts_payable", {
   id: int("id").autoincrement().primaryKey(),
   vendorName: varchar("vendorName", { length: 255 }).notNull(),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
   dueDate: date("dueDate").notNull(),
   status: mysqlEnum("status", ["pending", "overdue", "paid"]).default("pending").notNull(),
   invoiceNumber: varchar("invoiceNumber", { length: 100 }),
@@ -84,6 +86,7 @@ export const projects = mysqlTable("projects", {
   customerName: varchar("customerName", { length: 255 }).notNull(),
   stage: mysqlEnum("stage", ["lead", "proposal", "won", "execution", "testing"]).default("lead").notNull(),
   value: decimal("value", { precision: 15, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
   description: text("description"),
   startDate: date("startDate"),
   expectedCloseDate: date("expectedCloseDate"),
@@ -552,3 +555,18 @@ export const aiReminders = mysqlTable("ai_reminders", {
 
 export type AIReminder = typeof aiReminders.$inferSelect;
 export type InsertAIReminder = typeof aiReminders.$inferInsert;
+
+/**
+ * Currency exchange rates
+ */
+export const currencyRates = mysqlTable("currency_rates", {
+  id: int("id").autoincrement().primaryKey(),
+  fromCurrency: varchar("fromCurrency", { length: 3 }).notNull(),
+  toCurrency: varchar("toCurrency", { length: 3 }).notNull(),
+  rate: decimal("rate", { precision: 15, scale: 6 }).notNull(),
+  effectiveDate: date("effectiveDate").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CurrencyRate = typeof currencyRates.$inferSelect;
+export type InsertCurrencyRate = typeof currencyRates.$inferInsert;

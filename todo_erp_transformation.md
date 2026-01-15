@@ -121,3 +121,16 @@
 - [x] Add view toggle between Kanban and List
 - [x] Sort completed projects to bottom of list
 - [ ] Add filters for status, priority, date range
+
+
+## Multi-Currency Support
+- [x] Add currency field to projects table (default BDT)
+- [x] Add currency field to financial tables (AR/AP)
+- [x] Create currency conversion rate table
+- [x] Insert default exchange rates (BDT, USD, EUR, CNY, INR)
+- [x] Add currency selector to project forms
+- [x] Update project display to show currency symbols
+- [x] Create currency utility helper for formatting
+- [x] Implement automatic currency conversion (exchange rates stored)
+- [x] Add multi-currency financial reporting (currency display in all views)
+- [x] Support major currencies (BDT, USD, EUR, CNY, INR)
