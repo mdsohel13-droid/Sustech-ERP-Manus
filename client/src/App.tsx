@@ -13,6 +13,7 @@ import Team from "./pages/Team";
 import Ideas from "./pages/Ideas";
 import Sales from "./pages/Sales";
 import Users from "./pages/Users";
+import Settings from "./pages/Settings";
 
 function Router() {
   return (
@@ -55,6 +56,11 @@ function Router() {
       <Route path={"/users"}>
         <DashboardLayout>
           <Users />
+        </DashboardLayout>
+      </Route>
+      <Route path={"/settings"}>
+        <DashboardLayout>
+          <Settings />
         </DashboardLayout>
       </Route>
       <Route path={"/404"} component={NotFound} />

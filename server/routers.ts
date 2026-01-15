@@ -4,6 +4,14 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
+
+// Admin-only procedure middleware
+const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== 'admin') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+  }
+  return next({ ctx });
+});
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import * as db from "./db";
@@ -321,14 +329,24 @@ export const appRouter = router({
 
   // ============ Team Module ============
   team: router({
-    createMember: protectedProcedure
+    addMember: protectedProcedure
       .input(z.object({
-        userId: z.number(),
-        position: z.string().optional(),
+        employeeId: z.string(),
+        name: z.string(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
         department: z.string().optional(),
+        designation: z.string().optional(),
+        joiningDate: z.string(),
+        salary: z.string().optional(),
+        userId: z.number().optional(),
       }))
-      .mutation(async ({ input }) => {
-        await db.createTeamMember(input);
+      .mutation(async ({ input, ctx }) => {
+        await db.createTeamMember({
+          ...input,
+          joiningDate: new Date(input.joiningDate),
+          createdBy: ctx.user.id,
+        });
         return { success: true };
       }),
     
@@ -687,6 +705,36 @@ Provide insights in JSON format:
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot delete your own account' });
         }
         await db.deleteUser(input.userId);
+        return { success: true };
+      }),
+  }),
+
+  // ============ Settings Module ============
+  settings: router({
+    getAll: adminProcedure.query(async () => {
+      return await db.getAllSettings();
+    }),
+
+    getByKey: adminProcedure
+      .input(z.object({ key: z.string() }))
+      .query(async ({ input }) => {
+        return await db.getSettingByKey(input.key);
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        settingKey: z.string(),
+        settingValue: z.string(),
+        category: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.upsertSetting({
+          settingKey: input.settingKey,
+          settingValue: input.settingValue,
+          category: input.category,
+          settingType: "string",
+          updatedBy: ctx.user.id,
+        });
         return { success: true };
       }),
   }),

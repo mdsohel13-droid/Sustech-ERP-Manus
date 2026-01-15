@@ -336,7 +336,7 @@ export async function createTeamMember(data: InsertTeamMember) {
 export async function getAllTeamMembers() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.select().from(teamMembers).where(eq(teamMembers.isActive, true));
+  return await db.select().from(teamMembers).where(eq(teamMembers.status, "active"));
 }
 
 export async function updateTeamMember(id: number, data: Partial<InsertTeamMember>) {
@@ -535,4 +535,36 @@ export async function deleteUser(userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(users).where(eq(users.id, userId));
+}
+
+
+// ============ Settings Module ============
+import { systemSettings, InsertSystemSetting } from "../drizzle/schema";
+
+export async function getAllSettings() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(systemSettings);
+}
+
+export async function getSettingByKey(key: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(systemSettings).where(eq(systemSettings.settingKey, key)).limit(1);
+  return result[0];
+}
+
+export async function upsertSetting(data: InsertSystemSetting) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getSettingByKey(data.settingKey);
+  
+  if (existing) {
+    return await db.update(systemSettings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(systemSettings.settingKey, data.settingKey));
+  } else {
+    return await db.insert(systemSettings).values(data);
+  }
 }

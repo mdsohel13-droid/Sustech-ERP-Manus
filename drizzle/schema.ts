@@ -136,21 +136,7 @@ export const customerInteractions = mysqlTable("customer_interactions", {
 export type CustomerInteraction = typeof customerInteractions.$inferSelect;
 export type InsertCustomerInteraction = typeof customerInteractions.$inferInsert;
 
-/**
- * Team members (extends users for team-specific data)
- */
-export const teamMembers = mysqlTable("team_members", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  position: varchar("position", { length: 255 }),
-  department: varchar("department", { length: 255 }),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type TeamMember = typeof teamMembers.$inferSelect;
-export type InsertTeamMember = typeof teamMembers.$inferInsert;
+// Team members table moved to comprehensive ERP schema below
 
 /**
  * Team attendance tracking
@@ -270,3 +256,299 @@ export const notificationLog = mysqlTable("notification_log", {
 
 export type NotificationLog = typeof notificationLog.$inferSelect;
 export type InsertNotificationLog = typeof notificationLog.$inferInsert;
+
+/**
+ * System Settings - Admin control panel
+ */
+export const systemSettings = mysqlTable("system_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  settingKey: varchar("settingKey", { length: 100 }).notNull().unique(),
+  settingValue: text("settingValue"),
+  settingType: mysqlEnum("settingType", ["string", "number", "boolean", "json"]).default("string").notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // general, currency, theme, archive, etc.
+  description: text("description"),
+  updatedBy: int("updatedBy"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SystemSetting = typeof systemSettings.$inferSelect;
+export type InsertSystemSetting = typeof systemSettings.$inferInsert;
+
+/**
+ * Daily Sales Tracking with Salesperson
+ */
+export const dailySales = mysqlTable("daily_sales", {
+  id: int("id").autoincrement().primaryKey(),
+  date: date("date").notNull(),
+  productId: int("productId").notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unitPrice: decimal("unitPrice", { precision: 15, scale: 2 }).notNull(),
+  totalAmount: decimal("totalAmount", { precision: 15, scale: 2 }).notNull(),
+  salespersonId: int("salespersonId").notNull(),
+  salespersonName: varchar("salespersonName", { length: 255 }).notNull(),
+  customerName: varchar("customerName", { length: 255 }),
+  notes: text("notes"),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DailySales = typeof dailySales.$inferSelect;
+export type InsertDailySales = typeof dailySales.$inferInsert;
+
+/**
+ * Weekly Sales Targets and Achievements
+ */
+export const weeklySalesTargets = mysqlTable("weekly_sales_targets", {
+  id: int("id").autoincrement().primaryKey(),
+  weekStartDate: date("weekStartDate").notNull(),
+  weekEndDate: date("weekEndDate").notNull(),
+  productId: int("productId").notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  targetAmount: decimal("targetAmount", { precision: 15, scale: 2 }).notNull(),
+  achievedAmount: decimal("achievedAmount", { precision: 15, scale: 2 }).default("0").notNull(),
+  salespersonId: int("salespersonId"),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WeeklySalesTarget = typeof weeklySalesTargets.$inferSelect;
+export type InsertWeeklySalesTarget = typeof weeklySalesTargets.$inferInsert;
+
+/**
+ * Monthly Sales Targets and Achievements
+ */
+export const monthlySalesTargets = mysqlTable("monthly_sales_targets", {
+  id: int("id").autoincrement().primaryKey(),
+  month: int("month").notNull(), // 1-12
+  year: int("year").notNull(),
+  productId: int("productId").notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  targetAmount: decimal("targetAmount", { precision: 15, scale: 2 }).notNull(),
+  achievedAmount: decimal("achievedAmount", { precision: 15, scale: 2 }).default("0").notNull(),
+  salespersonId: int("salespersonId"),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MonthlySalesTarget = typeof monthlySalesTargets.$inferSelect;
+export type InsertMonthlySalesTarget = typeof monthlySalesTargets.$inferInsert;
+
+/**
+ * Project Financial Transactions
+ */
+export const projectTransactions = mysqlTable("project_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  projectId: int("projectId").notNull(),
+  transactionDate: date("transactionDate").notNull(),
+  transactionType: mysqlEnum("transactionType", [
+    "revenue",
+    "purchase",
+    "expense",
+    "cogs",
+    "wacc",
+  ]).notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("BDT").notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }),
+  invoiceNumber: varchar("invoiceNumber", { length: 100 }),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProjectTransaction = typeof projectTransactions.$inferSelect;
+export type InsertProjectTransaction = typeof projectTransactions.$inferInsert;
+
+/**
+ * Income & Expenditure Module
+ */
+export const incomeExpenditure = mysqlTable("income_expenditure", {
+  id: int("id").autoincrement().primaryKey(),
+  date: date("date").notNull(),
+  type: mysqlEnum("type", ["income", "expenditure"]).notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // sales_product, sales_service, salary, rent, utilities, etc.
+  subcategory: varchar("subcategory", { length: 100 }),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("BDT").notNull(),
+  description: text("description"),
+  referenceNumber: varchar("referenceNumber", { length: 100 }),
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type IncomeExpenditure = typeof incomeExpenditure.$inferSelect;
+export type InsertIncomeExpenditure = typeof incomeExpenditure.$inferInsert;
+
+/**
+ * Marketing & Branding Campaigns
+ */
+export const marketingCampaigns = mysqlTable("marketing_campaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", [
+    "social_media",
+    "email",
+    "sms",
+    "event",
+    "content",
+    "branding",
+    "other",
+  ]).notNull(),
+  platform: varchar("platform", { length: 100 }), // Facebook, Instagram, LinkedIn, etc.
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate"),
+  budget: decimal("budget", { precision: 15, scale: 2 }),
+  spent: decimal("spent", { precision: 15, scale: 2 }).default("0"),
+  targetAudience: text("targetAudience"),
+  description: text("description"),
+  status: mysqlEnum("status", ["planning", "active", "paused", "completed", "cancelled"]).default("planning").notNull(),
+  metrics: text("metrics"), // JSON: impressions, clicks, conversions, etc.
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MarketingCampaign = typeof marketingCampaigns.$inferSelect;
+export type InsertMarketingCampaign = typeof marketingCampaigns.$inferInsert;
+
+/**
+ * Marketing Content (Facebook posts, etc.)
+ */
+export const marketingContent = mysqlTable("marketing_content", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId"),
+  contentType: mysqlEnum("contentType", ["post", "ad", "story", "video", "image", "article"]).notNull(),
+  platform: varchar("platform", { length: 100 }).notNull(),
+  title: varchar("title", { length: 500 }),
+  content: text("content").notNull(),
+  contentBangla: text("contentBangla"), // Bangla version
+  scheduledDate: timestamp("scheduledDate"),
+  publishedDate: timestamp("publishedDate"),
+  status: mysqlEnum("status", ["draft", "scheduled", "published", "archived"]).default("draft").notNull(),
+  productIds: text("productIds"), // JSON array of product IDs
+  aiGenerated: mysqlEnum("aiGenerated", ["yes", "no"]).default("no").notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MarketingContent = typeof marketingContent.$inferSelect;
+export type InsertMarketingContent = typeof marketingContent.$inferInsert;
+
+/**
+ * Team Members / Employees
+ */
+export const teamMembers = mysqlTable("team_members", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: varchar("employeeId", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  department: varchar("department", { length: 100 }),
+  designation: varchar("designation", { length: 100 }),
+  joiningDate: date("joiningDate").notNull(),
+  salary: decimal("salary", { precision: 15, scale: 2 }),
+  status: mysqlEnum("status", ["active", "on_leave", "resigned", "terminated"]).default("active").notNull(),
+  userId: int("userId"), // Link to users table if they have system access
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = typeof teamMembers.$inferInsert;
+
+/**
+ * Payroll Records
+ */
+export const payrollRecords = mysqlTable("payroll_records", {
+  id: int("id").autoincrement().primaryKey(),
+  teamMemberId: int("teamMemberId").notNull(),
+  month: int("month").notNull(), // 1-12
+  year: int("year").notNull(),
+  basicSalary: decimal("basicSalary", { precision: 15, scale: 2 }).notNull(),
+  allowances: decimal("allowances", { precision: 15, scale: 2 }).default("0"),
+  deductions: decimal("deductions", { precision: 15, scale: 2 }).default("0"),
+  bonus: decimal("bonus", { precision: 15, scale: 2 }).default("0"),
+  netSalary: decimal("netSalary", { precision: 15, scale: 2 }).notNull(),
+  paymentDate: date("paymentDate"),
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
+  status: mysqlEnum("status", ["pending", "paid", "cancelled"]).default("pending").notNull(),
+  notes: text("notes"),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PayrollRecord = typeof payrollRecords.$inferSelect;
+export type InsertPayrollRecord = typeof payrollRecords.$inferInsert;
+
+/**
+ * Employee KPI Definitions
+ */
+export const employeeKPIs = mysqlTable("employee_kpis", {
+  id: int("id").autoincrement().primaryKey(),
+  teamMemberId: int("teamMemberId").notNull(),
+  kpiName: varchar("kpiName", { length: 255 }).notNull(),
+  kpiDescription: text("kpiDescription"),
+  measurementUnit: varchar("measurementUnit", { length: 50 }).notNull(), // sales_amount, number_of_calls, projects_completed, etc.
+  targetValue: decimal("targetValue", { precision: 15, scale: 2 }).notNull(),
+  currentValue: decimal("currentValue", { precision: 15, scale: 2 }).default("0").notNull(),
+  period: mysqlEnum("period", ["daily", "weekly", "monthly", "quarterly", "yearly"]).notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
+  status: mysqlEnum("status", ["active", "completed", "cancelled"]).default("active").notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmployeeKPI = typeof employeeKPIs.$inferSelect;
+export type InsertEmployeeKPI = typeof employeeKPIs.$inferInsert;
+
+/**
+ * Archive / Deleted Items
+ */
+export const archivedItems = mysqlTable("archived_items", {
+  id: int("id").autoincrement().primaryKey(),
+  moduleName: varchar("moduleName", { length: 100 }).notNull(), // financial, projects, customers, etc.
+  itemId: int("itemId").notNull(),
+  itemData: text("itemData").notNull(), // JSON of original item
+  deletedBy: int("deletedBy").notNull(),
+  deletedAt: timestamp("deletedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(), // Auto-delete after retention period
+});
+
+export type ArchivedItem = typeof archivedItems.$inferSelect;
+export type InsertArchivedItem = typeof archivedItems.$inferInsert;
+
+/**
+ * AI Reminders and Follow-ups
+ */
+export const aiReminders = mysqlTable("ai_reminders", {
+  id: int("id").autoincrement().primaryKey(),
+  reminderType: mysqlEnum("reminderType", ["client_followup", "lead_followup", "task", "meeting", "other"]).notNull(),
+  entityType: varchar("entityType", { length: 50 }).notNull(), // customer, project, lead, etc.
+  entityId: int("entityId").notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  descriptionBangla: text("descriptionBangla"),
+  dueDate: date("dueDate").notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  status: mysqlEnum("status", ["pending", "completed", "snoozed", "cancelled"]).default("pending").notNull(),
+  assignedTo: int("assignedTo").notNull(),
+  aiGenerated: mysqlEnum("aiGenerated", ["yes", "no"]).default("yes").notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AIReminder = typeof aiReminders.$inferSelect;
+export type InsertAIReminder = typeof aiReminders.$inferInsert;

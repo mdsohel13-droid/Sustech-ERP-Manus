@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Briefcase, Lightbulb, UsersRound, TrendingUp, Shield } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Briefcase, Lightbulb, UsersRound, TrendingUp, Shield, Settings } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -40,6 +40,7 @@ const getMenuItems = (userRole?: string) => {
   
   if (userRole === 'admin') {
     baseItems.push({ icon: Shield, label: "Users", path: "/users" });
+    baseItems.push({ icon: Settings, label: "Settings", path: "/settings" });
   }
   
   return baseItems;

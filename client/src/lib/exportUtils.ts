@@ -64,11 +64,31 @@ export async function exportToPDF(
   }
 
   try {
-    // Capture element as canvas
+    // Capture element as canvas with RGB fallback for OKLCH colors
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
       logging: false,
+      backgroundColor: '#faf8f5', // Cream background fallback for OKLCH
+      onclone: (clonedDoc) => {
+        // Force all elements to use computed RGB colors
+        const allElements = clonedDoc.querySelectorAll('*');
+        allElements.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            const computed = window.getComputedStyle(el);
+            // Force browser to resolve OKLCH to RGB
+            if (computed.backgroundColor) {
+              el.style.backgroundColor = computed.backgroundColor;
+            }
+            if (computed.color) {
+              el.style.color = computed.color;
+            }
+            if (computed.borderColor) {
+              el.style.borderColor = computed.borderColor;
+            }
+          }
+        });
+      },
     });
 
     const imgData = canvas.toDataURL("image/png");
