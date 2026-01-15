@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GripVertical, Calendar, DollarSign } from "lucide-react";
+import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -26,6 +26,9 @@ export default function Projects() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draggedProject, setDraggedProject] = useState<number | null>(null);
   const [editingProject, setEditingProject] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [sortField, setSortField] = useState<'name' | 'value' | 'createdAt'>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const utils = trpc.useUtils();
   const { data: projects } = trpc.projects.getAll.useQuery();
@@ -124,7 +127,17 @@ export default function Projects() {
           <h1>Project Pipeline</h1>
           <p className="text-muted-foreground text-lg mt-2">Track projects through stages from lead to completion</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingProject(null); }}>
+        <div className="flex items-center gap-2">
+          <div className="flex border rounded-md">
+            <Button variant={viewMode === 'kanban' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('kanban')}>
+              <LayoutGrid className="h-4 w-4 mr-2" />Kanban
+            </Button>
+            <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')}>
+              <List className="h-4 w-4 mr-2" />List
+            </Button>
+          </div>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingProject(null); }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />New Project</Button>
           </DialogTrigger>
@@ -250,6 +263,80 @@ export default function Projects() {
           </div>
         ))}
       </div>
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <Card className="editorial-card">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left p-4 font-semibold">Project Name</th>
+                    <th className="text-left p-4 font-semibold">Customer</th>
+                    <th className="text-left p-4 font-semibold cursor-pointer" onClick={() => { setSortField('value'); setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc'); }}>
+                      Value <ArrowUpDown className="inline h-3 w-3" />
+                    </th>
+                    <th className="text-left p-4 font-semibold">Status</th>
+                    <th className="text-left p-4 font-semibold">Priority</th>
+                    <th className="text-left p-4 font-semibold">Expected Close</th>
+                    <th className="text-left p-4 font-semibold">Description</th>
+                    <th className="text-right p-4 font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects
+                    ?.slice()
+                    .sort((a, b) => {
+                      const direction = sortDirection === 'asc' ? 1 : -1;
+                      if (sortField === 'value') {
+                        return ((Number(a.value) || 0) - (Number(b.value) || 0)) * direction;
+                      } else if (sortField === 'createdAt') {
+                        return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction;
+                      }
+                      return a.name.localeCompare(b.name) * direction;
+                    })
+                    .sort((a, b) => {
+                      // Sort completed projects to bottom
+                      if (a.stage === 'testing' && b.stage !== 'testing') return 1;
+                      if (a.stage !== 'testing' && b.stage === 'testing') return -1;
+                      return 0;
+                    })
+                    .map((project) => (
+                      <tr key={project.id} className={`border-t hover:bg-muted/30 transition-colors ${
+                        project.stage === 'lead' ? 'bg-blue-50/30' :
+                        project.stage === 'proposal' ? 'bg-yellow-50/30' :
+                        project.stage === 'won' ? 'bg-green-50/30' :
+                        project.stage === 'execution' ? 'bg-purple-50/30' :
+                        'bg-gray-50/30'
+                      }`}>
+                        <td className="p-4 font-medium">{project.name}</td>
+                        <td className="p-4">{project.customerName}</td>
+                        <td className="p-4">${Number(project.value || 0).toLocaleString()}</td>
+                        <td className="p-4">
+                          <Badge variant="outline">{stageLabels[project.stage as ProjectStage]}</Badge>
+                        </td>
+                        <td className="p-4">
+                          <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
+                        </td>
+                        <td className="p-4">
+                          {project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yyyy") : "-"}
+                        </td>
+                        <td className="p-4 max-w-xs truncate">{project.description || "-"}</td>
+                        <td className="p-4 text-right">
+                          <div className="flex gap-1 justify-end">
+                            <Button variant="ghost" size="sm" onClick={() => { setEditingProject(project); setDialogOpen(true); }}>Edit</Button>
+                            <Button variant="ghost" size="sm" onClick={() => { if (confirm("Delete this project?")) { deleteMutation.mutate({ id: project.id }); } }}>Delete</Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

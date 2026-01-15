@@ -105,3 +105,19 @@
 - [ ] Test deployment on dedicated server
 - [ ] Create deployment documentation
 - [ ] Final checkpoint and delivery
+
+
+## Bug Fix: Settings Page Error
+- [x] Fix system_settings table missing error
+- [x] Create daily_sales, weekly_sales_targets, monthly_sales_targets tables
+- [ ] Ensure all ERP schema tables are created in database
+- [ ] Test Settings page functionality
+
+
+## Project List View Enhancement
+- [x] Create comprehensive list view showing all project columns
+- [x] Add sortable columns (name, value, status, dates, priority)
+- [x] Add color-coded status indicators
+- [x] Add view toggle between Kanban and List
+- [x] Sort completed projects to bottom of list
+- [ ] Add filters for status, priority, date range

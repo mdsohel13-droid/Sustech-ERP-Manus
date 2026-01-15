@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1767798714226,
-      "tag": "0000_glamorous_jack_murdock",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1767798917496,
-      "tag": "0001_spicy_jazinda",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1767812551801,
-      "tag": "0002_sudden_crusher_hogan",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1768415298281,
-      "tag": "0003_abandoned_nightshade",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1768416340462,
-      "tag": "0004_keen_preak",
+      "when": 1768503683890,
+      "tag": "0000_lively_jackal",
       "breakpoints": true
     }
   ]
