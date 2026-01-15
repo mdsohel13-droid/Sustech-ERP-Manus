@@ -520,16 +520,47 @@ Financial:
 Projects: ${JSON.stringify(projectStats)}
 Customers: ${JSON.stringify(customerStats)}
 
-Provide insights in JSON format:
-[{"title": "...", "summary": "...", "recommendations": "...", "insightType": "trend|pattern|anomaly"}]`;
+Provide 2-3 actionable business insights.`;
 
       const response = await invokeLLM({
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: "You are a business analyst. Respond only with valid JSON." },
+          { role: "user", content: prompt }
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "business_insights",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                insights: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      summary: { type: "string" },
+                      recommendations: { type: "string" },
+                      insightType: { type: "string", enum: ["trend", "pattern", "anomaly"] }
+                    },
+                    required: ["title", "summary", "recommendations", "insightType"],
+                    additionalProperties: false
+                  }
+                }
+              },
+              required: ["insights"],
+              additionalProperties: false
+            }
+          }
+        }
       });
 
-      const rawContent = response.choices[0]?.message?.content || "[]";
+      const rawContent = response.choices[0]?.message?.content || '{"insights":[]}';
       const content = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
-      const insights = JSON.parse(content.replace(/```json\n?|```/g, ""));
+      const parsed = JSON.parse(content);
+      const insights = parsed.insights || [];
 
       for (const insight of insights) {
         await db.createInsight({

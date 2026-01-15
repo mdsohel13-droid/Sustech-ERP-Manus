@@ -134,3 +134,8 @@
 - [x] Implement automatic currency conversion (exchange rates stored)
 - [x] Add multi-currency financial reporting (currency display in all views)
 - [x] Support major currencies (BDT, USD, EUR, CNY, INR)
+
+
+## Bug Fixes - AI Insights
+- [x] Fix JSON parsing error in AI insights generation
+- [x] Ensure LLM response is properly structured as JSON using json_schema
