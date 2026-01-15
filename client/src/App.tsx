@@ -11,7 +11,7 @@ import Projects from "./pages/Projects";
 import Customers from "./pages/Customers";
 import Team from "./pages/Team";
 import Ideas from "./pages/Ideas";
-import Sales from "./pages/Sales";
+import SalesEnhanced from "./pages/SalesEnhanced";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 
@@ -50,7 +50,7 @@ function Router() {
       </Route>
       <Route path={"/sales"}>
         <DashboardLayout>
-          <Sales />
+          <SalesEnhanced />
         </DashboardLayout>
       </Route>
       <Route path={"/users"}>

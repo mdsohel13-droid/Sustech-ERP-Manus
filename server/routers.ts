@@ -738,6 +738,97 @@ Provide insights in JSON format:
         return { success: true };
       }),
   }),
+
+  // ============ Enhanced Sales Module ============
+  salesEnhanced: router({
+    // Daily Sales
+    createDailySale: protectedProcedure
+      .input(z.object({
+        date: z.string(),
+        productId: z.number(),
+        productName: z.string(),
+        quantity: z.string(),
+        unitPrice: z.string(),
+        totalAmount: z.string(),
+        salespersonId: z.number(),
+        salespersonName: z.string(),
+        customerName: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createDailySale(input);
+        return { success: true };
+      }),
+
+    getDailySales: protectedProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getDailySales(input.startDate, input.endDate);
+      }),
+
+    // Weekly Targets
+    createWeeklyTarget: protectedProcedure
+      .input(z.object({
+        weekStartDate: z.string(),
+        weekEndDate: z.string(),
+        productId: z.number(),
+        productName: z.string(),
+        targetAmount: z.string(),
+        salespersonId: z.number().nullable(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createWeeklyTarget({
+          ...input,
+          achievedAmount: "0",
+        });
+        return { success: true };
+      }),
+
+    getWeeklyTargets: protectedProcedure.query(async () => {
+      return await db.getWeeklyTargets();
+    }),
+
+    // Monthly Targets
+    createMonthlyTarget: protectedProcedure
+      .input(z.object({
+        month: z.number(),
+        year: z.number(),
+        productId: z.number(),
+        productName: z.string(),
+        targetAmount: z.string(),
+        salespersonId: z.number().nullable(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createMonthlyTarget({
+          ...input,
+          achievedAmount: "0",
+        });
+        return { success: true };
+      }),
+
+    getMonthlyTargets: protectedProcedure.query(async () => {
+      return await db.getMonthlyTargets();
+    }),
+
+    // Salespeople
+    getSalespeople: protectedProcedure.query(async () => {
+      return await db.getSalespeople();
+    }),
+
+    createSalesperson: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createSalesperson(input);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

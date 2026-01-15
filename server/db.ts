@@ -5,6 +5,9 @@ import {
   accountsReceivable, InsertAccountsReceivable,
   accountsPayable, InsertAccountsPayable,
   sales, InsertSales,
+  dailySales,
+  weeklySalesTargets,
+  monthlySalesTargets,
   projects, InsertProject,
   customers, InsertCustomer,
   customerInteractions, InsertCustomerInteraction,
@@ -567,4 +570,72 @@ export async function upsertSetting(data: InsertSystemSetting) {
   } else {
     return await db.insert(systemSettings).values(data);
   }
+}
+
+
+// ============ Enhanced Sales Module ============
+export async function createDailySale(sale: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(dailySales).values(sale);
+  return result;
+}
+
+export async function getDailySales(startDate: string, endDate: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(dailySales)
+    .where(
+      sql`${dailySales.date} >= ${startDate} AND ${dailySales.date} <= ${endDate}`
+    )
+    .orderBy(desc(dailySales.date));
+}
+
+export async function createWeeklyTarget(target: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(weeklySalesTargets).values(target);
+  return result;
+}
+
+export async function getWeeklyTargets() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(weeklySalesTargets)
+    .orderBy(desc(weeklySalesTargets.weekStartDate));
+}
+
+export async function createMonthlyTarget(target: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(monthlySalesTargets).values(target);
+  return result;
+}
+
+export async function getMonthlyTargets() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(monthlySalesTargets)
+    .orderBy(desc(monthlySalesTargets.year), desc(monthlySalesTargets.month));
+}
+
+export async function getSalespeople() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(salesProducts);
+}
+
+export async function createSalesperson(person: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(salesProducts).values(person);
+  return result;
 }
