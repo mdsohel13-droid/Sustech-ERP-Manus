@@ -19,6 +19,8 @@ import IncomeExpenditure from "./pages/IncomeExpenditure";
 import ActionTracker from "@/pages/ActionTracker";
 import HumanResource from "@/pages/HumanResource";
 import TenderQuotation from "./pages/TenderQuotation";
+import AccessDenied from "./pages/AccessDenied";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function Router() {
   return (
@@ -30,7 +32,9 @@ function Router() {
       </Route>
       <Route path={"/financial"}>
         <DashboardLayout>
-          <Financial />
+          <ProtectedRoute module="financial">
+            <Financial />
+          </ProtectedRoute>
         </DashboardLayout>
       </Route>
       <Route path={"/projects"}>
@@ -55,7 +59,9 @@ function Router() {
       </Route>
       <Route path={"/sales"}>
         <DashboardLayout>
-          <SalesEnhanced />
+          <ProtectedRoute module="sales">
+            <SalesEnhanced />
+          </ProtectedRoute>
         </DashboardLayout>
       </Route>
       <Route path={"/users"}>
@@ -65,7 +71,9 @@ function Router() {
       </Route>
       <Route path={"/settings"}>
         <DashboardLayout>
-          <Settings />
+          <ProtectedRoute module="settings">
+            <Settings />
+          </ProtectedRoute>
         </DashboardLayout>
       </Route>
       <Route path={"/income-expenditure"}>
@@ -85,8 +93,13 @@ function Router() {
       </Route>
       <Route path={"/hr"}>
         <DashboardLayout>
-          <HumanResource />
+          <ProtectedRoute module="hr">
+            <HumanResource />
+          </ProtectedRoute>
         </DashboardLayout>
+      </Route>
+      <Route path={"/access-denied"}>
+        <AccessDenied />
       </Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

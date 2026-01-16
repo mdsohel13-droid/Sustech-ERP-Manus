@@ -26,26 +26,38 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { usePermissions } from "@/hooks/usePermissions";
 
-const getMenuItems = (userRole?: string) => {
-  const baseItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-    { icon: DollarSign, label: "Financial", path: "/financial" },
-    { icon: Receipt, label: "Income & Expenditure", path: "/income-expenditure" },
-    { icon: TrendingUp, label: "Sales", path: "/sales" },
-    { icon: Briefcase, label: "Projects", path: "/projects" },
-    { icon: Users, label: "Customers", path: "/customers" },
-    { icon: Users, label: "Human Resource", path: "/hr" },
-    { icon: Lightbulb, label: "Ideas", path: "/ideas" },
-    { icon: Target, label: "Action Tracker", path: "/action-tracker" },
-    { icon: FileText, label: "Tender/Quotation", path: "/tender-quotation" },
-  ];
-  
-  if (userRole === 'admin') {
-    baseItems.push({ icon: Settings, label: "Settings", path: "/settings" });
-  }
-  
-  return baseItems;
+const ALL_MENU_ITEMS = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/", module: "dashboard" },
+  { icon: DollarSign, label: "Financial", path: "/financial", module: "financial" },
+  { icon: Receipt, label: "Income & Expenditure", path: "/income-expenditure", module: "income_expenditure" },
+  { icon: TrendingUp, label: "Sales", path: "/sales", module: "sales" },
+  { icon: Briefcase, label: "Projects", path: "/projects", module: "projects" },
+  { icon: Users, label: "Customers", path: "/customers", module: "customers" },
+  { icon: Users, label: "Human Resource", path: "/hr", module: "hr" },
+  { icon: Lightbulb, label: "Ideas", path: "/ideas", module: "ideas" },
+  { icon: Target, label: "Action Tracker", path: "/action-tracker", module: "action_tracker" },
+  { icon: FileText, label: "Tender/Quotation", path: "/tender-quotation", module: "tender_quotation" },
+  { icon: Settings, label: "Settings", path: "/settings", module: "settings" },
+];
+
+const getMenuItems = (userRole?: string, hasModuleAccess?: (module: string) => boolean) => {
+  return ALL_MENU_ITEMS.filter(item => {
+    // Always show dashboard
+    if (item.module === 'dashboard') return true;
+    
+    // Settings only for admin
+    if (item.module === 'settings') return userRole === 'admin';
+    
+    // Check permission if hasModuleAccess function provided
+    if (hasModuleAccess) {
+      return hasModuleAccess(item.module);
+    }
+    
+    // Default: show all for admin/manager
+    return userRole === 'admin' || userRole === 'manager';
+  });
 };
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -123,12 +135,13 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
+  const { hasModuleAccess } = usePermissions();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const menuItems = getMenuItems(user?.role);
+  const menuItems = getMenuItems(user?.role, hasModuleAccess);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 

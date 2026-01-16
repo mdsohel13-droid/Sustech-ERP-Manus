@@ -48,6 +48,7 @@ import { useState } from "react";
 import { format, isPast, differenceInDays } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
+import { AttachmentUpload } from "@/components/AttachmentUpload";
 
 const statusConfig = {
   not_started: { label: "Not Started", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300", icon: Clock },
@@ -377,6 +378,12 @@ export default function TenderQuotation() {
                     rows={2}
                   />
                 </div>
+                {editingItem && (
+                  <div className="grid gap-2 mt-4 pt-4 border-t">
+                    <Label>Attachments (Tender Documents, Quotations, etc.)</Label>
+                    <AttachmentUpload entityType="tender_quotation" entityId={editingItem.id} />
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>

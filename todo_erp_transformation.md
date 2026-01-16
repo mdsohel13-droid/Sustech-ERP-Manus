@@ -304,3 +304,43 @@
 - [x] Link to Action Tracker module
 - [x] Ensure consistent styling with other quick actions
 - [ ] Add visual indicators for action counts
+
+
+## Follow-up Enhancements - Phase 3
+
+### 1. Attachment Integration in Modules
+- [x] Add AttachmentUpload component to Projects module (project details)
+- [x] Add AttachmentUpload component to Tender/Quotation module
+- [x] Add AttachmentUpload component to HR module (employee documents)
+- [x] Display existing attachments with download/delete options
+- [ ] Test file upload and retrieval across all modules
+
+### 2. ### 2. Role-Based Navigation Enforcement
+- [x] Create usePermissions hook to check user module access
+- [x] Update DashboardLayout to hide inaccessible menu items
+- [x] Create AccessDenied page component
+- [x] Wrap routes with ProtectedRoute component
+- [ ] Test access control for different user roles roles
+
+### 3. HR Attendance Management
+- [ ] Create clock-in/clock-out UI with current time display
+- [ ] Add attendance history view with filters
+- [ ] Calculate daily/weekly/monthly work hours
+- [ ] Add late arrival and early departure tracking
+- [ ] Create attendance reports and analytics
+
+### 4. Leave Approval Workflow
+- [ ] Create leave application form with date picker
+- [ ] Add leave balance display per employee
+- [ ] Build approval queue for managers/admin
+- [ ] Add approve/reject functionality with comments
+- [ ] Send notifications on leave status changes
+- [ ] Update leave balances after approval
+
+### 5. Performance Review & KPI Tracking
+- [ ] Create KPI definition form for managers
+- [ ] Build employee performance review form
+- [ ] Add rating scales and feedback sections
+- [ ] Track KPI progress over time
+- [ ] Create performance analytics dashboard
+- [ ] Generate performance reports

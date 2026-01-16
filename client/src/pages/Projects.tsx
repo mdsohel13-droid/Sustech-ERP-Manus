@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
+import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
@@ -215,6 +216,12 @@ export default function Projects() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea id="description" name="description" rows={3} defaultValue={editingProject?.description || ""} />
                 </div>
+                {editingProject && (
+                  <div className="grid gap-2 mt-4 pt-4 border-t">
+                    <Label>Attachments</Label>
+                    <AttachmentUpload entityType="project" entityId={editingProject.id} />
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>

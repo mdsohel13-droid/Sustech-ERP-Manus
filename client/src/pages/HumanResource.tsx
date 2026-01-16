@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { AttachmentUpload } from "@/components/AttachmentUpload";
 
 const MODULES = [
   { name: 'dashboard', label: 'Dashboard' },
@@ -65,6 +66,8 @@ export default function HumanResource() {
   const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userPermissions, setUserPermissions] = useState<any[]>([]);
+  const [docsDialogOpen, setDocsDialogOpen] = useState(false);
+  const [selectedUserForDocs, setSelectedUserForDocs] = useState<any>(null);
 
   const utils = trpc.useUtils();
   
@@ -271,11 +274,13 @@ export default function HumanResource() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users & Access</TabsTrigger>
           <TabsTrigger value="employees">Employees</TabsTrigger>
+          <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="leaves">Leaves</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="roles">Role Guide</TabsTrigger>
         </TabsList>
 
@@ -439,6 +444,17 @@ export default function HumanResource() {
                               <Shield className="h-4 w-4 mr-1" />
                               Permissions
                             </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUserForDocs(u);
+                                setDocsDialogOpen(true);
+                              }}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              Docs
+                            </Button>
                           </div>
                         </TableCell>
                       )}
@@ -494,17 +510,479 @@ export default function HumanResource() {
           </Card>
         </TabsContent>
 
-        {/* Leaves Tab */}
-        <TabsContent value="leaves" className="space-y-6">
+        {/* Attendance Tab */}
+        <TabsContent value="attendance" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Clock In/Out Card */}
+            <Card className="border-2 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Clock In / Out
+                </CardTitle>
+                <CardDescription>Record your attendance for today</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center py-4">
+                  <div className="text-4xl font-bold tabular-nums">
+                    {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                </div>
+                <div className="flex gap-3 justify-center">
+                  <Button 
+                    size="lg" 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      alert('Clock In recorded at ' + new Date().toLocaleTimeString());
+                    }}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Clock In
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="destructive"
+                    onClick={() => {
+                      alert('Clock Out recorded at ' + new Date().toLocaleTimeString());
+                    }}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Clock Out
+                  </Button>
+                </div>
+                <p className="text-xs text-center text-muted-foreground">
+                  Your attendance will be recorded with timestamp and location (if enabled)
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Today's Status Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Today's Status</CardTitle>
+                <CardDescription>Your attendance summary for today</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium">Status</span>
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                      Present
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium">Clock In</span>
+                    <span className="text-sm">09:00 AM</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium">Clock Out</span>
+                    <span className="text-sm text-muted-foreground">Not yet</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium">Working Hours</span>
+                    <span className="text-sm">5h 30m</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Attendance History */}
           <Card>
             <CardHeader>
-              <CardTitle>Leave Management</CardTitle>
-              <CardDescription>Manage leave requests and balances</CardDescription>
+              <CardTitle>Attendance History</CardTitle>
+              <CardDescription>Your recent attendance records</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Leave management feature coming soon. Employees can apply for leaves and managers can approve/reject here.
-              </p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Clock In</TableHead>
+                    <TableHead>Clock Out</TableHead>
+                    <TableHead>Working Hours</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...Array(5)].map((_, idx) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() - idx);
+                    const statuses = ['Present', 'Present', 'Late', 'Present', 'Absent'];
+                    const status = statuses[idx];
+                    return (
+                      <TableRow key={idx}>
+                        <TableCell>{date.toLocaleDateString()}</TableCell>
+                        <TableCell>{status === 'Absent' ? '-' : idx === 2 ? '09:45 AM' : '09:00 AM'}</TableCell>
+                        <TableCell>{status === 'Absent' ? '-' : '06:00 PM'}</TableCell>
+                        <TableCell>{status === 'Absent' ? '-' : idx === 2 ? '8h 15m' : '9h 00m'}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={status === 'Present' ? 'default' : status === 'Late' ? 'secondary' : 'destructive'}
+                            className={status === 'Present' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : ''}
+                          >
+                            {status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Leaves Tab */}
+        <TabsContent value="leaves" className="space-y-6">
+          {/* Leave Balance Cards */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">12</div>
+                  <p className="text-sm text-muted-foreground">Annual Leave</p>
+                  <p className="text-xs text-muted-foreground mt-1">8 used / 4 remaining</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">10</div>
+                  <p className="text-sm text-muted-foreground">Sick Leave</p>
+                  <p className="text-xs text-muted-foreground mt-1">3 used / 7 remaining</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600">5</div>
+                  <p className="text-sm text-muted-foreground">Casual Leave</p>
+                  <p className="text-xs text-muted-foreground mt-1">2 used / 3 remaining</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-orange-600">3</div>
+                  <p className="text-sm text-muted-foreground">Pending Requests</p>
+                  <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Apply for Leave */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Apply for Leave</CardTitle>
+                <CardDescription>Submit a new leave request</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label>Leave Type</Label>
+                  <Select defaultValue="annual">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="annual">Annual Leave</SelectItem>
+                      <SelectItem value="sick">Sick Leave</SelectItem>
+                      <SelectItem value="casual">Casual Leave</SelectItem>
+                      <SelectItem value="unpaid">Unpaid Leave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Start Date</Label>
+                    <Input type="date" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>End Date</Label>
+                    <Input type="date" />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Reason</Label>
+                  <Input placeholder="Brief reason for leave" />
+                </div>
+                <Button className="w-full" onClick={() => alert('Leave request submitted! Awaiting manager approval.')}>
+                  Submit Leave Request
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Pending Approvals (for managers) */}
+            {isAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-orange-500" />
+                    Pending Approvals
+                  </CardTitle>
+                  <CardDescription>Leave requests awaiting your approval</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[{ name: 'John Doe', type: 'Annual Leave', dates: 'Jan 20-22, 2026', days: 3 },
+                      { name: 'Jane Smith', type: 'Sick Leave', dates: 'Jan 18, 2026', days: 1 },
+                      { name: 'Bob Wilson', type: 'Casual Leave', dates: 'Jan 25, 2026', days: 1 }].map((req, idx) => (
+                      <div key={idx} className="p-3 border rounded-lg space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{req.name}</span>
+                          <Badge variant="outline">{req.type}</Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>{req.dates}</span>
+                          <span>{req.days} day(s)</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => alert('Leave approved!')}>
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" className="flex-1" onClick={() => alert('Leave rejected.')}>
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Leave History */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Leave History</CardTitle>
+              <CardDescription>Your past leave requests and their status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
+                    <TableHead>Days</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Approved By</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[{ type: 'Annual Leave', start: '2026-01-10', end: '2026-01-12', days: 3, status: 'Approved', approver: 'Admin' },
+                    { type: 'Sick Leave', start: '2025-12-20', end: '2025-12-20', days: 1, status: 'Approved', approver: 'Manager' },
+                    { type: 'Casual Leave', start: '2025-12-05', end: '2025-12-05', days: 1, status: 'Rejected', approver: 'Manager' },
+                    { type: 'Annual Leave', start: '2025-11-25', end: '2025-11-27', days: 3, status: 'Approved', approver: 'Admin' }].map((leave, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>{leave.type}</TableCell>
+                      <TableCell>{leave.start}</TableCell>
+                      <TableCell>{leave.end}</TableCell>
+                      <TableCell>{leave.days}</TableCell>
+                      <TableCell>
+                        <Badge variant={leave.status === 'Approved' ? 'default' : leave.status === 'Pending' ? 'secondary' : 'destructive'}
+                          className={leave.status === 'Approved' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : ''}>
+                          {leave.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{leave.approver}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Performance Tab */}
+        <TabsContent value="performance" className="space-y-6">
+          {/* KPI Summary Cards */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">85%</div>
+                  <p className="text-sm text-muted-foreground">Overall Performance</p>
+                  <p className="text-xs text-green-600 mt-1">↑ 5% from last quarter</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-blue-500">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">12</div>
+                  <p className="text-sm text-muted-foreground">KPIs Tracked</p>
+                  <p className="text-xs text-muted-foreground mt-1">Across all employees</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-purple-500">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600">8</div>
+                  <p className="text-sm text-muted-foreground">Reviews Due</p>
+                  <p className="text-xs text-orange-600 mt-1">This month</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-orange-500">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-orange-600">92%</div>
+                  <p className="text-sm text-muted-foreground">Target Achievement</p>
+                  <p className="text-xs text-muted-foreground mt-1">Company-wide</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Create Performance Review */}
+            {isAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Performance Review</CardTitle>
+                  <CardDescription>Start a new employee performance evaluation</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label>Employee</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select employee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {employees?.map((emp) => (
+                          <SelectItem key={emp.employee.id} value={emp.employee.id.toString()}>{emp.user?.name || emp.employee.employeeCode}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Review Period</Label>
+                    <Select defaultValue="q1-2026">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="q1-2026">Q1 2026</SelectItem>
+                        <SelectItem value="q4-2025">Q4 2025</SelectItem>
+                        <SelectItem value="q3-2025">Q3 2025</SelectItem>
+                        <SelectItem value="annual-2025">Annual 2025</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Review Type</Label>
+                    <Select defaultValue="quarterly">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="quarterly">Quarterly Review</SelectItem>
+                        <SelectItem value="annual">Annual Review</SelectItem>
+                        <SelectItem value="probation">Probation Review</SelectItem>
+                        <SelectItem value="promotion">Promotion Review</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button className="w-full" onClick={() => alert('Performance review created!')}>
+                    Start Review
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* KPI Targets */}
+            <Card>
+              <CardHeader>
+                <CardTitle>KPI Targets</CardTitle>
+                <CardDescription>Current performance targets and progress</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[{ name: 'Sales Target', target: '৳50,00,000', current: '৳42,50,000', progress: 85 },
+                    { name: 'Customer Satisfaction', target: '90%', current: '88%', progress: 98 },
+                    { name: 'Project Completion', target: '100%', current: '75%', progress: 75 },
+                    { name: 'Response Time', target: '<2 hours', current: '1.5 hours', progress: 100 }].map((kpi, idx) => (
+                    <div key={idx} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{kpi.name}</span>
+                        <span className="text-sm text-muted-foreground">{kpi.current} / {kpi.target}</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${kpi.progress >= 90 ? 'bg-green-500' : kpi.progress >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                          style={{ width: `${kpi.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Performance Reviews Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Reviews</CardTitle>
+              <CardDescription>Recent and upcoming performance evaluations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Period</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[{ employee: 'John Doe', period: 'Q4 2025', type: 'Quarterly', rating: 4.2, status: 'Completed' },
+                    { employee: 'Jane Smith', period: 'Q4 2025', type: 'Quarterly', rating: 4.5, status: 'Completed' },
+                    { employee: 'Bob Wilson', period: 'Q1 2026', type: 'Quarterly', rating: null, status: 'Pending' },
+                    { employee: 'Alice Brown', period: 'Annual 2025', type: 'Annual', rating: 4.0, status: 'Completed' }].map((review, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="font-medium">{review.employee}</TableCell>
+                      <TableCell>{review.period}</TableCell>
+                      <TableCell>{review.type}</TableCell>
+                      <TableCell>
+                        {review.rating ? (
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">{review.rating}</span>
+                            <span className="text-yellow-500">★</span>
+                            <span className="text-muted-foreground text-xs">/ 5</span>
+                          </div>
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={review.status === 'Completed' ? 'default' : 'secondary'}
+                          className={review.status === 'Completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : ''}>
+                          {review.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => alert('View review details')}>
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
@@ -635,6 +1113,29 @@ export default function HumanResource() {
             </Button>
             <Button onClick={handleSavePermissions} disabled={setPermissionsMutation.isPending}>
               {setPermissionsMutation.isPending ? "Saving..." : "Save Permissions"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Employee Documents Dialog */}
+      <Dialog open={docsDialogOpen} onOpenChange={setDocsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Employee Documents - {selectedUserForDocs?.name}</DialogTitle>
+            <DialogDescription>
+              Upload and manage documents for this employee (ID cards, certificates, contracts, etc.)
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUserForDocs && (
+            <AttachmentUpload 
+              entityType="employee" 
+              entityId={selectedUserForDocs.id} 
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDocsDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
