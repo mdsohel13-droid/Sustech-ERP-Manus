@@ -161,3 +161,17 @@
 - [x] Integrate project financials with central finance module (transactions tracked per project)
 - [x] Write and pass vitest tests for project financial tracking
 - [ ] Add financial reports showing all project costs centrally
+
+
+## Bug Fix: API Fetch Error on Dashboard
+- [ ] Investigate "Failed to fetch" API query error on Dashboard page
+- [ ] Identify which tRPC query is failing
+- [ ] Fix the root cause of the fetch error
+- [ ] Test and verify the fix works
+
+## Bug Fix: OAuth Callback Error
+- [ ] Investigate "OAuth callback failed" error
+- [ ] Check server-side OAuth handler code
+- [ ] Review server logs for error details
+- [ ] Fix the root cause of OAuth failure
+- [ ] Test login flow
