@@ -175,3 +175,72 @@
 - [x] Review server logs for error details
 - [x] Fix the root cause of OAuth failure - database role enum missing 'viewer' value
 - [x] Test login flow - confirmed working on published site
+
+## Feature: Graphical Dashboard Enhancement
+- [x] Research reference dashboard design from SlideTeam
+- [x] Add charts and graphs for visual KPIs
+- [x] Implement revenue trends chart (Area chart)
+- [x] Add project status visualization (Pie chart)
+- [x] Create cash flow chart (Bar chart)
+- [x] Enhanced KPI cards with icons and colors
+- [x] Add border-left color coding for cards
+## Feature: Action Tracker
+- [x] Create action tracker schema (Actions, Decisions, Issues, Opportunities)
+- [x] Add color coding for different tracker types
+- [x] Build Quick Actions section in dashboard
+- [x] Create dedicated Action Tracker module/page with color-coded cards
+- [x] Implement list view with filters by type
+- [x] Add CRUD operations for tracker items
+- [x] Add navigation menu item
+
+## Feature: Tender/Quotation Tracking Module
+- [x] Create tender/quotation schema
+- [x] Separate tracking for Government Tenders and Private Quotations
+- [x] Implement fields: SL, Description, ID, Client, Submission Date, Follow-up Date
+- [x] Add status tracking (Not Started, Preparing, Submitted, Win/Loss/PO Received)
+- [x] Auto-transfer to Projects when status is "PO Received"
+- [x] Move to Archive when status is "Loss"
+- [x] Add overdue highlighting (orange) for follow-up dates
+- [x] Create summary section with overdue/upcoming alerts
+- [x] Add overdue/upcoming items query (3-4 days ahead)
+- [x] Add navigation menu item
+- [x] Create tabbed interface for Government/Private separation
+
+## Feature: Projects Financials UI Improvement
+- [ ] Redesign financials popup to landscape layout
+- [ ] Remove horizontal scrolling
+- [ ] Make transaction types editable
+- [ ] Enable adding new transaction types dynamically
+
+
+## Feature: Editable Transaction Types
+- [x] Create transaction_types table in database
+- [x] Add default transaction types (Revenue, Purchase, Expense, COGS, WACC)
+- [x] Add CRUD operations for transaction types
+- [x] Update ProjectFinancials to load types dynamically
+- [x] Add "Manage Types" button in financials dialog
+- [x] Allow adding new transaction types on-the-fly
+- [x] Improved financials popup to landscape layout (95% viewport width)
+- [x] Removed horizontal scrolling with responsive table design
+
+## Feature: Dynamic User Creation
+- [ ] Add user creation form in Users module
+- [ ] Add user creation form in Settings module
+- [ ] Implement user invitation system
+- [ ] Add role assignment during user creation
+- [ ] Add email validation and duplicate checking
+
+## Feature: HR Module Consolidation
+- [ ] Research HR best practices and KPI frameworks
+- [ ] Design comprehensive HR module structure
+- [ ] Merge Users and Team modules into "Human Resource"
+- [ ] Add employee profiles with complete information
+- [ ] Add department and position management
+- [ ] Implement attendance tracking
+- [ ] Add leave management system
+- [ ] Create performance review system
+- [ ] Add KPI definition and tracking per employee
+- [ ] Add payroll management integration
+- [ ] Create HR analytics dashboard
+- [ ] Add employee onboarding/offboarding workflows
+- [ ] Update navigation to replace Users/Team with HR

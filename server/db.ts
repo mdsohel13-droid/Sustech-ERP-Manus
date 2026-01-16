@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, desc, asc, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql, isNull, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users,
@@ -20,7 +20,10 @@ import {
   salesProducts, InsertSalesProduct,
   salesTracking, InsertSalesTracking,
   projectTransactions, InsertProjectTransaction,
-  incomeExpenditure, InsertIncomeExpenditure
+  incomeExpenditure, InsertIncomeExpenditure,
+  actionTracker, InsertActionTracker,
+  tenderQuotation, InsertTenderQuotation,
+  transactionTypes, InsertTransactionType
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -843,4 +846,191 @@ export async function deleteIncomeExpenditure(id: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(incomeExpenditure).where(eq(incomeExpenditure.id, id));
+}
+
+
+// ============ Action Tracker ============
+export async function createActionTracker(data: InsertActionTracker) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(actionTracker).values(data);
+  return result;
+}
+
+export async function getAllActionTrackers() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(actionTracker).orderBy(desc(actionTracker.createdAt));
+}
+
+export async function getActionTrackersByType(type: "action" | "decision" | "issue" | "opportunity") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(actionTracker).where(eq(actionTracker.type, type)).orderBy(desc(actionTracker.createdAt));
+}
+
+export async function getActionTrackerById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(actionTracker).where(eq(actionTracker.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateActionTracker(id: number, data: Partial<InsertActionTracker>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(actionTracker).set(data).where(eq(actionTracker.id, id));
+}
+
+export async function deleteActionTracker(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(actionTracker).where(eq(actionTracker.id, id));
+}
+
+export async function getOpenActionTrackers() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(actionTracker)
+    .where(eq(actionTracker.status, "open"))
+    .orderBy(desc(actionTracker.priority), desc(actionTracker.createdAt));
+}
+
+
+// ============ Tender/Quotation Tracking ============
+export async function createTenderQuotation(data: InsertTenderQuotation) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(tenderQuotation).values(data);
+  return result;
+}
+
+export async function getAllTenderQuotations() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(tenderQuotation)
+    .where(isNull(tenderQuotation.archivedAt))
+    .orderBy(desc(tenderQuotation.createdAt));
+}
+
+export async function getTenderQuotationsByType(type: "government_tender" | "private_quotation") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(tenderQuotation)
+    .where(and(
+      eq(tenderQuotation.type, type),
+      isNull(tenderQuotation.archivedAt)
+    ))
+    .orderBy(desc(tenderQuotation.createdAt));
+}
+
+export async function getTenderQuotationById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(tenderQuotation).where(eq(tenderQuotation.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateTenderQuotation(id: number, data: Partial<InsertTenderQuotation>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(tenderQuotation).set(data).where(eq(tenderQuotation.id, id));
+}
+
+export async function deleteTenderQuotation(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(tenderQuotation).where(eq(tenderQuotation.id, id));
+}
+
+export async function archiveTenderQuotation(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(tenderQuotation)
+    .set({ archivedAt: new Date() as any })
+    .where(eq(tenderQuotation.id, id));
+}
+
+export async function getOverdueTenderQuotations() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const today = new Date();
+  return await db.select().from(tenderQuotation)
+    .where(and(
+      isNull(tenderQuotation.archivedAt),
+      lt(tenderQuotation.followUpDate, today as any)
+    ))
+    .orderBy(asc(tenderQuotation.followUpDate));
+}
+
+export async function getUpcomingTenderQuotations(daysAhead: number = 3) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const today = new Date();
+  const futureDate = new Date();
+  futureDate.setDate(today.getDate() + daysAhead);
+  
+  return await db.select().from(tenderQuotation)
+    .where(and(
+      isNull(tenderQuotation.archivedAt),
+      gte(tenderQuotation.followUpDate, today as any),
+      lte(tenderQuotation.followUpDate, futureDate as any)
+    ))
+    .orderBy(asc(tenderQuotation.followUpDate));
+}
+
+
+// ============ Transaction Types ============
+export async function getAllTransactionTypes() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(transactionTypes)
+    .where(eq(transactionTypes.isActive, true))
+    .orderBy(asc(transactionTypes.name));
+}
+
+export async function createTransactionType(data: InsertTransactionType) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(transactionTypes).values(data);
+  return result;
+}
+
+export async function updateTransactionType(id: number, data: Partial<InsertTransactionType>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(transactionTypes).set(data).where(eq(transactionTypes.id, id));
+}
+
+export async function deleteTransactionType(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if it's a system type
+  const type = await db.select().from(transactionTypes).where(eq(transactionTypes.id, id)).limit(1);
+  if (type[0]?.isSystem) {
+    throw new Error("Cannot delete system transaction type");
+  }
+  
+  // Soft delete by setting isActive to false
+  await db.update(transactionTypes).set({ isActive: false }).where(eq(transactionTypes.id, id));
 }

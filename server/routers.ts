@@ -996,6 +996,245 @@ Provide 2-3 actionable business insights.`;
         return { success: true };
       }),
   }),
+
+  // ============ Action Tracker Module ============
+  actionTracker: router({
+    create: protectedProcedure
+      .input(z.object({
+        type: z.enum(["action", "decision", "issue", "opportunity"]),
+        title: z.string(),
+        description: z.string().optional(),
+        status: z.enum(["open", "in_progress", "resolved", "closed"]).optional(),
+        priority: z.enum(["low", "medium", "high", "critical"]).optional(),
+        assignedTo: z.number().optional(),
+        dueDate: z.string().optional(),
+        tags: z.string().optional(),
+        relatedModule: z.string().optional(),
+        relatedId: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { dueDate, ...data } = input;
+        await db.createActionTracker({
+          ...data,
+          dueDate: dueDate ? (new Date(dueDate) as any) : undefined,
+          createdBy: ctx.user.id
+        });
+        return { success: true };
+      }),
+
+    getAll: protectedProcedure.query(async () => {
+      return await db.getAllActionTrackers();
+    }),
+
+    getByType: protectedProcedure
+      .input(z.object({ type: z.enum(["action", "decision", "issue", "opportunity"]) }))
+      .query(async ({ input }) => {
+        return await db.getActionTrackersByType(input.type);
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getActionTrackerById(input.id);
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        type: z.enum(["action", "decision", "issue", "opportunity"]).optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        status: z.enum(["open", "in_progress", "resolved", "closed"]).optional(),
+        priority: z.enum(["low", "medium", "high", "critical"]).optional(),
+        assignedTo: z.number().optional(),
+        dueDate: z.string().optional(),
+        resolvedDate: z.string().optional(),
+        tags: z.string().optional(),
+        relatedModule: z.string().optional(),
+        relatedId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, dueDate, resolvedDate, ...data } = input;
+        await db.updateActionTracker(id, {
+          ...data,
+          dueDate: dueDate ? (new Date(dueDate) as any) : undefined,
+          resolvedDate: resolvedDate ? (new Date(resolvedDate) as any) : undefined,
+        });
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteActionTracker(input.id);
+        return { success: true };
+      }),
+
+    getOpen: protectedProcedure.query(async () => {
+      return await db.getOpenActionTrackers();
+    }),
+  }),
+
+  // ============ Tender/Quotation Tracking Module ============
+  tenderQuotation: router({
+    create: protectedProcedure
+      .input(z.object({
+        type: z.enum(["government_tender", "private_quotation"]),
+        referenceId: z.string(),
+        description: z.string(),
+        clientName: z.string(),
+        submissionDate: z.string(),
+        followUpDate: z.string().optional(),
+        status: z.enum(["not_started", "preparing", "submitted", "win", "loss", "po_received"]).optional(),
+        estimatedValue: z.string().optional(),
+        currency: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { submissionDate, followUpDate, ...data } = input;
+        await db.createTenderQuotation({
+          ...data,
+          submissionDate: new Date(submissionDate) as any,
+          followUpDate: followUpDate ? (new Date(followUpDate) as any) : undefined,
+          createdBy: ctx.user.id
+        });
+        return { success: true };
+      }),
+
+    getAll: protectedProcedure.query(async () => {
+      return await db.getAllTenderQuotations();
+    }),
+
+    getByType: protectedProcedure
+      .input(z.object({ type: z.enum(["government_tender", "private_quotation"]) }))
+      .query(async ({ input }) => {
+        return await db.getTenderQuotationsByType(input.type);
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getTenderQuotationById(input.id);
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        type: z.enum(["government_tender", "private_quotation"]).optional(),
+        referenceId: z.string().optional(),
+        description: z.string().optional(),
+        clientName: z.string().optional(),
+        submissionDate: z.string().optional(),
+        followUpDate: z.string().optional(),
+        status: z.enum(["not_started", "preparing", "submitted", "win", "loss", "po_received"]).optional(),
+        estimatedValue: z.string().optional(),
+        currency: z.string().optional(),
+        notes: z.string().optional(),
+        transferredToProjectId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, submissionDate, followUpDate, ...data } = input;
+        
+        // Auto-transfer to Projects if status is "po_received"
+        if (data.status === "po_received" && !data.transferredToProjectId) {
+          const tender = await db.getTenderQuotationById(id);
+          if (tender) {
+            // Create new project from tender/quotation
+            const projectResult = await db.createProject({
+              name: tender.description,
+              customerName: tender.clientName,
+              stage: "lead",
+              value: tender.estimatedValue || "0",
+              currency: tender.currency,
+              startDate: new Date() as any,
+              description: `Transferred from ${tender.type === "government_tender" ? "Government Tender" : "Private Quotation"}: ${tender.referenceId}`,
+              createdBy: tender.createdBy
+            });
+            
+            // Update tender with project ID
+            data.transferredToProjectId = Number(projectResult[0].insertId);
+          }
+        }
+        
+        // Archive if status is "loss"
+        if (data.status === "loss") {
+          await db.archiveTenderQuotation(id);
+        }
+        
+        await db.updateTenderQuotation(id, {
+          ...data,
+          submissionDate: submissionDate ? (new Date(submissionDate) as any) : undefined,
+          followUpDate: followUpDate ? (new Date(followUpDate) as any) : undefined,
+        });
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteTenderQuotation(input.id);
+        return { success: true };
+      }),
+
+    archive: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.archiveTenderQuotation(input.id);
+        return { success: true };
+      }),
+
+    getOverdue: protectedProcedure.query(async () => {
+      return await db.getOverdueTenderQuotations();
+    }),
+
+    getUpcoming: protectedProcedure
+      .input(z.object({ daysAhead: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await db.getUpcomingTenderQuotations(input.daysAhead || 3);
+      }),
+  }),
+
+  // ============ Transaction Types ============
+  transactionTypes: router({
+    getAll: protectedProcedure.query(async () => {
+      return await db.getAllTransactionTypes();
+    }),
+
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        code: z.string(),
+        category: z.enum(["income", "expense"]),
+        description: z.string().optional(),
+        color: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createTransactionType(input);
+        return { success: true };
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        code: z.string().optional(),
+        category: z.enum(["income", "expense"]).optional(),
+        description: z.string().optional(),
+        color: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateTransactionType(id, data);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteTransactionType(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

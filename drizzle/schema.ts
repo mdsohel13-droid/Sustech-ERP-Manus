@@ -570,3 +570,72 @@ export const currencyRates = mysqlTable("currency_rates", {
 
 export type CurrencyRate = typeof currencyRates.$inferSelect;
 export type InsertCurrencyRate = typeof currencyRates.$inferInsert;
+
+/**
+ * Action Tracker - for tracking Actions, Decisions, Issues, and Opportunities
+ */
+export const actionTracker = mysqlTable("action_tracker", {
+  id: int("id").autoincrement().primaryKey(),
+  type: mysqlEnum("type", ["action", "decision", "issue", "opportunity"]).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  status: mysqlEnum("status", ["open", "in_progress", "resolved", "closed"]).default("open").notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "critical"]).default("medium").notNull(),
+  assignedTo: int("assignedTo"),
+  dueDate: date("dueDate"),
+  resolvedDate: date("resolvedDate"),
+  tags: text("tags"), // JSON array of tags
+  relatedModule: varchar("relatedModule", { length: 100 }), // projects, customers, sales, etc.
+  relatedId: int("relatedId"), // ID of related item
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ActionTracker = typeof actionTracker.$inferSelect;
+export type InsertActionTracker = typeof actionTracker.$inferInsert;
+
+/**
+ * Tender/Quotation Tracking - for Government Tenders and Private Quotations
+ */
+export const tenderQuotation = mysqlTable("tender_quotation", {
+  id: int("id").autoincrement().primaryKey(),
+  type: mysqlEnum("type", ["government_tender", "private_quotation"]).notNull(),
+  referenceId: varchar("referenceId", { length: 100 }).notNull(), // Tender/Quotation ID
+  description: text("description").notNull(),
+  clientName: varchar("clientName", { length: 255 }).notNull(),
+  submissionDate: date("submissionDate").notNull(),
+  followUpDate: date("followUpDate"),
+  status: mysqlEnum("status", ["not_started", "preparing", "submitted", "win", "loss", "po_received"]).default("not_started").notNull(),
+  estimatedValue: decimal("estimatedValue", { precision: 15, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  notes: text("notes"),
+  attachments: text("attachments"), // JSON array of file URLs
+  transferredToProjectId: int("transferredToProjectId"), // ID of project if auto-transferred
+  archivedAt: timestamp("archivedAt"), // When moved to archive
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TenderQuotation = typeof tenderQuotation.$inferSelect;
+export type InsertTenderQuotation = typeof tenderQuotation.$inferInsert;
+
+/**
+ * Transaction Types - for customizable project financial transaction categories
+ */
+export const transactionTypes = mysqlTable("transaction_types", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  code: varchar("code", { length: 50 }).notNull().unique(), // e.g., "revenue", "expense"
+  category: mysqlEnum("category", ["income", "expense"]).notNull(),
+  description: text("description"),
+  color: varchar("color", { length: 50 }).default("gray"), // For UI color coding
+  isSystem: boolean("isSystem").default(false).notNull(), // System types can't be deleted
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TransactionType = typeof transactionTypes.$inferSelect;
+export type InsertTransactionType = typeof transactionTypes.$inferInsert;

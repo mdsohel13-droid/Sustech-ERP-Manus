@@ -11,7 +11,13 @@ import {
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
-  Lightbulb
+  Lightbulb,
+  TrendingDown,
+  Activity,
+  Target,
+  CheckCircle2,
+  Clock,
+  AlertTriangle
 } from "lucide-react";
 import { Link } from "wouter";
 import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
@@ -19,6 +25,23 @@ import { startOfMonth, endOfMonth } from "date-fns";
 import { useState } from "react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  AreaChart
+} from 'recharts';
 
 export default function Home() {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -59,6 +82,33 @@ export default function Home() {
   const totalCustomers = customersByStatus.reduce((sum, c) => sum + Number(c.count), 0);
   const hotCustomers = customersByStatus.find(c => c.status === 'hot')?.count || 0;
 
+  // Mock data for charts (replace with real data from backend)
+  const revenueData = [
+    { month: 'Jul', revenue: 18000, target: 20000 },
+    { month: 'Aug', revenue: 22000, target: 20000 },
+    { month: 'Sep', revenue: 19000, target: 20000 },
+    { month: 'Oct', revenue: 25000, target: 20000 },
+    { month: 'Nov', revenue: 21000, target: 20000 },
+    { month: 'Dec', revenue: 23000, target: 20000 },
+  ];
+
+  const projectStatusData = projectsByStage.map(p => ({
+    name: p.stage,
+    value: Number(p.count),
+    amount: Number(p.totalValue)
+  }));
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+  const cashFlowData = [
+    { month: 'Jul', income: 25000, expense: 18000 },
+    { month: 'Aug', income: 28000, expense: 20000 },
+    { month: 'Sep', income: 26000, expense: 19000 },
+    { month: 'Oct', income: 32000, expense: 22000 },
+    { month: 'Nov', income: 29000, expense: 21000 },
+    { month: 'Dec', income: 31000, expense: 23000 },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -74,122 +124,136 @@ export default function Home() {
         <DateRangeFilter value={dateRange} onChange={setDateRange} />
       </div>
 
-      {/* Key Metrics Grid */}
+      {/* Key Metrics Grid - Enhanced with Icons and Colors */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Financial Health */}
-        <Card className="editorial-card hover:shadow-lg transition-shadow">
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium label-text">Net Position</CardTitle>
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">NET POSITION</CardTitle>
+            <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
+            <div className="text-4xl font-bold">
               {formatCurrency(netPosition, currency)}
             </div>
-            <div className="flex items-center gap-2 mt-2 text-sm">
-              <span className="text-muted-foreground">AR: {formatCurrency(arTotal, currency)}</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">AP: {formatCurrency(apTotal, currency)}</span>
+            <div className="flex items-center gap-4 mt-3 text-sm">
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">AR:</span>
+                <span className="font-semibold text-green-600">{formatCurrency(arTotal, currency)}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">AP:</span>
+                <span className="font-semibold text-orange-600">{formatCurrency(apTotal, currency)}</span>
+              </div>
             </div>
             {(arOverdue > 0 || apOverdue > 0) && (
-              <div className="flex items-center gap-1 mt-2 text-xs text-destructive">
+              <div className="flex items-center gap-1 mt-3 text-xs text-red-600 bg-red-50 dark:bg-red-950 p-2 rounded">
                 <AlertCircle className="h-3 w-3" />
                 <span>Overdue items detected</span>
               </div>
             )}
             <Link href="/financial">
-              <Button variant="link" size="sm" className="mt-2 px-0">
-                View Details <ArrowUpRight className="h-3 w-3 ml-1" />
+              <Button variant="link" className="mt-2 p-0 h-auto text-blue-600">
+                View Details <ArrowUpRight className="ml-1 h-3 w-3" />
               </Button>
             </Link>
           </CardContent>
         </Card>
 
-        {/* Projects */}
-        <Card className="editorial-card hover:shadow-lg transition-shadow">
+        {/* Active Projects */}
+        <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium label-text">Active Projects</CardTitle>
-            <Briefcase className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">ACTIVE PROJECTS</CardTitle>
+            <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+              <Briefcase className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{totalProjects}</div>
-            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-              <TrendingUp className="h-4 w-4" />
-              <span>Total Value: {formatCurrency(totalProjectValue, currency)}</span>
+            <div className="text-4xl font-bold">{totalProjects}</div>
+            <div className="flex items-center gap-2 mt-3">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-600">
+                Total Value: {formatCurrency(totalProjectValue, currency)}
+              </span>
             </div>
-            <div className="mt-3 space-y-1">
-              {projectsByStage.slice(0, 3).map((stage) => (
-                <div key={stage.stage} className="flex justify-between text-xs">
-                  <span className="capitalize text-muted-foreground">{stage.stage}</span>
-                  <span className="font-medium">{stage.count}</span>
+            <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+              {projectsByStage.slice(0, 2).map((stage) => (
+                <div key={stage.stage} className="flex flex-col">
+                  <span className="text-muted-foreground capitalize">{stage.stage}</span>
+                  <span className="font-semibold">{stage.count}</span>
                 </div>
               ))}
             </div>
             <Link href="/projects">
-              <Button variant="link" size="sm" className="mt-2 px-0">
-                View Pipeline <ArrowUpRight className="h-3 w-3 ml-1" />
+              <Button variant="link" className="mt-2 p-0 h-auto text-purple-600">
+                View Pipeline <ArrowUpRight className="ml-1 h-3 w-3" />
               </Button>
             </Link>
           </CardContent>
         </Card>
 
-        {/* Customers */}
-        <Card className="editorial-card hover:shadow-lg transition-shadow">
+        {/* Total Customers */}
+        <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium label-text">Total Customers</CardTitle>
-            <Users className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">TOTAL CUSTOMERS</CardTitle>
+            <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+              <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{totalCustomers}</div>
-            <div className="flex items-center gap-2 mt-2 text-sm">
-              <span className="px-2 py-1 rounded-full bg-red-100 text-red-800 text-xs font-medium">
-                {hotCustomers} Hot
-              </span>
-              <span className="text-muted-foreground text-xs">High priority leads</span>
-            </div>
-            <div className="mt-3 space-y-1">
-              {customersByStatus.map((status) => (
-                <div key={status.status} className="flex justify-between text-xs">
-                  <span className="capitalize text-muted-foreground">{status.status}</span>
-                  <span className="font-medium">{status.count}</span>
+            <div className="text-4xl font-bold">{totalCustomers}</div>
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                  <span className="text-muted-foreground">{hotCustomers} Hot</span>
+                </span>
+                <span className="font-semibold text-red-600">High priority leads</span>
+              </div>
+              {customersByStatus.slice(0, 2).map((status) => (
+                <div key={status.status} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="capitalize">{status.status}</span>
+                  <span className="font-semibold">{status.count}</span>
                 </div>
               ))}
             </div>
             <Link href="/customers">
-              <Button variant="link" size="sm" className="mt-2 px-0">
-                View CRM <ArrowUpRight className="h-3 w-3 ml-1" />
+              <Button variant="link" className="mt-2 p-0 h-auto text-green-600">
+                View CRM <ArrowUpRight className="ml-1 h-3 w-3" />
               </Button>
             </Link>
           </CardContent>
         </Card>
 
         {/* Quick Actions */}
-        <Card className="editorial-card hover:shadow-lg transition-shadow bg-accent/10">
+        <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium label-text">Quick Actions</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">QUICK ACTIONS</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Link href="/projects">
               <Button variant="outline" size="sm" className="w-full justify-start">
-                <Briefcase className="h-4 w-4 mr-2" />
+                <Briefcase className="mr-2 h-4 w-4" />
                 Add New Project
               </Button>
             </Link>
             <Link href="/customers">
               <Button variant="outline" size="sm" className="w-full justify-start">
-                <Users className="h-4 w-4 mr-2" />
+                <Users className="mr-2 h-4 w-4" />
                 Add Customer
               </Button>
             </Link>
             <Link href="/financial">
               <Button variant="outline" size="sm" className="w-full justify-start">
-                <DollarSign className="h-4 w-4 mr-2" />
+                <DollarSign className="mr-2 h-4 w-4" />
                 Record Transaction
               </Button>
             </Link>
             <Link href="/ideas">
               <Button variant="outline" size="sm" className="w-full justify-start">
-                <Lightbulb className="h-4 w-4 mr-2" />
+                <Lightbulb className="mr-2 h-4 w-4" />
                 Capture Idea
               </Button>
             </Link>
@@ -197,166 +261,176 @@ export default function Home() {
         </Card>
       </div>
 
-      {/* LLM Insights Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-semibold">AI-Generated Insights</h2>
-          <InsightActions />
-        </div>
-        {insights && insights.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {insights.map((insight) => (
-              <Card key={insight.id} className="insight-card">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{insight.title}</CardTitle>
-                      <CardDescription className="label-text mt-1">
-                        {insight.insightType.toUpperCase()}
-                      </CardDescription>
-                    </div>
-                    <Lightbulb className="h-5 w-5 text-primary" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-foreground/90 leading-relaxed">
-                    {insight.summary}
-                  </p>
-                  {insight.recommendations && (
-                    <div className="mt-4 pt-4 border-t border-border/50">
-                      <p className="text-xs label-text mb-2">RECOMMENDATIONS</p>
-                      <p className="text-sm text-muted-foreground">
-                        {insight.recommendations}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>              </Card>
-            ))}
+      {/* Charts Section */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Revenue Trend Chart */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Revenue Trend
+            </CardTitle>
+            <CardDescription>Monthly revenue vs target (Last 6 months)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  formatter={(value: number) => formatCurrency(value, currency)}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#3b82f6" 
+                  fillOpacity={1} 
+                  fill="url(#colorRevenue)" 
+                  strokeWidth={2}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="target" 
+                  stroke="#f59e0b" 
+                  strokeDasharray="5 5" 
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Project Status Distribution */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-purple-600" />
+              Project Status Distribution
+            </CardTitle>
+            <CardDescription>Current projects by stage</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={projectStatusData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {projectStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `${value} projects`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Cash Flow Chart */}
+        <Card className="col-span-1 md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              Cash Flow Analysis
+            </CardTitle>
+            <CardDescription>Income vs Expenses (Last 6 months)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={cashFlowData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  formatter={(value: number) => formatCurrency(value, currency)}
+                />
+                <Legend />
+                <Bar dataKey="income" fill="#10b981" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="expense" fill="#ef4444" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI-Generated Insights */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-yellow-500" />
+                AI-Generated Insights
+              </CardTitle>
+              <CardDescription>Data-driven recommendations for your business</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toast.info("AI Insights generation started")}
+              >
+                Generate AI Insights
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toast.success("Notification sent")}
+              >
+                Check & Notify
+              </Button>
+            </div>
           </div>
-        ) : (
-          <Card className="editorial-card">
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <p className="text-muted-foreground text-center">No insights generated yet. Click "Generate AI Insights" above to analyze your data.</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Status Overview */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="editorial-card">
-          <CardHeader>
-            <CardTitle className="text-lg">Financial Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Accounts Receivable</span>
-              <span className="font-semibold">${arTotal.toLocaleString()}</span>
+        </CardHeader>
+        <CardContent>
+          {insights && insights.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {insights.map((insight) => (
+                <Card key={insight.id} className="border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-yellow-500" />
+                        <CardTitle className="text-base">{insight.title}</CardTitle>
+                      </div>
+                      <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                        {insight.insightType.toUpperCase()}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">{insight.summary}</p>
+                    {insight.recommendations && (
+                      <p className="text-sm text-blue-600 mt-2 font-medium">{insight.recommendations}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            {arOverdue > 0 && (
-              <div className="flex justify-between items-center text-destructive">
-                <span className="text-sm flex items-center gap-1">
-                  <ArrowDownRight className="h-3 w-3" />
-                  Overdue
-                </span>
-                <span className="font-semibold">${arOverdue.toLocaleString()}</span>
-              </div>
-            )}
-            <div className="divider-line my-2" />
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Accounts Payable</span>
-              <span className="font-semibold">${apTotal.toLocaleString()}</span>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Lightbulb className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No insights available. Click "Generate AI Insights" to analyze your data.</p>
             </div>
-            {apOverdue > 0 && (
-              <div className="flex justify-between items-center text-destructive">
-                <span className="text-sm flex items-center gap-1">
-                  <ArrowDownRight className="h-3 w-3" />
-                  Overdue
-                </span>
-                <span className="font-semibold">${apOverdue.toLocaleString()}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="editorial-card">
-          <CardHeader>
-            <CardTitle className="text-lg">Project Pipeline</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {projectsByStage.map((stage) => (
-              <div key={stage.stage} className="flex justify-between items-center">
-                <span className="text-sm capitalize text-muted-foreground">{stage.stage}</span>
-                <div className="text-right">
-                  <div className="font-semibold">{stage.count} projects</div>
-                  <div className="text-xs text-muted-foreground">
-                    ${Number(stage.totalValue).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="editorial-card">
-          <CardHeader>
-            <CardTitle className="text-lg">Customer Distribution</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {customersByStatus.map((status) => (
-              <div key={status.status} className="flex justify-between items-center">
-                <span className={`text-sm capitalize px-3 py-1 rounded-full border status-${status.status}`}>
-                  {status.status}
-                </span>
-                <span className="font-semibold">{status.count} customers</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-
-// Add insight generation button component
-function InsightActions() {
-  const utils = trpc.useUtils();
-  const generateMutation = trpc.insights.generate.useMutation({
-    onSuccess: (data) => {
-      utils.dashboard.getInsights.invalidate();
-      toast.success(`Generated ${data.count} new insights`);
-    },
-  });
-
-  const notifyMutation = trpc.notifications.checkAndNotify.useMutation({
-    onSuccess: (data) => {
-      if (data.alertsSent > 0) {
-        toast.success(`Sent ${data.alertsSent} alert notifications`);
-      } else {
-        toast.info("No alerts to send");
-      }
-    },
-  });
-
-  return (
-    <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => generateMutation.mutate()}
-        disabled={generateMutation.isPending}
-      >
-        {generateMutation.isPending ? "Generating..." : "Generate AI Insights"}
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => notifyMutation.mutate()}
-        disabled={notifyMutation.isPending}
-      >
-        {notifyMutation.isPending ? "Checking..." : "Check & Notify"}
-      </Button>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

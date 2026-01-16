@@ -15,6 +15,20 @@
       "when": 1768505273660,
       "tag": "0001_omniscient_mulholland_black",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1768584731944,
+      "tag": "0002_opposite_valeria_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1768586187798,
+      "tag": "0003_exotic_glorian",
+      "breakpoints": true
     }
   ]
 }
