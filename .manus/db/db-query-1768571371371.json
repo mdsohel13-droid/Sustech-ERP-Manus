@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'manager', 'viewer', 'user') NOT NULL DEFAULT 'viewer';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'manager', 'viewer', 'user') NOT NULL DEFAULT 'viewer';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 507
+}

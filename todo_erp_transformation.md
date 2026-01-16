@@ -170,8 +170,8 @@
 - [ ] Test and verify the fix works
 
 ## Bug Fix: OAuth Callback Error
-- [ ] Investigate "OAuth callback failed" error
-- [ ] Check server-side OAuth handler code
-- [ ] Review server logs for error details
-- [ ] Fix the root cause of OAuth failure
-- [ ] Test login flow
+- [x] Investigate "OAuth callback failed" error
+- [x] Check server-side OAuth handler code
+- [x] Review server logs for error details
+- [x] Fix the root cause of OAuth failure - database role enum missing 'viewer' value
+- [x] Test login flow - confirmed working on published site
