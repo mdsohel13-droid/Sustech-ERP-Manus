@@ -139,3 +139,19 @@
 ## Bug Fixes - AI Insights
 - [x] Fix JSON parsing error in AI insights generation
 - [x] Ensure LLM response is properly structured as JSON using json_schema
+
+
+## Bug Fixes - OAuth
+- [ ] Investigate OAuth callback error
+- [ ] Check server logs for authentication issues
+- [ ] Verify OAuth configuration
+
+
+## Project Module Enhancements
+- [x] Fix list view to hide Kanban board when list view is selected
+- [x] Add project financial tracking (budget, expenses, COGS, WACC, profit/loss)
+- [x] Create project transaction entry forms
+- [x] Display financial summary within each project
+- [x] Integrate project financials with central finance module (transactions tracked per project)
+- [x] Write and pass vitest tests for project financial tracking
+- [ ] Add financial reports showing all project costs centrally

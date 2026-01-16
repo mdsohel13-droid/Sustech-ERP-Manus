@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown } from "lucide-react";
+import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/currencyUtils";
+import { ProjectFinancials } from "@/components/ProjectFinancials";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -30,6 +31,8 @@ export default function Projects() {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [sortField, setSortField] = useState<'name' | 'value' | 'createdAt'>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [financialsOpen, setFinancialsOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const utils = trpc.useUtils();
   const { data: projects } = trpc.projects.getAll.useQuery();
@@ -238,45 +241,49 @@ export default function Projects() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {(["lead", "proposal", "won", "execution", "testing"] as ProjectStage[]).map((stage) => (
-          <div key={stage} className="kanban-column" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, stage)}>
-            <h3 className="font-medium mb-4 label-text">{stageLabels[stage]}</h3>
-            <div className="space-y-3">
-              {getProjectsByStage(stage).map((project) => (
-                <div key={project.id} className="kanban-card" draggable onDragStart={() => handleDragStart(project.id)}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm">{project.name}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{project.customerName}</p>
+      {/* Kanban View */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {(["lead", "proposal", "won", "execution", "testing"] as ProjectStage[]).map((stage) => (
+            <div key={stage} className="kanban-column" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, stage)}>
+              <h3 className="font-medium mb-4 label-text">{stageLabels[stage]}</h3>
+              <div className="space-y-3">
+                {getProjectsByStage(stage).map((project) => (
+                  <div key={project.id} className="kanban-card" draggable onDragStart={() => handleDragStart(project.id)}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm">{project.name}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">{project.customerName}</p>
+                      </div>
+                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                     </div>
-                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                    {project.value && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                        <DollarSign className="h-3 w-3" />
+                        <span>${Number(project.value).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {project.expectedCloseDate && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                        <Calendar className="h-3 w-3" />
+                        <span>{format(new Date(project.expectedCloseDate), "MMM dd, yyyy")}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      <Badge className={`text-xs ${getPriorityColor(project.priority)}`}>{project.priority}</Badge>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setFinancialsOpen(true); }}><Wallet className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setEditingProject(project); setDialogOpen(true); }}>Edit</Button>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); if (confirm("Delete this project?")) { deleteMutation.mutate({ id: project.id }); } }}>Delete</Button>
+                      </div>
+                    </div>
                   </div>
-                  {project.value && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                      <DollarSign className="h-3 w-3" />
-                      <span>${Number(project.value).toLocaleString()}</span>
-                    </div>
-                  )}
-                  {project.expectedCloseDate && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                      <Calendar className="h-3 w-3" />
-                      <span>{format(new Date(project.expectedCloseDate), "MMM dd, yyyy")}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mt-2">
-                    <Badge className={`text-xs ${getPriorityColor(project.priority)}`}>{project.priority}</Badge>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setEditingProject(project); setDialogOpen(true); }}>Edit</Button>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); if (confirm("Delete this project?")) { deleteMutation.mutate({ id: project.id }); } }}>Delete</Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* List View */}
       {viewMode === 'list' && (
@@ -339,6 +346,7 @@ export default function Projects() {
                         <td className="p-4 max-w-xs truncate">{project.description || "-"}</td>
                         <td className="p-4 text-right">
                           <div className="flex gap-1 justify-end">
+                            <Button variant="ghost" size="sm" onClick={() => { setSelectedProject(project); setFinancialsOpen(true); }}><Wallet className="h-4 w-4 mr-1" />Financials</Button>
                             <Button variant="ghost" size="sm" onClick={() => { setEditingProject(project); setDialogOpen(true); }}>Edit</Button>
                             <Button variant="ghost" size="sm" onClick={() => { if (confirm("Delete this project?")) { deleteMutation.mutate({ id: project.id }); } }}>Delete</Button>
                           </div>
@@ -350,6 +358,16 @@ export default function Projects() {
             </div>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Project Financials Dialog */}
+      {selectedProject && (
+        <ProjectFinancials
+          projectId={selectedProject.id}
+          projectName={selectedProject.name}
+          open={financialsOpen}
+          onOpenChange={setFinancialsOpen}
+        />
       )}
     </div>
   );

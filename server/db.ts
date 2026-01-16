@@ -18,7 +18,8 @@ import {
   dashboardInsights, InsertDashboardInsight,
   notificationLog, InsertNotificationLog,
   salesProducts, InsertSalesProduct,
-  salesTracking, InsertSalesTracking
+  salesTracking, InsertSalesTracking,
+  projectTransactions, InsertProjectTransaction
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -638,4 +639,90 @@ export async function createSalesperson(person: any) {
   
   const [result] = await db.insert(salesProducts).values(person);
   return result;
+}
+
+
+// ===== Project Financial Transactions =====
+export async function createProjectTransaction(transaction: InsertProjectTransaction) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(projectTransactions).values(transaction);
+  return result.insertId;
+}
+
+export async function getProjectTransactions(projectId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(projectTransactions)
+    .where(eq(projectTransactions.projectId, projectId))
+    .orderBy(desc(projectTransactions.transactionDate));
+}
+
+export async function getProjectFinancialSummary(projectId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const transactions = await db
+    .select()
+    .from(projectTransactions)
+    .where(eq(projectTransactions.projectId, projectId));
+  
+  let totalRevenue = 0;
+  let totalPurchases = 0;
+  let totalExpenses = 0;
+  let totalCOGS = 0;
+  let totalWACC = 0;
+  
+  transactions.forEach((t) => {
+    const amount = Number(t.amount);
+    switch (t.transactionType) {
+      case "revenue":
+        totalRevenue += amount;
+        break;
+      case "purchase":
+        totalPurchases += amount;
+        break;
+      case "expense":
+        totalExpenses += amount;
+        break;
+      case "cogs":
+        totalCOGS += amount;
+        break;
+      case "wacc":
+        totalWACC += amount;
+        break;
+    }
+  });
+  
+  const totalCosts = totalPurchases + totalExpenses + totalCOGS + totalWACC;
+  const profitLoss = totalRevenue - totalCosts;
+  
+  return {
+    totalRevenue,
+    totalPurchases,
+    totalExpenses,
+    totalCOGS,
+    totalWACC,
+    totalCosts,
+    profitLoss,
+    profitMargin: totalRevenue > 0 ? (profitLoss / totalRevenue) * 100 : 0,
+  };
+}
+
+export async function updateProjectTransaction(id: number, data: Partial<InsertProjectTransaction>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(projectTransactions).set(data).where(eq(projectTransactions.id, id));
+}
+
+export async function deleteProjectTransaction(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(projectTransactions).where(eq(projectTransactions.id, id));
 }

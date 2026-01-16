@@ -245,6 +245,67 @@ export const appRouter = router({
     getStats: protectedProcedure.query(async () => {
       return await db.getProjectStats();
     }),
+    
+    // Project Financial Transactions
+    createTransaction: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+        transactionDate: z.string(),
+        transactionType: z.enum(["revenue", "purchase", "expense", "cogs", "wacc"]),
+        amount: z.string(),
+        currency: z.string().optional(),
+        description: z.string().optional(),
+        category: z.string().optional(),
+        invoiceNumber: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { transactionDate, ...data } = input;
+        await db.createProjectTransaction({
+          ...data,
+          transactionDate: new Date(transactionDate) as any,
+          createdBy: ctx.user.id
+        });
+        return { success: true };
+      }),
+    
+    getTransactions: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getProjectTransactions(input.projectId);
+      }),
+    
+    getFinancialSummary: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getProjectFinancialSummary(input.projectId);
+      }),
+    
+    updateTransaction: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        transactionDate: z.string().optional(),
+        transactionType: z.enum(["revenue", "purchase", "expense", "cogs", "wacc"]).optional(),
+        amount: z.string().optional(),
+        currency: z.string().optional(),
+        description: z.string().optional(),
+        category: z.string().optional(),
+        invoiceNumber: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, transactionDate, ...data } = input;
+        await db.updateProjectTransaction(id, {
+          ...data,
+          ...(transactionDate ? { transactionDate: new Date(transactionDate) as any } : {}),
+        });
+        return { success: true };
+      }),
+    
+    deleteTransaction: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProjectTransaction(input.id);
+        return { success: true };
+      }),
   }),
 
   // ============ Customer Module ============
