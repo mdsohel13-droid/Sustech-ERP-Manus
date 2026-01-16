@@ -7,13 +7,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Shield, Trash2, UserCog } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Shield, Trash2, UserCog, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
 export default function Users() {
   const { user: currentUser } = useAuth();
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
   const utils = trpc.useUtils();
   const { data: users, isLoading } = trpc.users.getAll.useQuery();
@@ -38,6 +42,27 @@ export default function Users() {
       toast.error(error.message || "Failed to delete user");
     },
   });
+
+  const createUserMutation = trpc.users.create.useMutation({
+    onSuccess: () => {
+      utils.users.getAll.invalidate();
+      toast.success("User created successfully");
+      setCreateDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create user");
+    },
+  });
+
+  const handleCreateUser = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createUserMutation.mutate({
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      role: formData.get("role") as "admin" | "manager" | "viewer" | "user",
+    });
+  };
 
   const handleRoleChange = (userId: number, newRole: string) => {
     updateRoleMutation.mutate({
@@ -97,6 +122,67 @@ export default function Users() {
           <h1>User Management</h1>
           <p className="text-muted-foreground text-lg mt-2">Manage user roles and permissions</p>
         </div>
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add New User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <form onSubmit={handleCreateUser}>
+              <DialogHeader>
+                <DialogTitle>Create New User</DialogTitle>
+                <DialogDescription>
+                  Add a new user to the system with specified role and permissions
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select name="role" defaultValue="viewer" required>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin - Full access</SelectItem>
+                      <SelectItem value="manager">Manager - Edit operations</SelectItem>
+                      <SelectItem value="viewer">Viewer - Read-only access</SelectItem>
+                      <SelectItem value="user">User - Standard access</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createUserMutation.isPending}>
+                  {createUserMutation.isPending ? "Creating..." : "Create User"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Role Descriptions */}

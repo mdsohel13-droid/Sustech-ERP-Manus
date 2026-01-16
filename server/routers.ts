@@ -774,6 +774,37 @@ Provide 2-3 actionable business insights.`;
       return await db.getAllUsers();
     }),
 
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email address"),
+        role: z.enum(["admin", "manager", "viewer", "user"]),
+        openId: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        
+        // Check if user with this email already exists
+        const existingUser = await db.getUserByEmail(input.email);
+        if (existingUser) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'User with this email already exists' });
+        }
+        
+        // Create user with generated openId if not provided
+        const openId = input.openId || `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        await db.createUser({
+          openId,
+          name: input.name,
+          email: input.email,
+          loginMethod: 'manual',
+          role: input.role,
+        });
+        
+        return { success: true };
+      }),
+
     updateRole: protectedProcedure
       .input(z.object({
         userId: z.number(),
@@ -1232,6 +1263,36 @@ Provide 2-3 actionable business insights.`;
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteTransactionType(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============ HR Module ============
+  hr: router({
+    getDashboardStats: protectedProcedure.query(async () => {
+      return await db.getHRDashboardStats();
+    }),
+
+    getAllEmployees: protectedProcedure.query(async () => {
+      return await db.getAllEmployees();
+    }),
+
+    getPendingLeaveApplications: protectedProcedure.query(async () => {
+      return await db.getPendingLeaveApplications();
+    }),
+
+    getAllDepartments: protectedProcedure.query(async () => {
+      return await db.getAllDepartments();
+    }),
+
+    createDepartment: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        description: z.string().optional(),
+        headId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createDepartment(input);
         return { success: true };
       }),
   }),

@@ -50,6 +50,9 @@ export default function Home() {
   });
   const { data: overview, isLoading } = trpc.dashboard.getOverview.useQuery();
   const { data: insights } = trpc.dashboard.getInsights.useQuery();
+  const { data: overdueTenders } = trpc.tenderQuotation.getOverdue.useQuery();
+  const { data: upcomingTenders } = trpc.tenderQuotation.getUpcoming.useQuery({ daysAhead: 4 });
+  const { data: openActions } = trpc.actionTracker.getOpen.useQuery();
   const { currency } = useCurrency();
 
   if (isLoading) {
@@ -260,6 +263,109 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Notifications & Alerts Section */}
+      {((overdueTenders && overdueTenders.length > 0) || (upcomingTenders && upcomingTenders.length > 0) || (openActions && openActions.length > 0)) && (
+        <div className="grid gap-6 md:grid-cols-3 mb-6">
+          {/* Overdue Tenders/Quotations */}
+          {overdueTenders && overdueTenders.length > 0 && (
+            <Card className="border-l-4 border-l-red-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  Overdue Follow-ups ({overdueTenders.length})
+                </CardTitle>
+                <CardDescription>Tenders/Quotations requiring immediate attention</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {overdueTenders.slice(0, 5).map((item: any) => (
+                    <Link key={item.id} href="/tender-quotation">
+                      <div className="p-2 bg-red-50 dark:bg-red-950 rounded hover:bg-red-100 dark:hover:bg-red-900 transition-colors cursor-pointer">
+                        <p className="font-medium text-sm truncate">{item.description}</p>
+                        <p className="text-xs text-muted-foreground">{item.clientName}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                {overdueTenders.length > 5 && (
+                  <Link href="/tender-quotation">
+                    <Button variant="link" size="sm" className="mt-2 p-0 h-auto text-red-600">
+                      View all {overdueTenders.length} items →
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Upcoming Tenders/Quotations */}
+          {upcomingTenders && upcomingTenders.length > 0 && (
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-orange-600">
+                  <Clock className="h-4 w-4" />
+                  Upcoming Follow-ups ({upcomingTenders.length})
+                </CardTitle>
+                <CardDescription>Due in the next 4 days</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {upcomingTenders.slice(0, 5).map((item: any) => (
+                    <Link key={item.id} href="/tender-quotation">
+                      <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors cursor-pointer">
+                        <p className="font-medium text-sm truncate">{item.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.clientName} • Due: {item.followUpDate && new Date(item.followUpDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                {upcomingTenders.length > 5 && (
+                  <Link href="/tender-quotation">
+                    <Button variant="link" size="sm" className="mt-2 p-0 h-auto text-orange-600">
+                      View all {upcomingTenders.length} items →
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Open Action Items */}
+          {openActions && openActions.length > 0 && (
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-blue-600">
+                  <Target className="h-4 w-4" />
+                  Open Action Items ({openActions.length})
+                </CardTitle>
+                <CardDescription>Pending actions and decisions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {openActions.slice(0, 5).map((item: any) => (
+                    <Link key={item.id} href="/action-tracker">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors cursor-pointer">
+                        <p className="font-medium text-sm truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{item.type}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                {openActions.length > 5 && (
+                  <Link href="/action-tracker">
+                    <Button variant="link" size="sm" className="mt-2 p-0 h-auto text-blue-600">
+                      View all {openActions.length} items →
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Charts Section */}
       <div className="grid gap-6 md:grid-cols-2">

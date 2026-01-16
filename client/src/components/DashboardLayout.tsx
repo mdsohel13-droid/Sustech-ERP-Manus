@@ -35,14 +35,13 @@ const getMenuItems = (userRole?: string) => {
     { icon: TrendingUp, label: "Sales", path: "/sales" },
     { icon: Briefcase, label: "Projects", path: "/projects" },
     { icon: Users, label: "Customers", path: "/customers" },
-    { icon: UsersRound, label: "Team", path: "/team" },
+    { icon: Users, label: "Human Resource", path: "/hr" },
     { icon: Lightbulb, label: "Ideas", path: "/ideas" },
     { icon: Target, label: "Action Tracker", path: "/action-tracker" },
     { icon: FileText, label: "Tender/Quotation", path: "/tender-quotation" },
   ];
   
   if (userRole === 'admin') {
-    baseItems.push({ icon: Shield, label: "Users", path: "/users" });
     baseItems.push({ icon: Settings, label: "Settings", path: "/settings" });
   }
   

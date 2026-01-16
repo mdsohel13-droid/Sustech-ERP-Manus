@@ -639,3 +639,134 @@ export const transactionTypes = mysqlTable("transaction_types", {
 
 export type TransactionType = typeof transactionTypes.$inferSelect;
 export type InsertTransactionType = typeof transactionTypes.$inferInsert;
+
+/**
+ * HR Module - Comprehensive Human Resource Management
+ */
+
+// Departments
+export const departments = mysqlTable("departments", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  headId: int("headId"), // FK to employees
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = typeof departments.$inferInsert;
+
+// Positions
+export const positions = mysqlTable("positions", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 100 }).notNull(),
+  departmentId: int("departmentId").notNull(),
+  level: varchar("level", { length: 50 }), // Junior, Mid, Senior, Lead, Manager
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Position = typeof positions.$inferSelect;
+export type InsertPosition = typeof positions.$inferInsert;
+
+// Employees (extends users)
+export const employees = mysqlTable("employees", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(), // FK to users table
+  employeeCode: varchar("employeeCode", { length: 50 }).notNull().unique(),
+  departmentId: int("departmentId"),
+  positionId: int("positionId"),
+  jobTitle: varchar("jobTitle", { length: 100 }),
+  employmentType: mysqlEnum("employmentType", ["full_time", "part_time", "contract", "intern"]).default("full_time").notNull(),
+  joinDate: date("joinDate").notNull(),
+  contractEndDate: date("contractEndDate"),
+  managerId: int("managerId"), // FK to employees (self-reference)
+  salaryGrade: varchar("salaryGrade", { length: 50 }),
+  workLocation: varchar("workLocation", { length: 100 }),
+  workSchedule: varchar("workSchedule", { length: 100 }), // e.g., "9 AM - 6 PM"
+  emergencyContactName: varchar("emergencyContactName", { length: 100 }),
+  emergencyContactPhone: varchar("emergencyContactPhone", { length: 50 }),
+  status: mysqlEnum("status", ["active", "on_leave", "terminated"]).default("active").notNull(),
+  terminationDate: date("terminationDate"),
+  terminationReason: text("terminationReason"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Employee = typeof employees.$inferSelect;
+export type InsertEmployee = typeof employees.$inferInsert;
+
+// Attendance Records (enhanced)
+export const attendanceRecords = mysqlTable("attendance_records", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  date: date("date").notNull(),
+  clockIn: timestamp("clockIn"),
+  clockOut: timestamp("clockOut"),
+  workHours: decimal("workHours", { precision: 5, scale: 2 }),
+  status: mysqlEnum("status", ["present", "absent", "late", "half_day", "wfh", "on_leave"]).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
+export type InsertAttendanceRecord = typeof attendanceRecords.$inferInsert;
+
+// Leave Balances
+export const leaveBalances = mysqlTable("leave_balances", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  leaveType: varchar("leaveType", { length: 50 }).notNull(), // annual, sick, casual, maternity, paternity
+  totalDays: decimal("totalDays", { precision: 5, scale: 1 }).notNull(),
+  usedDays: decimal("usedDays", { precision: 5, scale: 1 }).default("0").notNull(),
+  availableDays: decimal("availableDays", { precision: 5, scale: 1 }).notNull(),
+  year: int("year").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeaveBalance = typeof leaveBalances.$inferSelect;
+export type InsertLeaveBalance = typeof leaveBalances.$inferInsert;
+
+// Leave Applications (enhanced)
+export const leaveApplications = mysqlTable("leave_applications", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  leaveType: varchar("leaveType", { length: 50 }).notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
+  daysCount: decimal("daysCount", { precision: 5, scale: 1 }).notNull(),
+  reason: text("reason").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "cancelled"]).default("pending").notNull(),
+  approvedBy: int("approvedBy"),
+  approvedAt: timestamp("approvedAt"),
+  rejectionReason: text("rejectionReason"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeaveApplication = typeof leaveApplications.$inferSelect;
+export type InsertLeaveApplication = typeof leaveApplications.$inferInsert;
+
+// Performance Reviews
+export const performanceReviews = mysqlTable("performance_reviews", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  reviewerId: int("reviewerId").notNull(),
+  reviewPeriod: varchar("reviewPeriod", { length: 50 }).notNull(), // e.g., "Q1 2026", "Annual 2025"
+  reviewDate: date("reviewDate").notNull(),
+  overallRating: decimal("overallRating", { precision: 3, scale: 1 }), // e.g., 4.5 out of 5
+  strengths: text("strengths"),
+  areasForImprovement: text("areasForImprovement"),
+  goals: text("goals"),
+  comments: text("comments"),
+  status: mysqlEnum("status", ["draft", "submitted", "acknowledged"]).default("draft").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PerformanceReview = typeof performanceReviews.$inferSelect;
+export type InsertPerformanceReview = typeof performanceReviews.$inferInsert;

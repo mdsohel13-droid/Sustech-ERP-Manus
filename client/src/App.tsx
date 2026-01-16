@@ -16,7 +16,8 @@ import SalesEnhanced from "./pages/SalesEnhanced";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import IncomeExpenditure from "./pages/IncomeExpenditure";
-import ActionTracker from "./pages/ActionTracker";
+import ActionTracker from "@/pages/ActionTracker";
+import HumanResource from "@/pages/HumanResource";
 import TenderQuotation from "./pages/TenderQuotation";
 
 function Router() {
@@ -80,6 +81,11 @@ function Router() {
       <Route path={"/tender-quotation"}>
         <DashboardLayout>
           <TenderQuotation />
+        </DashboardLayout>
+      </Route>
+      <Route path={"/hr"}>
+        <DashboardLayout>
+          <HumanResource />
         </DashboardLayout>
       </Route>
       <Route path={"/404"} component={NotFound} />

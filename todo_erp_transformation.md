@@ -223,23 +223,37 @@
 - [x] Improved financials popup to landscape layout (95% viewport width)
 - [x] Removed horizontal scrolling with responsive table design
 
-## Feature: Dynamic User Creation
-- [ ] Add user creation form in Users module
-- [ ] Add user creation form in Settings module
-- [ ] Implement user invitation system
-- [ ] Add role assignment during user creation
-- [ ] Add email validation and duplicate checking
+## Feature: Dashboard Widgets & Notifications
+- [x] Add overdue tenders/quotations widget to dashboard
+- [x] Add upcoming tenders/quotations widget (next 4 days)
+- [x] Add open action items widget
+- [x] Clickable cards linking to respective modules
+- [x] Real-time count badges
+- [x] Scrollable list with "View all" links
 
+## Feature: Dynamic User Creation
+- [x] Add user creation form in Users module
+- [x] Backend API for user creation with validation
+- [x] Add role assignment during user creation
+- [x] Add email validation and duplicate checking
+- [x] Prevent duplicate email addresses
+- [x] Generate unique openId for manually created users
 ## Feature: HR Module Consolidation
-- [ ] Research HR best practices and KPI frameworks
-- [ ] Design comprehensive HR module structure
-- [ ] Merge Users and Team modules into "Human Resource"
-- [ ] Add employee profiles with complete information
-- [ ] Add department and position management
-- [ ] Implement attendance tracking
-- [ ] Add leave management system
-- [ ] Create performance review system
-- [ ] Add KPI definition and tracking per employee
+- [x] Research HR best practices and KPI frameworks
+- [x] Design comprehensive HR module structure
+- [x] Database schema for HR module (departments, positions, employees, attendance_records, leave_balances, leave_applications, performance_reviews)
+- [x] HR module backend functions (departments, positions, employees, attendance, leaves, performance)
+- [x] HR module tRPC router procedures
+- [x] HR Dashboard with key metrics and analytics
+- [x] Employee directory with details
+- [x] Pending leave requests display
+- [x] Replace Team and Users with unified Human Resource menu
+- [x] Tab-based interface (Overview, Employees, Attendance, Leaves, Performance)
+- [ ] Complete attendance management UI
+- [ ] Complete leave management UI with approval workflow
+- [ ] Performance review and KPI tracking UI
+- [ ] Employee profile detail pages
+- [ ] Department and position management UIacking per employee
 - [ ] Add payroll management integration
 - [ ] Create HR analytics dashboard
 - [ ] Add employee onboarding/offboarding workflows
