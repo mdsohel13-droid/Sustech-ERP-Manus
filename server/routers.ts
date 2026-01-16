@@ -1268,6 +1268,40 @@ Provide 2-3 actionable business insights.`;
       }),
   }),
 
+  // ============ Permissions ============
+  permissions: router({
+    getMyPermissions: protectedProcedure.query(async ({ ctx }) => {
+      const permissions = await db.getUserPermissions(ctx.user.id);
+      // If no permissions set, return defaults based on role
+      if (permissions.length === 0) {
+        return db.getDefaultPermissionsByRole(ctx.user.role);
+      }
+      return permissions;
+    }),
+
+    getUserPermissions: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUserPermissions(input.userId);
+      }),
+
+    setUserPermissions: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        permissions: z.array(z.object({
+          moduleName: z.string(),
+          canView: z.boolean(),
+          canCreate: z.boolean(),
+          canEdit: z.boolean(),
+          canDelete: z.boolean(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        await db.setUserPermissionsBulk(input.userId, input.permissions);
+        return { success: true };
+      }),
+  }),
+
   // ============ Attachments ============
   attachments: router({
     getByEntity: protectedProcedure

@@ -796,3 +796,20 @@ export const attachments = mysqlTable("attachments", {
 
 export type Attachment = typeof attachments.$inferSelect;
 export type InsertAttachment = typeof attachments.$inferInsert;
+
+
+// ============ Module Permissions (Role-Based Access Control) ============
+export const modulePermissions = mysqlTable("module_permissions", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("user_id").notNull(),
+  moduleName: varchar("module_name", { length: 50 }).notNull(), // dashboard, financial, sales, projects, customers, hr, action_tracker, tender_quotation, settings
+  canView: boolean("can_view").default(true).notNull(),
+  canCreate: boolean("can_create").default(false).notNull(),
+  canEdit: boolean("can_edit").default(false).notNull(),
+  canDelete: boolean("can_delete").default(false).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+});
+
+export type ModulePermission = typeof modulePermissions.$inferSelect;
+export type InsertModulePermission = typeof modulePermissions.$inferInsert;

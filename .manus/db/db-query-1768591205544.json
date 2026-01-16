@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `module_permissions` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `user_id` int NOT NULL,\n  `module_name` varchar(50) NOT NULL,\n  `can_view` boolean NOT NULL DEFAULT true,\n  `can_create` boolean NOT NULL DEFAULT false,\n  `can_edit` boolean NOT NULL DEFAULT false,\n  `can_delete` boolean NOT NULL DEFAULT false,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `module_permissions_id` PRIMARY KEY(`id`),\n  UNIQUE KEY `user_module_unique` (`user_id`, `module_name`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute CREATE TABLE IF NOT EXISTS `module_permissions` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `user_id` int NOT NULL,\n  `module_name` varchar(50) NOT NULL,\n  `can_view` boolean NOT NULL DEFAULT true,\n  `can_create` boolean NOT NULL DEFAULT false,\n  `can_edit` boolean NOT NULL DEFAULT false,\n  `can_delete` boolean NOT NULL DEFAULT false,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `module_permissions_id` PRIMARY KEY(`id`),\n  UNIQUE KEY `user_module_unique` (`user_id`, `module_name`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 174
+}

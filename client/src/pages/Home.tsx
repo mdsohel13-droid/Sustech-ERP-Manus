@@ -260,6 +260,12 @@ export default function Home() {
                 Capture Idea
               </Button>
             </Link>
+            <Link href="/action-tracker">
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Target className="mr-2 h-4 w-4" />
+                Action Tracker
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

@@ -43,6 +43,13 @@
       "when": 1768590688502,
       "tag": "0005_workable_lady_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1768591480317,
+      "tag": "0006_plain_shocker",
+      "breakpoints": true
     }
   ]
 }

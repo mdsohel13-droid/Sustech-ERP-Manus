@@ -2,6 +2,7 @@ import { eq, and, gte, lte, desc, asc, sql, isNull, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   attachments, Attachment, InsertAttachment,
+  modulePermissions, ModulePermission, InsertModulePermission,
   users, InsertUser,
   accountsReceivable, InsertAccountsReceivable,
   accountsPayable, InsertAccountsPayable,
@@ -1332,4 +1333,105 @@ export async function deleteAttachmentRecord(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(attachments).where(eq(attachments.id, id));
+}
+
+
+// ============ Module Permissions ============
+export async function getUserPermissions(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(modulePermissions).where(eq(modulePermissions.userId, userId));
+}
+
+export async function setUserPermission(data: InsertModulePermission) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if permission exists
+  const existing = await db.select().from(modulePermissions)
+    .where(and(
+      eq(modulePermissions.userId, data.userId),
+      eq(modulePermissions.moduleName, data.moduleName)
+    ));
+  
+  if (existing.length > 0) {
+    // Update existing
+    await db.update(modulePermissions)
+      .set({
+        canView: data.canView,
+        canCreate: data.canCreate,
+        canEdit: data.canEdit,
+        canDelete: data.canDelete,
+      })
+      .where(eq(modulePermissions.id, existing[0].id));
+  } else {
+    // Insert new
+    await db.insert(modulePermissions).values(data);
+  }
+}
+
+export async function setUserPermissionsBulk(userId: number, permissions: Array<{
+  moduleName: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Delete existing permissions for user
+  await db.delete(modulePermissions).where(eq(modulePermissions.userId, userId));
+  
+  // Insert new permissions
+  for (const perm of permissions) {
+    await db.insert(modulePermissions).values({
+      userId,
+      moduleName: perm.moduleName,
+      canView: perm.canView,
+      canCreate: perm.canCreate,
+      canEdit: perm.canEdit,
+      canDelete: perm.canDelete,
+    });
+  }
+}
+
+export async function deleteUserPermissions(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(modulePermissions).where(eq(modulePermissions.userId, userId));
+}
+
+// Default permissions by role
+export function getDefaultPermissionsByRole(role: string) {
+  const modules = ['dashboard', 'financial', 'income_expenditure', 'sales', 'projects', 'customers', 'hr', 'action_tracker', 'tender_quotation', 'ideas', 'settings'];
+  
+  if (role === 'admin') {
+    return modules.map(m => ({
+      moduleName: m,
+      canView: true,
+      canCreate: true,
+      canEdit: true,
+      canDelete: true,
+    }));
+  }
+  
+  if (role === 'manager') {
+    return modules.map(m => ({
+      moduleName: m,
+      canView: true,
+      canCreate: m !== 'settings',
+      canEdit: m !== 'settings',
+      canDelete: m !== 'settings' && m !== 'hr',
+    }));
+  }
+  
+  // viewer role - read only
+  return modules.map(m => ({
+    moduleName: m,
+    canView: m !== 'settings' && m !== 'hr',
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+  }));
 }
