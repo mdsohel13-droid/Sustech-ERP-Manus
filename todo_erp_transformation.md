@@ -258,3 +258,49 @@
 - [ ] Create HR analytics dashboard
 - [ ] Add employee onboarding/offboarding workflows
 - [ ] Update navigation to replace Users/Team with HR
+
+
+## Critical Modifications - Phase 2
+
+### 1. Universal Document Attachment System
+- [x] Create attachments database table (entity_type, entity_id, file_url, file_name, file_type, file_size, uploaded_by, uploaded_at)
+- [x] Add attachment upload component with S3 integration
+- [x] Add attachment display/download component
+- [x] Create attachments tRPC router (upload, getByEntity, delete)
+- [x] Implement S3 file storage integration
+- [ ] Integrate attachments in Projects module
+- [ ] Integrate attachments in Tender/Quotation module
+- [ ] Integrate attachments in Sales module
+- [ ] Integrate attachments in Customers module
+- [ ] Integrate attachments in Financial module
+- [ ] Integrate attachments in Income & Expenditure module
+- [ ] Integrate attachments in HR module (employee documents)
+
+### 2. Financial Module Integration (CA-level)
+- [ ] Merge Income & Expenditure into Financial module as sub-section
+- [ ] Link Sales module to Financial - auto-create income entries
+- [ ] Implement automatic Accounts Receivable from Sales
+- [ ] Add aging analysis for receivables (30/60/90 days)
+- [ ] Link project payments to income tracking
+- [ ] Create unified financial dashboard with P&L view
+- [ ] Add cash flow statement integration
+- [ ] Implement double-entry bookkeeping principles
+- [ ] Add financial period closing functionality
+- [ ] Create trial balance view
+
+### 3. HR Module Fixes & Role-Based Access Control
+- [ ] Fix employee creation functionality in HR module
+- [ ] Create module_permissions table (user_id, module_name, can_view, can_create, can_edit, can_delete)
+- [ ] Implement role-based access control middleware
+- [ ] Add module access management UI for admin/owner
+- [ ] Restrict Sales Executive/Manager to Sales module only
+- [ ] Implement granular permission checking in all modules
+- [ ] Add permission management in user creation/edit
+- [ ] Update navigation to show only accessible modules
+- [ ] Add "Access Denied" pages for unauthorized access
+
+### 4. Dashboard Quick Actions Enhancement
+- [ ] Add Action Tracker quick action button
+- [ ] Link to Action Tracker module with pre-filled form
+- [ ] Add visual indicators for action counts
+- [ ] Ensure consistent styling with other quick actions

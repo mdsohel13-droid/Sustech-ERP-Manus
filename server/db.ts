@@ -1,7 +1,8 @@
 import { eq, and, gte, lte, desc, asc, sql, isNull, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { 
-  InsertUser, users,
+import {
+  attachments, Attachment, InsertAttachment,
+  users, InsertUser,
   accountsReceivable, InsertAccountsReceivable,
   accountsPayable, InsertAccountsPayable,
   sales, InsertSales,
@@ -1306,4 +1307,29 @@ export async function getHRDashboardStats() {
     pendingLeaves: pendingLeaves[0]?.count || 0,
     employeesByDept,
   };
+}
+
+
+// ============ Attachments ============
+export async function createAttachmentRecord(data: InsertAttachment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(attachments).values(data);
+}
+
+export async function getAttachmentsByEntity(entityType: string, entityId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(attachments)
+    .where(and(
+      eq(attachments.entityType, entityType as any),
+      eq(attachments.entityId, entityId)
+    ))
+    .orderBy(desc(attachments.uploadedAt));
+}
+
+export async function deleteAttachmentRecord(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(attachments).where(eq(attachments.id, id));
 }

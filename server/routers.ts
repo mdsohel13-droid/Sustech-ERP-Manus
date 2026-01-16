@@ -14,6 +14,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 });
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
+import { storagePut } from "./storage";
 import * as db from "./db";
 
 export const appRouter = router({
@@ -1263,6 +1264,61 @@ Provide 2-3 actionable business insights.`;
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteTransactionType(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============ Attachments ============
+  attachments: router({
+    getByEntity: protectedProcedure
+      .input(z.object({
+        entityType: z.string(),
+        entityId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getAttachmentsByEntity(input.entityType, input.entityId);
+      }),
+
+    upload: protectedProcedure
+      .input(z.object({
+        entityType: z.string(),
+        entityId: z.number(),
+        fileName: z.string(),
+        fileData: z.string(), // base64
+        fileType: z.string().optional(),
+        fileSize: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Convert base64 to buffer and upload to S3
+        const base64Data = input.fileData.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique file key
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const fileKey = `attachments/${input.entityType}/${input.entityId}/${timestamp}-${randomSuffix}-${input.fileName}`;
+        
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.fileType);
+        
+        // Save to database
+        await db.createAttachmentRecord({
+          entityType: input.entityType as any,
+          entityId: input.entityId,
+          fileName: input.fileName,
+          fileUrl: url,
+          fileType: input.fileType,
+          fileSize: input.fileSize,
+          uploadedBy: ctx.user.id,
+        });
+        
+        return { success: true, url };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteAttachmentRecord(input.id);
         return { success: true };
       }),
   }),

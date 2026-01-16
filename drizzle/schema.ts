@@ -770,3 +770,29 @@ export const performanceReviews = mysqlTable("performance_reviews", {
 
 export type PerformanceReview = typeof performanceReviews.$inferSelect;
 export type InsertPerformanceReview = typeof performanceReviews.$inferInsert;
+
+
+// ============ Universal Attachments ============
+export const attachments = mysqlTable("attachments", {
+  id: int("id").primaryKey().autoincrement(),
+  entityType: mysqlEnum("entity_type", [
+    "project",
+    "tender_quotation",
+    "sale",
+    "customer",
+    "financial_transaction",
+    "income_expenditure",
+    "employee",
+    "action_tracker",
+  ]).notNull(),
+  entityId: int("entity_id").notNull(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileType: varchar("file_type", { length: 100 }),
+  fileSize: int("file_size"), // in bytes
+  uploadedBy: int("uploaded_by").notNull(),
+  uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
+});
+
+export type Attachment = typeof attachments.$inferSelect;
+export type InsertAttachment = typeof attachments.$inferInsert;
