@@ -47,11 +47,17 @@
 - [ ] Create downloadable CSV/Excel template for import
 - [ ] Validate and process bulk customer data
 - [ ] Fix edit functionality for customers
-- [ ] Create Income & Expenditure module
-- [ ] Track sales income (products & services)
-- [ ] Track all expense types
-- [ ] Create income vs expenditure reports
-- [ ] Add monthly/yearly financial summaries
+- [x] Fix currency inconsistency across all modules
+- [x] Implement global currency context reading from system settings
+- [x] Update Dashboard to use global currency from settings
+- [x] Update Financial module to use global currency from settings
+- [x] Update Projects module to use global currency from settings
+- [x] Create Income & Expenditure module
+- [x] Track sales income (products & services)
+- [x] Track all expense types
+- [x] Create income vs expenditure reports
+- [x] Add monthly/yearly financial summaries
+- [x] Write and pass vitest tests for Income & Expenditure module
 
 ## Phase 6: Marketing & Branding Module
 - [ ] Research marketing and branding best practices

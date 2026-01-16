@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
 import Financial from "./pages/Financial";
@@ -14,6 +15,7 @@ import Ideas from "./pages/Ideas";
 import SalesEnhanced from "./pages/SalesEnhanced";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
+import IncomeExpenditure from "./pages/IncomeExpenditure";
 
 function Router() {
   return (
@@ -63,6 +65,11 @@ function Router() {
           <Settings />
         </DashboardLayout>
       </Route>
+      <Route path={"/income-expenditure"}>
+        <DashboardLayout>
+          <IncomeExpenditure />
+        </DashboardLayout>
+      </Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -73,10 +80,12 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <CurrencyProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </CurrencyProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

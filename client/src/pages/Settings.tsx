@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Save, Palette, Globe, Archive, Bell, Building2 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function Settings() {
   const utils = trpc.useUtils();
@@ -50,6 +51,19 @@ export default function Settings() {
     emailNotifications: "enabled",
     reminderFrequency: "daily",
   });
+
+  // Load existing settings from database
+  useEffect(() => {
+    if (settings && settings.length > 0) {
+      const newFormData = { ...formData };
+      settings.forEach((setting) => {
+        if (setting.settingKey in newFormData) {
+          (newFormData as any)[setting.settingKey] = setting.settingValue || (newFormData as any)[setting.settingKey];
+        }
+      });
+      setFormData(newFormData);
+    }
+  }, [settings]);
 
   const handleSave = (category: string) => {
     Object.entries(formData).forEach(([key, value]) => {

@@ -17,6 +17,8 @@ import { Link } from "wouter";
 import { DateRangeFilter, type DateRange } from "@/components/DateRangeFilter";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { useState } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currencyUtils";
 
 export default function Home() {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -25,6 +27,7 @@ export default function Home() {
   });
   const { data: overview, isLoading } = trpc.dashboard.getOverview.useQuery();
   const { data: insights } = trpc.dashboard.getInsights.useQuery();
+  const { currency } = useCurrency();
 
   if (isLoading) {
     return (
@@ -81,12 +84,12 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ${netPosition.toLocaleString()}
+              {formatCurrency(netPosition, currency)}
             </div>
             <div className="flex items-center gap-2 mt-2 text-sm">
-              <span className="text-muted-foreground">AR: ${arTotal.toLocaleString()}</span>
+              <span className="text-muted-foreground">AR: {formatCurrency(arTotal, currency)}</span>
               <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">AP: ${apTotal.toLocaleString()}</span>
+              <span className="text-muted-foreground">AP: {formatCurrency(apTotal, currency)}</span>
             </div>
             {(arOverdue > 0 || apOverdue > 0) && (
               <div className="flex items-center gap-1 mt-2 text-xs text-destructive">
@@ -112,7 +115,7 @@ export default function Home() {
             <div className="text-3xl font-bold">{totalProjects}</div>
             <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
               <TrendingUp className="h-4 w-4" />
-              <span>Total Value: ${totalProjectValue.toLocaleString()}</span>
+              <span>Total Value: {formatCurrency(totalProjectValue, currency)}</span>
             </div>
             <div className="mt-3 space-y-1">
               {projectsByStage.slice(0, 3).map((stage) => (

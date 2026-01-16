@@ -36,6 +36,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { Download } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currencyUtils";
 
 export default function Financial() {
   const [arDialogOpen, setArDialogOpen] = useState(false);
@@ -45,6 +47,7 @@ export default function Financial() {
   const [editingAP, setEditingAP] = useState<any>(null);
 
   const utils = trpc.useUtils();
+  const { currency } = useCurrency();
   const { data: arList } = trpc.financial.getAllAR.useQuery();
   const { data: apList } = trpc.financial.getAllAP.useQuery();
   const { data: arSummary } = trpc.financial.getARSummary.useQuery();
@@ -226,16 +229,16 @@ export default function Financial() {
             <TrendingUp className="h-5 w-5 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">${Number(arSummary?.total || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold">{formatCurrency(arSummary?.total || 0, currency)}</div>
             <div className="mt-2 space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Pending</span>
-                <span className="font-medium">${Number(arSummary?.pending || 0).toLocaleString()}</span>
+                <span className="font-medium">{formatCurrency(arSummary?.pending || 0, currency)}</span>
               </div>
               {Number(arSummary?.overdue || 0) > 0 && (
                 <div className="flex justify-between text-destructive">
                   <span>Overdue</span>
-                  <span className="font-medium">${Number(arSummary?.overdue || 0).toLocaleString()}</span>
+                  <span className="font-medium">{formatCurrency(arSummary?.overdue || 0, currency)}</span>
                 </div>
               )}
             </div>
@@ -248,16 +251,16 @@ export default function Financial() {
             <TrendingDown className="h-5 w-5 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">${Number(apSummary?.total || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold">{formatCurrency(apSummary?.total || 0, currency)}</div>
             <div className="mt-2 space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Pending</span>
-                <span className="font-medium">${Number(apSummary?.pending || 0).toLocaleString()}</span>
+                <span className="font-medium">{formatCurrency(apSummary?.pending || 0, currency)}</span>
               </div>
               {Number(apSummary?.overdue || 0) > 0 && (
                 <div className="flex justify-between text-destructive">
                   <span>Overdue</span>
-                  <span className="font-medium">${Number(apSummary?.overdue || 0).toLocaleString()}</span>
+                  <span className="font-medium">{formatCurrency(apSummary?.overdue || 0, currency)}</span>
                 </div>
               )}
             </div>
@@ -271,7 +274,7 @@ export default function Financial() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ${(Number(arSummary?.total || 0) - Number(apSummary?.total || 0)).toLocaleString()}
+              {formatCurrency((Number(arSummary?.total || 0) - Number(apSummary?.total || 0)), currency)}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               AR minus AP balance
@@ -367,7 +370,7 @@ export default function Financial() {
                   arList.map((ar) => (
                     <TableRow key={ar.id}>
                       <TableCell className="font-medium">{ar.customerName}</TableCell>
-                      <TableCell>${Number(ar.amount).toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(ar.amount, ar.currency || currency)}</TableCell>
                       <TableCell>{ar.dueDate ? format(new Date(ar.dueDate), "MMM dd, yyyy") : "-"}</TableCell>
                       <TableCell>{ar.invoiceNumber || "-"}</TableCell>
                       <TableCell>{getStatusBadge(ar.status)}</TableCell>
@@ -490,7 +493,7 @@ export default function Financial() {
                   apList.map((ap) => (
                     <TableRow key={ap.id}>
                       <TableCell className="font-medium">{ap.vendorName}</TableCell>
-                      <TableCell>${Number(ap.amount).toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(ap.amount, ap.currency || currency)}</TableCell>
                       <TableCell>{ap.dueDate ? format(new Date(ap.dueDate), "MMM dd, yyyy") : "-"}</TableCell>
                       <TableCell>{ap.invoiceNumber || "-"}</TableCell>
                       <TableCell>{getStatusBadge(ap.status)}</TableCell>

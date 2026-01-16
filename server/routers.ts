@@ -921,6 +921,81 @@ Provide 2-3 actionable business insights.`;
         return { success: true };
       }),
   }),
+
+  // ============ Income & Expenditure Module ============
+  incomeExpenditure: router({
+    create: protectedProcedure
+      .input(z.object({
+        date: z.string(),
+        type: z.enum(["income", "expenditure"]),
+        category: z.string(),
+        subcategory: z.string().optional(),
+        amount: z.string(),
+        currency: z.string().default("BDT"),
+        description: z.string().optional(),
+        referenceNumber: z.string().optional(),
+        paymentMethod: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.createIncomeExpenditure({
+          ...input,
+          date: new Date(input.date),
+          createdBy: ctx.user.id,
+        } as any);
+        return { success: true };
+      }),
+
+    getAll: protectedProcedure.query(async () => {
+      return await db.getAllIncomeExpenditure();
+    }),
+
+    getByDateRange: protectedProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getIncomeExpenditureByDateRange(input.startDate, input.endDate);
+      }),
+
+    getSummary: protectedProcedure.query(async () => {
+      return await db.getIncomeExpenditureSummary();
+    }),
+
+    getIncomeByCategory: protectedProcedure.query(async () => {
+      return await db.getIncomeByCategory();
+    }),
+
+    getExpenditureByCategory: protectedProcedure.query(async () => {
+      return await db.getExpenditureByCategory();
+    }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        date: z.string().optional(),
+        type: z.enum(["income", "expenditure"]).optional(),
+        category: z.string().optional(),
+        subcategory: z.string().optional(),
+        amount: z.string().optional(),
+        currency: z.string().optional(),
+        description: z.string().optional(),
+        referenceNumber: z.string().optional(),
+        paymentMethod: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateIncomeExpenditure(id, data as Partial<any>);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteIncomeExpenditure(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -19,7 +19,8 @@ import {
   notificationLog, InsertNotificationLog,
   salesProducts, InsertSalesProduct,
   salesTracking, InsertSalesTracking,
-  projectTransactions, InsertProjectTransaction
+  projectTransactions, InsertProjectTransaction,
+  incomeExpenditure, InsertIncomeExpenditure
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -725,4 +726,121 @@ export async function deleteProjectTransaction(id: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(projectTransactions).where(eq(projectTransactions.id, id));
+}
+
+// ============ Income & Expenditure Module ============
+export async function createIncomeExpenditure(data: InsertIncomeExpenditure) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(incomeExpenditure).values(data);
+  return result;
+}
+
+export async function getAllIncomeExpenditure() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(incomeExpenditure).orderBy(desc(incomeExpenditure.date));
+}
+
+export async function getIncomeExpenditureByDateRange(startDate: string, endDate: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(incomeExpenditure)
+    .where(
+      and(
+        sql`${incomeExpenditure.date} >= ${startDate}`,
+        sql`${incomeExpenditure.date} <= ${endDate}`
+      )
+    )
+    .orderBy(desc(incomeExpenditure.date));
+}
+
+export async function getIncomeExpenditureSummary() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const records = await db.select().from(incomeExpenditure);
+  
+  let totalIncome = 0;
+  let totalExpenditure = 0;
+  
+  records.forEach((record) => {
+    const amount = Number(record.amount);
+    if (record.type === "income") {
+      totalIncome += amount;
+    } else {
+      totalExpenditure += amount;
+    }
+  });
+  
+  return {
+    totalIncome,
+    totalExpenditure,
+    netPosition: totalIncome - totalExpenditure,
+  };
+}
+
+export async function getIncomeByCategory() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const incomeRecords = await db
+    .select()
+    .from(incomeExpenditure)
+    .where(eq(incomeExpenditure.type, "income"));
+  
+  const categoryTotals: Record<string, number> = {};
+  
+  incomeRecords.forEach((record) => {
+    const category = record.category;
+    const amount = Number(record.amount);
+    categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+  });
+  
+  return Object.entries(categoryTotals).map(([category, total]) => ({
+    category,
+    total,
+  }));
+}
+
+export async function getExpenditureByCategory() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const expenditureRecords = await db
+    .select()
+    .from(incomeExpenditure)
+    .where(eq(incomeExpenditure.type, "expenditure"));
+  
+  const categoryTotals: Record<string, number> = {};
+  
+  expenditureRecords.forEach((record) => {
+    const category = record.category;
+    const amount = Number(record.amount);
+    categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+  });
+  
+  return Object.entries(categoryTotals).map(([category, total]) => ({
+    category,
+    total,
+  }));
+}
+
+export async function updateIncomeExpenditure(id: number, data: Partial<InsertIncomeExpenditure>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(incomeExpenditure).set(data).where(eq(incomeExpenditure.id, id));
+}
+
+export async function deleteIncomeExpenditure(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(incomeExpenditure).where(eq(incomeExpenditure.id, id));
 }

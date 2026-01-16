@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Briefcase, Lightbulb, UsersRound, TrendingUp, Shield, Settings } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Briefcase, Lightbulb, UsersRound, TrendingUp, Shield, Settings, Receipt } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -31,6 +31,7 @@ const getMenuItems = (userRole?: string) => {
   const baseItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: DollarSign, label: "Financial", path: "/financial" },
+    { icon: Receipt, label: "Income & Expenditure", path: "/income-expenditure" },
     { icon: TrendingUp, label: "Sales", path: "/sales" },
     { icon: Briefcase, label: "Projects", path: "/projects" },
     { icon: Users, label: "Customers", path: "/customers" },

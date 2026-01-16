@@ -12,6 +12,7 @@ import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
 import { toast } from "sonner";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
 
 type ProjectStage = "lead" | "proposal" | "won" | "execution" | "testing";
@@ -37,6 +38,7 @@ export default function Projects() {
   const utils = trpc.useUtils();
   const { data: projects } = trpc.projects.getAll.useQuery();
   const { data: stats } = trpc.projects.getStats.useQuery();
+  const { currency } = useCurrency();
 
   const createMutation = trpc.projects.create.useMutation({
     onSuccess: () => {
@@ -167,7 +169,7 @@ export default function Projects() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="currency">Currency</Label>
-                    <Select name="currency" defaultValue={editingProject?.currency || "BDT"}>
+                    <Select name="currency" defaultValue={editingProject?.currency || currency}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="BDT">BDT (৳)</SelectItem>
@@ -234,7 +236,7 @@ export default function Projects() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stageStat?.count || 0}</div>
-                <p className="text-xs text-muted-foreground mt-1">${Number(stageStat?.totalValue || 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatCurrency(stageStat?.totalValue || 0, currency)}</p>
               </CardContent>
             </Card>
           );
@@ -260,7 +262,7 @@ export default function Projects() {
                     {project.value && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
                         <DollarSign className="h-3 w-3" />
-                        <span>${Number(project.value).toLocaleString()}</span>
+                        <span>{formatCurrency(project.value, project.currency || currency)}</span>
                       </div>
                     )}
                     {project.expectedCloseDate && (
