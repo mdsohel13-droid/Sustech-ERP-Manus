@@ -641,6 +641,12 @@ export async function createDailySale(sale: any) {
   return result;
 }
 
+export async function getAllSales() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(dailySales).orderBy(desc(dailySales.date));
+}
+
 export async function getDailySales(startDate: string, endDate: string) {
   const db = await getDb();
   if (!db) return [];

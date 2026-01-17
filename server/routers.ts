@@ -48,6 +48,10 @@ export const appRouter = router({
         return { success: true };
       }),
     
+    getAccountsReceivable: protectedProcedure.query(async () => {
+      return await db.getAllAR();
+    }),
+    
     getAllAR: protectedProcedure.query(async () => {
       return await db.getAllAR();
     }),
@@ -116,6 +120,10 @@ export const appRouter = router({
         await db.createAP({ ...data, dueDate: new Date(dueDate) as any, createdBy: ctx.user.id });
         return { success: true };
       }),
+    
+    getAccountsPayable: protectedProcedure.query(async () => {
+      return await db.getAllAP();
+    }),
     
     getAllAP: protectedProcedure.query(async () => {
       return await db.getAllAP();
@@ -687,6 +695,11 @@ Provide 2-3 actionable business insights.`;
 
   // ============ Sales Tracking Module ============
   sales: router({
+    // Get all sales
+    getAll: protectedProcedure.query(async () => {
+      return await db.getAllSales();
+    }),
+
     // Products
     getAllProducts: protectedProcedure.query(async () => {
       return await db.getAllSalesProducts();
