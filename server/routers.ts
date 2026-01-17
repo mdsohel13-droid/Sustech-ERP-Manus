@@ -1328,6 +1328,62 @@ Provide 2-3 actionable business insights.`;
       .query(async ({ input }) => {
         return await db.getUpcomingTenderQuotations(input.daysAhead || 3);
       }),
+
+    // Quotation Items
+    getQuotationItems: publicProcedure
+      .input(z.object({ quotationId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getQuotationItems(input.quotationId);
+      }),
+
+    createQuotationItem: protectedProcedure
+      .input(z.object({
+        quotationId: z.number(),
+        description: z.string(),
+        specifications: z.string().optional(),
+        quantity: z.number(),
+        unit: z.string(),
+        unitPrice: z.number(),
+        amount: z.number(),
+        discount: z.number(),
+        discountAmount: z.number(),
+        finalAmount: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.createQuotationItem(input);
+      }),
+
+    updateQuotationItem: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        description: z.string().optional(),
+        specifications: z.string().optional(),
+        quantity: z.number().optional(),
+        unit: z.string().optional(),
+        unitPrice: z.number().optional(),
+        amount: z.number().optional(),
+        discount: z.number().optional(),
+        discountAmount: z.number().optional(),
+        finalAmount: z.number().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await db.updateQuotationItem(id, data);
+      }),
+
+    deleteQuotationItem: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await db.deleteQuotationItem(input.id);
+      }),
+
+    getQuotationTotal: publicProcedure
+      .input(z.object({ quotationId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getQuotationTotal(input.quotationId);
+      }),
   }),
 
   // ============ Transaction Types ============
@@ -1492,4 +1548,3 @@ Provide 2-3 actionable business insights.`;
   }),
 });
 
-export type AppRouter = typeof appRouter;

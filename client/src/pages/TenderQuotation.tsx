@@ -49,6 +49,8 @@ import { format, isPast, differenceInDays } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
+import { QuotationBuilder } from "@/components/QuotationBuilder";
+import { trpc } from "@/lib/trpc";
 
 const statusConfig = {
   not_started: { label: "Not Started", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300", icon: Clock },
