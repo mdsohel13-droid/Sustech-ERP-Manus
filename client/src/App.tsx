@@ -20,6 +20,10 @@ import ActionTracker from "@/pages/ActionTracker";
 import HumanResource from "@/pages/HumanResource";
 import TenderQuotation from "./pages/TenderQuotation";
 import Reports from "./pages/Reports";
+import Products from "./pages/Products";
+import Contacts from "./pages/Contacts";
+import Inventory from "./pages/Inventory";
+import Purchases from "./pages/Purchases";
 import AccessDenied from "./pages/AccessDenied";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ToastProvider } from "./components/Toast";
@@ -102,6 +106,18 @@ function Router() {
       </Route>
       <Route path={"/reports"}>
         <Reports />
+      </Route>
+      <Route path={"/products"}>
+        <Products />
+      </Route>
+      <Route path={"/contacts"}>
+        <Contacts />
+      </Route>
+      <Route path={"/inventory"}>
+        <Inventory />
+      </Route>
+      <Route path={"/purchases"}>
+        <Purchases />
       </Route>
       <Route path={"/access-denied"}>
         <AccessDenied />
