@@ -901,8 +901,8 @@ Provide 2-3 actionable business insights.`;
         customerName: z.string().optional(),
         notes: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
-        await db.createDailySale(input);
+      .mutation(async ({ ctx, input }) => {
+        await db.createDailySale({ ...input, createdBy: ctx.user.id });
         return { success: true };
       }),
 

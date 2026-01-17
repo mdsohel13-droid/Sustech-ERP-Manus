@@ -76,6 +76,37 @@ export default function Purchases() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  const handleViewPO = (po: PurchaseOrder) => {
+    setSelectedPO(po);
+    setShowViewDialog(true);
+  };
+
+  const handleEditPO = (po: PurchaseOrder) => {
+    setSelectedPO(po);
+    setShowEditDialog(true);
+  };
+
+  const handleDownloadPO = (po: PurchaseOrder) => {
+    const content = `Purchase Order: ${po.poNumber}\nVendor: ${po.vendor}\nDate: ${po.date}\nTotal: ${formatCurrency(po.total, currency)}`;
+    const element = document.createElement("a");
+    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(content));
+    element.setAttribute("download", `${po.poNumber}.txt`);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const handleDeletePO = (po: PurchaseOrder) => {
+    if (confirm(`Are you sure you want to delete ${po.poNumber}?`)) {
+      // TODO: Implement delete functionality
+      console.log("Delete PO:", po.id);
+    }
+  };
 
   // Filter POs
   const filteredPOs = useMemo(() => {
@@ -310,13 +341,13 @@ export default function Purchases() {
                           <td className="p-4 text-center">{getStatusBadge(po.status)}</td>
                           <td className="p-4">
                             <div className="flex items-center justify-center gap-1">
-                              <button className="p-1.5 hover:bg-muted rounded-md">
+                              <button onClick={() => handleViewPO(po)} className="p-1.5 hover:bg-muted rounded-md" title="View">
                                 <Eye className="w-4 h-4 text-muted-foreground" />
                               </button>
-                              <button className="p-1.5 hover:bg-muted rounded-md">
+                              <button onClick={() => handleEditPO(po)} className="p-1.5 hover:bg-muted rounded-md" title="Edit">
                                 <Edit className="w-4 h-4 text-muted-foreground" />
                               </button>
-                              <button className="p-1.5 hover:bg-muted rounded-md">
+                              <button onClick={() => handleDownloadPO(po)} className="p-1.5 hover:bg-muted rounded-md" title="Download">
                                 <Download className="w-4 h-4 text-muted-foreground" />
                               </button>
                             </div>
@@ -374,3 +405,5 @@ export default function Purchases() {
     </DashboardLayout>
   );
 }
+
+// Note: View and Edit dialogs for PO will be added in next update

@@ -625,7 +625,19 @@ export async function createDailySale(sale: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const [result] = await db.insert(dailySales).values(sale);
+  const result = await db.insert(dailySales).values({
+    date: new Date(sale.date),
+    productId: sale.productId,
+    productName: sale.productName,
+    quantity: parseFloat(sale.quantity),
+    unitPrice: parseFloat(sale.unitPrice),
+    totalAmount: parseFloat(sale.totalAmount),
+    salespersonId: sale.salespersonId,
+    salespersonName: sale.salespersonName,
+    customerName: sale.customerName || null,
+    notes: sale.notes || null,
+    createdBy: sale.createdBy,
+  } as any);
   return result;
 }
 
