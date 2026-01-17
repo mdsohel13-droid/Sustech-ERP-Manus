@@ -197,3 +197,23 @@
 - [ ] Create Download Quotation button in Tender/Quotation UI
 - [ ] Add customizable terms dialog for quotations
 - [ ] Test quotation PDF download
+
+
+## Human Resources Module Enhancement 👥
+- [ ] Create employee management interface with add/edit/delete
+- [ ] Implement role and designation management
+- [ ] Add job description management
+- [ ] Create basic employee information form (name, email, phone, address)
+- [ ] Implement confidential information section (salary, benefits) - admin only
+- [ ] Add employee status tracking (active, on leave, terminated)
+- [ ] Create department and position management
+- [ ] Implement employee directory with search and filters
+- [ ] Add employee profile view with all information
+- [ ] Create test employee with prefix "sohel-2026"
+
+
+## Bug Fix - Add Employee Button Missing in Employees Tab
+- [x] Add "Add Employee" button to Employees tab in HR module
+- [x] Create Add Employee dialog with full form fields
+- [x] Ensure backend createEmployee procedure is working
+- [x] Test employee creation workflow

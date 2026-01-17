@@ -68,6 +68,7 @@ export default function HumanResource() {
   const [userPermissions, setUserPermissions] = useState<any[]>([]);
   const [docsDialogOpen, setDocsDialogOpen] = useState(false);
   const [selectedUserForDocs, setSelectedUserForDocs] = useState<any>(null);
+  const [addEmployeeDialogOpen, setAddEmployeeDialogOpen] = useState(false);
 
   const utils = trpc.useUtils();
   
@@ -101,6 +102,40 @@ export default function HumanResource() {
       alert("Permissions updated successfully!");
     },
   });
+
+  const createEmployeeMutation = trpc.hr.createEmployee.useMutation({
+    onSuccess: () => {
+      utils.hr.getAllEmployees.invalidate();
+      setAddEmployeeDialogOpen(false);
+      alert("Employee created successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to create employee: " + error.message);
+    },
+  });
+
+  const handleAddEmployee = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const userId = parseInt(formData.get('userId') as string);
+    const joinDate = formData.get('joinDate') as string;
+    const departmentId = formData.get('departmentId') as string;
+    
+    createEmployeeMutation.mutate({
+      userId,
+      employeeCode: formData.get('employeeCode') as string,
+      departmentId: departmentId ? parseInt(departmentId) : undefined,
+      jobTitle: formData.get('jobTitle') as string || undefined,
+      employmentType: (formData.get('employmentType') as any) || 'full_time',
+      joinDate,
+      salaryGrade: formData.get('salaryGrade') as string || undefined,
+      workLocation: formData.get('workLocation') as string || undefined,
+      workSchedule: formData.get('workSchedule') as string || undefined,
+      emergencyContactName: formData.get('emergencyContactName') as string || undefined,
+      emergencyContactPhone: formData.get('emergencyContactPhone') as string || undefined,
+    });
+  };
 
   const handleOpenPermissions = (targetUser: any) => {
     setSelectedUser(targetUser);
@@ -468,6 +503,118 @@ export default function HumanResource() {
 
         {/* Employees Tab */}
         <TabsContent value="employees" className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-2xl font-bold">Employee Directory</h2>
+              <p className="text-muted-foreground">Manage employee records and information</p>
+            </div>
+            {user?.role === 'admin' && (
+              <Dialog open={addEmployeeDialogOpen} onOpenChange={setAddEmployeeDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Employee
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add New Employee</DialogTitle>
+                    <DialogDescription>
+                      Create a new employee record with basic and job information
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddEmployee} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="emp_userId">Link to User Account</Label>
+                        <Select name="userId" required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select user account" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allUsers?.map((u: any) => (
+                              <SelectItem key={u.id} value={u.id.toString()}>
+                                {u.name} ({u.email})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_employeeCode">Employee Code *</Label>
+                        <Input id="emp_employeeCode" name="employeeCode" placeholder="EMP-001" required />
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_jobTitle">Job Title / Designation</Label>
+                        <Input id="emp_jobTitle" name="jobTitle" placeholder="Senior Developer" />
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_departmentId">Department</Label>
+                        <Select name="departmentId">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hrStats?.employeesByDept?.map((d: any) => (
+                              <SelectItem key={d.departmentId || d.department} value={(d.departmentId || 1).toString()}>
+                                {d.department}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_employmentType">Employment Type</Label>
+                        <Select name="employmentType" defaultValue="full_time">
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="full_time">Full Time</SelectItem>
+                            <SelectItem value="part_time">Part Time</SelectItem>
+                            <SelectItem value="contract">Contract</SelectItem>
+                            <SelectItem value="intern">Intern</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_joinDate">Join Date *</Label>
+                        <Input id="emp_joinDate" name="joinDate" type="date" required />
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_salaryGrade">Salary Grade</Label>
+                        <Input id="emp_salaryGrade" name="salaryGrade" placeholder="Grade A" />
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_workLocation">Work Location</Label>
+                        <Input id="emp_workLocation" name="workLocation" placeholder="Dhaka Office" />
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_workSchedule">Work Schedule</Label>
+                        <Input id="emp_workSchedule" name="workSchedule" placeholder="9 AM - 6 PM" />
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_emergencyContactName">Emergency Contact Name</Label>
+                        <Input id="emp_emergencyContactName" name="emergencyContactName" placeholder="Contact person name" />
+                      </div>
+                      <div>
+                        <Label htmlFor="emp_emergencyContactPhone">Emergency Contact Phone</Label>
+                        <Input id="emp_emergencyContactPhone" name="emergencyContactPhone" placeholder="+880 1XXX-XXXXXX" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setAddEmployeeDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={createEmployeeMutation.isPending}>
+                        {createEmployeeMutation.isPending ? "Creating..." : "Create Employee"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
           <Card>
             <CardHeader>
               <CardTitle>Employee Directory</CardTitle>

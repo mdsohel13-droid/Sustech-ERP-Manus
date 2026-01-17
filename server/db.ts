@@ -34,7 +34,10 @@ import {
   leaveBalances, InsertLeaveBalance,
   leaveApplications, InsertLeaveApplication,
   performanceReviews, InsertPerformanceReview,
-  budgets, InsertBudget
+  budgets, InsertBudget,
+  jobDescriptions,
+  employeeRoles,
+  employeeConfidential
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1549,4 +1552,103 @@ export async function getQuotationTotal(quotationId: number) {
   }).from(quotationItems).where(eq(quotationItems.quotationId, quotationId));
   
   return result[0] || { subtotal: 0, totalDiscount: 0, total: 0 };
+}
+
+
+// ============ Job Descriptions ============
+export async function createJobDescription(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(jobDescriptions).values(data);
+  return result;
+}
+
+export async function getJobDescriptions() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(jobDescriptions).orderBy(asc(jobDescriptions.title));
+}
+
+export async function getJobDescriptionById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(jobDescriptions).where(eq(jobDescriptions.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function updateJobDescription(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(jobDescriptions).set(data).where(eq(jobDescriptions.id, id));
+}
+
+export async function deleteJobDescription(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(jobDescriptions).where(eq(jobDescriptions.id, id));
+}
+
+// ============ Employee Roles ============
+export async function createEmployeeRole(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(employeeRoles).values(data);
+}
+
+export async function getEmployeeRoles() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(employeeRoles).orderBy(asc(employeeRoles.name));
+}
+
+export async function getEmployeeRoleById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(employeeRoles).where(eq(employeeRoles.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function updateEmployeeRole(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(employeeRoles).set(data).where(eq(employeeRoles.id, id));
+}
+
+export async function deleteEmployeeRole(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(employeeRoles).where(eq(employeeRoles.id, id));
+}
+
+// ============ Employee Confidential Information ============
+export async function createEmployeeConfidential(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(employeeConfidential).values(data);
+}
+
+export async function getEmployeeConfidential(employeeId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(employeeConfidential).where(eq(employeeConfidential.employeeId, employeeId)).limit(1);
+  return result[0] || null;
+}
+
+export async function updateEmployeeConfidential(employeeId: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if record exists
+  const existing = await getEmployeeConfidential(employeeId);
+  if (existing) {
+    return await db.update(employeeConfidential).set(data).where(eq(employeeConfidential.employeeId, employeeId));
+  } else {
+    return await db.insert(employeeConfidential).values({ ...data, employeeId });
+  }
+}
+
+export async function deleteEmployeeConfidential(employeeId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(employeeConfidential).where(eq(employeeConfidential.employeeId, employeeId));
 }

@@ -854,3 +854,57 @@ export const modulePermissions = mysqlTable("module_permissions", {
 
 export type ModulePermission = typeof modulePermissions.$inferSelect;
 export type InsertModulePermission = typeof modulePermissions.$inferInsert;
+
+
+// ============ Job Descriptions ============
+export const jobDescriptions = mysqlTable("job_descriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  positionId: int("position_id").notNull(),
+  title: varchar("title", { length: 100 }).notNull(),
+  summary: text("summary"),
+  responsibilities: text("responsibilities"), // JSON array of responsibilities
+  qualifications: text("qualifications"), // JSON array of qualifications
+  requirements: text("requirements"), // JSON array of requirements
+  salaryRange: varchar("salary_range", { length: 100 }),
+  reportingTo: varchar("reporting_to", { length: 100 }),
+  department: varchar("department", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type JobDescription = typeof jobDescriptions.$inferSelect;
+export type InsertJobDescription = typeof jobDescriptions.$inferInsert;
+
+// ============ Employee Roles (For role management separate from user roles) ============
+export const employeeRoles = mysqlTable("employee_roles", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  permissions: text("permissions"), // JSON array of permissions
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmployeeRole = typeof employeeRoles.$inferSelect;
+export type InsertEmployeeRole = typeof employeeRoles.$inferInsert;
+
+// ============ Employee Confidential Information (Admin Only) ============
+export const employeeConfidential = mysqlTable("employee_confidential", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employee_id").notNull().unique(),
+  baseSalary: decimal("base_salary", { precision: 15, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  benefits: text("benefits"), // JSON array of benefits
+  bankAccountNumber: varchar("bank_account_number", { length: 100 }),
+  bankName: varchar("bank_name", { length: 100 }),
+  taxId: varchar("tax_id", { length: 100 }),
+  ssn: varchar("ssn", { length: 50 }), // Social Security Number or equivalent
+  medicalRecords: text("medical_records"), // JSON or notes
+  emergencyContactRelation: varchar("emergency_contact_relation", { length: 100 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmployeeConfidential = typeof employeeConfidential.$inferSelect;
+export type InsertEmployeeConfidential = typeof employeeConfidential.$inferInsert;

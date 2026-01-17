@@ -1545,6 +1545,123 @@ Provide 2-3 actionable business insights.`;
         await db.createDepartment(input);
         return { success: true };
       }),
+
+    createEmployee: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        employeeCode: z.string(),
+        departmentId: z.number().optional(),
+        positionId: z.number().optional(),
+        jobTitle: z.string().optional(),
+        employmentType: z.enum(["full_time", "part_time", "contract", "intern"]).optional(),
+        joinDate: z.string(),
+        contractEndDate: z.string().optional(),
+        managerId: z.number().optional(),
+        salaryGrade: z.string().optional(),
+        workLocation: z.string().optional(),
+        workSchedule: z.string().optional(),
+        emergencyContactName: z.string().optional(),
+        emergencyContactPhone: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { joinDate, contractEndDate, ...rest } = input;
+        await db.createEmployee({
+          ...rest,
+          joinDate: new Date(joinDate) as any,
+          contractEndDate: contractEndDate ? new Date(contractEndDate) as any : undefined,
+          status: "active",
+        });
+        return { success: true };
+      }),
+
+    updateEmployee: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        jobTitle: z.string().optional(),
+        departmentId: z.number().optional(),
+        positionId: z.number().optional(),
+        employmentType: z.enum(["full_time", "part_time", "contract", "intern"]).optional(),
+        contractEndDate: z.string().optional(),
+        managerId: z.number().optional(),
+        salaryGrade: z.string().optional(),
+        workLocation: z.string().optional(),
+        workSchedule: z.string().optional(),
+        emergencyContactName: z.string().optional(),
+        emergencyContactPhone: z.string().optional(),
+        status: z.enum(["active", "on_leave", "terminated"]).optional(),
+        terminationDate: z.string().optional(),
+        terminationReason: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, contractEndDate, terminationDate, ...rest } = input;
+        await db.updateEmployee(id, {
+          ...rest,
+          contractEndDate: contractEndDate ? new Date(contractEndDate) as any : undefined,
+          terminationDate: terminationDate ? new Date(terminationDate) as any : undefined,
+        });
+        return { success: true };
+      }),
+
+    getJobDescriptions: protectedProcedure.query(async () => {
+      return await db.getJobDescriptions();
+    }),
+
+    createJobDescription: adminProcedure
+      .input(z.object({
+        positionId: z.number(),
+        title: z.string(),
+        summary: z.string().optional(),
+        responsibilities: z.string().optional(),
+        qualifications: z.string().optional(),
+        requirements: z.string().optional(),
+        salaryRange: z.string().optional(),
+        reportingTo: z.string().optional(),
+        department: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createJobDescription(input);
+        return { success: true };
+      }),
+
+    getEmployeeRoles: protectedProcedure.query(async () => {
+      return await db.getEmployeeRoles();
+    }),
+
+    createEmployeeRole: adminProcedure
+      .input(z.object({
+        name: z.string(),
+        description: z.string().optional(),
+        permissions: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createEmployeeRole(input);
+        return { success: true };
+      }),
+
+    getEmployeeConfidential: adminProcedure
+      .input(z.object({ employeeId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEmployeeConfidential(input.employeeId);
+      }),
+
+    updateEmployeeConfidential: adminProcedure
+      .input(z.object({
+        employeeId: z.number(),
+        baseSalary: z.string().optional(),
+        currency: z.string().optional(),
+        benefits: z.string().optional(),
+        bankAccountNumber: z.string().optional(),
+        bankName: z.string().optional(),
+        taxId: z.string().optional(),
+        ssn: z.string().optional(),
+        medicalRecords: z.string().optional(),
+        emergencyContactRelation: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateEmployeeConfidential(input.employeeId, input);
+        return { success: true };
+      }),
   }),
 });
 

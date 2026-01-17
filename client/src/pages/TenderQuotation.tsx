@@ -1,4 +1,3 @@
-import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +48,6 @@ import { format, isPast, differenceInDays } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
-import { QuotationBuilder } from "@/components/QuotationBuilder";
 import { trpc } from "@/lib/trpc";
 
 const statusConfig = {
