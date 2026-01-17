@@ -344,3 +344,55 @@
 - [ ] Track KPI progress over time
 - [ ] Create performance analytics dashboard
 - [ ] Generate performance reports
+
+
+## World-Class ERP Redesign (Jan 17, 2026)
+
+### Phase 1: UI Redesign & Navigation
+- [ ] Clean minimal UI: white/neutral background, high-contrast text, consistent icons
+- [ ] Three-layer navigation: left sidebar (modules), top tabs (sub-modules), right panel (actions)
+- [ ] Role-based customizable dashboards (Cashier, Manager, Owner, Accountant, etc.)
+- [ ] Max 3 primary actions visible per screen
+
+### Phase 2: Global Command Bar
+- [ ] Implement Ctrl+K command/search bar
+- [ ] Fuzzy search across products, customers, invoices, documents
+- [ ] Natural language commands support
+
+### Phase 3: AI Assistant
+- [ ] Dockable AI Assistant panel on right side
+- [ ] Context-aware suggestions based on current screen
+- [ ] Natural language workflows (create PO, explain reports, generate reminders)
+- [ ] Guided onboarding via AI
+
+### Phase 4: Module Restructure
+- [ ] Contacts module with 360° view and AI segmentation
+- [ ] Products module with progressive form sections
+- [ ] Inventory module with Transfers, Adjustments, Stock Count, Lot/Expiry tabs
+- [ ] Purchases module with OCR document scanning
+- [ ] Sell/POS module with touch-optimized interface
+
+### Phase 5: Finance & Accounting
+- [ ] Cash-flow forecast chart (30/90 days)
+- [ ] AI explains P&L and balance sheet
+- [ ] Expense OCR capture and auto-classification
+
+### Phase 6: CRM, Projects, HRM
+- [ ] CRM lead scoring and next best action suggestions
+- [ ] Projects health summary (red/amber/green)
+- [ ] HRM attendance analytics with anomaly detection
+
+### Phase 7: Reports Module
+- [ ] Query bar for natural language report generation
+- [ ] Pin favorite reports to dashboard
+- [ ] Email/SMS alerts for threshold breaches
+
+### Phase 8: Micro-UX
+- [ ] Inline help and tooltips on every screen
+- [ ] Descriptive button labels
+- [ ] Undo/snackbar notifications for destructive actions
+
+### Phase 9: Performance
+- [ ] Pagination and server-side filtering
+- [ ] Lazy loading for large tables
+- [ ] Client-side caching of reference data
