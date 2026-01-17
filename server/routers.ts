@@ -1662,6 +1662,75 @@ Provide 2-3 actionable business insights.`;
         await db.updateEmployeeConfidential(input.employeeId, input);
         return { success: true };
       }),
+    // Onboarding Management
+    getOnboardingTemplates: protectedProcedure.query(async () => {
+      return await db.getOnboardingTemplates();
+    }),
+    createOnboardingTemplate: adminProcedure
+      .input(z.object({
+        taskName: z.string(),
+        taskCategory: z.enum(["documents", "equipment", "training", "access", "introduction", "other"]),
+        description: z.string().optional(),
+        daysFromStart: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createOnboardingTemplate(input);
+        return { success: true };
+      }),
+    deleteOnboardingTemplate: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteOnboardingTemplate(input.id);
+        return { success: true };
+      }),
+    getOnboardingTasks: protectedProcedure
+      .input(z.object({ employeeId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getOnboardingTasksForEmployee(input.employeeId);
+      }),
+    initializeOnboarding: adminProcedure
+      .input(z.object({ employeeId: z.number(), joinDate: z.string() }))
+      .mutation(async ({ input }) => {
+        const tasks = await db.createOnboardingTasksFromTemplates(input.employeeId, new Date(input.joinDate));
+        return { success: true, tasks };
+      }),
+    updateOnboardingTask: protectedProcedure
+      .input(z.object({
+        taskId: z.number(),
+        completed: z.boolean().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateOnboardingTask(input.taskId, {
+          completed: input.completed,
+          notes: input.notes,
+          completedBy: ctx.user.id,
+        });
+        return { success: true };
+      }),
+    addOnboardingTask: adminProcedure
+      .input(z.object({
+        employeeId: z.number(),
+        taskName: z.string(),
+        taskCategory: z.enum(["documents", "equipment", "training", "access", "introduction", "other"]),
+        description: z.string().optional(),
+        dueDate: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.addOnboardingTask(input.employeeId, input);
+        return { success: true };
+      }),
+    deleteOnboardingTask: adminProcedure
+      .input(z.object({ taskId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteOnboardingTask(input.taskId);
+        return { success: true };
+      }),
+    getOnboardingProgress: protectedProcedure
+      .input(z.object({ employeeId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getOnboardingProgress(input.employeeId);
+      }),
   }),
 });
 

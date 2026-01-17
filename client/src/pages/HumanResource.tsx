@@ -40,6 +40,12 @@ import {
   Award,
   FileText,
   Shield,
+  Briefcase,
+  ClipboardCheck,
+  CheckCircle2,
+  Circle,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -78,6 +84,15 @@ export default function HumanResource() {
   const [confidentialDialogOpen, setConfidentialDialogOpen] = useState(false);
   const [selectedEmployeeForConfidential, setSelectedEmployeeForConfidential] = useState<any>(null);
   const [confidentialData, setConfidentialData] = useState<any>(null);
+  // Job Descriptions state
+  const [addJobDescDialogOpen, setAddJobDescDialogOpen] = useState(false);
+  const [viewJobDescDialogOpen, setViewJobDescDialogOpen] = useState(false);
+  const [selectedJobDesc, setSelectedJobDesc] = useState<any>(null);
+  // Onboarding state
+  const [onboardingDialogOpen, setOnboardingDialogOpen] = useState(false);
+  const [selectedEmployeeForOnboarding, setSelectedEmployeeForOnboarding] = useState<any>(null);
+  const [addOnboardingTaskDialogOpen, setAddOnboardingTaskDialogOpen] = useState(false);
+  const [addTemplateDialogOpen, setAddTemplateDialogOpen] = useState(false);
 
   const utils = trpc.useUtils();
   
@@ -86,6 +101,16 @@ export default function HumanResource() {
   const { data: pendingLeaves } = trpc.hr.getPendingLeaveApplications.useQuery();
   const { data: allUsers } = trpc.users.getAll.useQuery();
   const { data: departments } = trpc.hr.getAllDepartments.useQuery();
+  const { data: jobDescriptions } = trpc.hr.getJobDescriptions.useQuery();
+  const { data: onboardingTemplates } = trpc.hr.getOnboardingTemplates.useQuery();
+  const { data: onboardingTasks } = trpc.hr.getOnboardingTasks.useQuery(
+    { employeeId: selectedEmployeeForOnboarding?.employee?.id || 0 },
+    { enabled: !!selectedEmployeeForOnboarding }
+  );
+  const { data: onboardingProgress } = trpc.hr.getOnboardingProgress.useQuery(
+    { employeeId: selectedEmployeeForOnboarding?.employee?.id || 0 },
+    { enabled: !!selectedEmployeeForOnboarding }
+  );
 
   // Mutations
   const createUserMutation = trpc.users.create.useMutation({
@@ -246,6 +271,118 @@ export default function HumanResource() {
     setSelectedEmployeeForConfidential(emp);
     setConfidentialData(null);
     setConfidentialDialogOpen(true);
+  };
+
+  // Job Description mutations
+  const createJobDescMutation = trpc.hr.createJobDescription.useMutation({
+    onSuccess: () => {
+      utils.hr.getJobDescriptions.invalidate();
+      setAddJobDescDialogOpen(false);
+      alert("Job description created successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to create job description: " + error.message);
+    },
+  });
+
+  const handleAddJobDesc = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createJobDescMutation.mutate({
+      positionId: 1, // Default position
+      title: formData.get('title') as string,
+      summary: formData.get('summary') as string || undefined,
+      responsibilities: formData.get('responsibilities') as string || undefined,
+      qualifications: formData.get('qualifications') as string || undefined,
+      requirements: formData.get('requirements') as string || undefined,
+      salaryRange: formData.get('salaryRange') as string || undefined,
+      reportingTo: formData.get('reportingTo') as string || undefined,
+      department: formData.get('department') as string || undefined,
+    });
+  };
+
+  // Onboarding mutations
+  const initializeOnboardingMutation = trpc.hr.initializeOnboarding.useMutation({
+    onSuccess: () => {
+      utils.hr.getOnboardingTasks.invalidate();
+      utils.hr.getOnboardingProgress.invalidate();
+      alert("Onboarding tasks initialized successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to initialize onboarding: " + error.message);
+    },
+  });
+
+  const updateOnboardingTaskMutation = trpc.hr.updateOnboardingTask.useMutation({
+    onSuccess: () => {
+      utils.hr.getOnboardingTasks.invalidate();
+      utils.hr.getOnboardingProgress.invalidate();
+    },
+    onError: (error) => {
+      alert("Failed to update task: " + error.message);
+    },
+  });
+
+  const addOnboardingTaskMutation = trpc.hr.addOnboardingTask.useMutation({
+    onSuccess: () => {
+      utils.hr.getOnboardingTasks.invalidate();
+      utils.hr.getOnboardingProgress.invalidate();
+      setAddOnboardingTaskDialogOpen(false);
+      alert("Task added successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to add task: " + error.message);
+    },
+  });
+
+  const deleteOnboardingTaskMutation = trpc.hr.deleteOnboardingTask.useMutation({
+    onSuccess: () => {
+      utils.hr.getOnboardingTasks.invalidate();
+      utils.hr.getOnboardingProgress.invalidate();
+    },
+  });
+
+  const createTemplateMutation = trpc.hr.createOnboardingTemplate.useMutation({
+    onSuccess: () => {
+      utils.hr.getOnboardingTemplates.invalidate();
+      setAddTemplateDialogOpen(false);
+      alert("Template created successfully!");
+    },
+  });
+
+  const deleteTemplateMutation = trpc.hr.deleteOnboardingTemplate.useMutation({
+    onSuccess: () => {
+      utils.hr.getOnboardingTemplates.invalidate();
+    },
+  });
+
+  const openOnboardingDialog = (emp: any) => {
+    setSelectedEmployeeForOnboarding(emp);
+    setOnboardingDialogOpen(true);
+  };
+
+  const handleAddOnboardingTask = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedEmployeeForOnboarding) return;
+    const formData = new FormData(e.currentTarget);
+    addOnboardingTaskMutation.mutate({
+      employeeId: selectedEmployeeForOnboarding.employee.id,
+      taskName: formData.get('taskName') as string,
+      taskCategory: formData.get('taskCategory') as any,
+      description: formData.get('description') as string || undefined,
+      dueDate: formData.get('dueDate') as string || undefined,
+    });
+  };
+
+  const handleAddTemplate = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createTemplateMutation.mutate({
+      taskName: formData.get('taskName') as string,
+      taskCategory: formData.get('taskCategory') as any,
+      description: formData.get('description') as string || undefined,
+      daysFromStart: parseInt(formData.get('daysFromStart') as string) || 0,
+    });
   };
 
   const handleOpenPermissions = (targetUser: any) => {
@@ -428,6 +565,8 @@ export default function HumanResource() {
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="leaves">Leaves</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="job-descriptions">Job Descriptions</TabsTrigger>
+          <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           {user?.role === 'admin' && <TabsTrigger value="confidential">Confidential</TabsTrigger>}
           <TabsTrigger value="roles">Role Guide</TabsTrigger>
         </TabsList>
@@ -863,6 +1002,248 @@ export default function HumanResource() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Job Descriptions Tab */}
+        <TabsContent value="job-descriptions" className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-2xl font-bold">Job Descriptions</h2>
+              <p className="text-muted-foreground">Define roles, responsibilities, and qualifications for positions</p>
+            </div>
+            {user?.role === 'admin' && (
+              <Dialog open={addJobDescDialogOpen} onOpenChange={setAddJobDescDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    Add Job Description
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Create Job Description</DialogTitle>
+                    <DialogDescription>
+                      Define a new job role with responsibilities and requirements
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddJobDesc} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="jd_title">Job Title *</Label>
+                        <Input id="jd_title" name="title" placeholder="e.g., Software Engineer" required />
+                      </div>
+                      <div>
+                        <Label htmlFor="jd_department">Department</Label>
+                        <Input id="jd_department" name="department" placeholder="e.g., Engineering" />
+                      </div>
+                      <div className="col-span-2">
+                        <Label htmlFor="jd_summary">Job Summary</Label>
+                        <Input id="jd_summary" name="summary" placeholder="Brief description of the role" />
+                      </div>
+                      <div className="col-span-2">
+                        <Label htmlFor="jd_responsibilities">Key Responsibilities</Label>
+                        <Input id="jd_responsibilities" name="responsibilities" placeholder="Main duties and responsibilities" />
+                      </div>
+                      <div className="col-span-2">
+                        <Label htmlFor="jd_qualifications">Qualifications</Label>
+                        <Input id="jd_qualifications" name="qualifications" placeholder="Education and experience requirements" />
+                      </div>
+                      <div className="col-span-2">
+                        <Label htmlFor="jd_requirements">Skills & Requirements</Label>
+                        <Input id="jd_requirements" name="requirements" placeholder="Technical skills and other requirements" />
+                      </div>
+                      <div>
+                        <Label htmlFor="jd_salaryRange">Salary Range</Label>
+                        <Input id="jd_salaryRange" name="salaryRange" placeholder="e.g., 50000-80000 BDT" />
+                      </div>
+                      <div>
+                        <Label htmlFor="jd_reportingTo">Reports To</Label>
+                        <Input id="jd_reportingTo" name="reportingTo" placeholder="e.g., Engineering Manager" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setAddJobDescDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={createJobDescMutation.isPending}>
+                        {createJobDescMutation.isPending ? "Creating..." : "Create Job Description"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {jobDescriptions?.map((jd: any) => (
+              <Card key={jd.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => { setSelectedJobDesc(jd); setViewJobDescDialogOpen(true); }}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-primary" />
+                    {jd.title}
+                  </CardTitle>
+                  <CardDescription>{jd.department || 'No department'}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{jd.summary || 'No summary available'}</p>
+                  {jd.salary_range && (
+                    <Badge variant="secondary" className="mt-2">{jd.salary_range}</Badge>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            {(!jobDescriptions || jobDescriptions.length === 0) && (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No job descriptions found. Create your first job description to get started.</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Onboarding Tab */}
+        <TabsContent value="onboarding" className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-2xl font-bold">Employee Onboarding</h2>
+              <p className="text-muted-foreground">Track and manage new employee onboarding progress</p>
+            </div>
+            {user?.role === 'admin' && (
+              <Dialog open={addTemplateDialogOpen} onOpenChange={setAddTemplateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Template
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Onboarding Template</DialogTitle>
+                    <DialogDescription>
+                      Create a reusable onboarding task template
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddTemplate} className="space-y-4">
+                    <div>
+                      <Label htmlFor="tpl_taskName">Task Name *</Label>
+                      <Input id="tpl_taskName" name="taskName" placeholder="e.g., Submit ID Card Copy" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="tpl_taskCategory">Category</Label>
+                      <Select name="taskCategory" defaultValue="other">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="documents">Documents</SelectItem>
+                          <SelectItem value="equipment">Equipment</SelectItem>
+                          <SelectItem value="training">Training</SelectItem>
+                          <SelectItem value="access">Access</SelectItem>
+                          <SelectItem value="introduction">Introduction</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="tpl_description">Description</Label>
+                      <Input id="tpl_description" name="description" placeholder="Task description" />
+                    </div>
+                    <div>
+                      <Label htmlFor="tpl_daysFromStart">Days from Start Date</Label>
+                      <Input id="tpl_daysFromStart" name="daysFromStart" type="number" defaultValue="0" />
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setAddTemplateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={createTemplateMutation.isPending}>
+                        {createTemplateMutation.isPending ? "Creating..." : "Create Template"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Employee Onboarding Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5" />
+                  Employee Onboarding Status
+                </CardTitle>
+                <CardDescription>Track onboarding progress for each employee</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {employees?.map((emp: any) => (
+                    <div key={emp.employee.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-primary">
+                            {emp.user?.name?.charAt(0) || "?"}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium">{emp.user?.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Joined: {emp.employee.joinDate ? new Date(emp.employee.joinDate).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => openOnboardingDialog(emp)}>
+                        <ClipboardCheck className="h-4 w-4 mr-1" />
+                        View Tasks
+                      </Button>
+                    </div>
+                  ))}
+                  {(!employees || employees.length === 0) && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No employees found. Add employees first to track onboarding.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Onboarding Templates */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Onboarding Templates
+                </CardTitle>
+                <CardDescription>Default tasks applied to new employees</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {onboardingTemplates?.map((tpl: any) => (
+                    <div key={tpl.id} className="flex items-center justify-between p-2 border rounded hover:bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">{tpl.task_category}</Badge>
+                        <span className="text-sm">{tpl.task_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Day {tpl.days_from_start}</span>
+                        {user?.role === 'admin' && (
+                          <Button variant="ghost" size="sm" onClick={() => deleteTemplateMutation.mutate({ id: tpl.id })}>
+                            <Trash2 className="h-3 w-3 text-red-500" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {(!onboardingTemplates || onboardingTemplates.length === 0) && (
+                    <p className="text-center text-muted-foreground py-4">
+                      No templates found. Add templates to automate onboarding.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Confidential Tab - Admin Only */}
@@ -1841,6 +2222,237 @@ export default function HumanResource() {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Job Description Dialog */}
+      <Dialog open={viewJobDescDialogOpen} onOpenChange={setViewJobDescDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5" />
+              {selectedJobDesc?.title}
+            </DialogTitle>
+            <DialogDescription>{selectedJobDesc?.department || 'No department'}</DialogDescription>
+          </DialogHeader>
+          {selectedJobDesc && (
+            <div className="space-y-4">
+              {selectedJobDesc.summary && (
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground">Job Summary</h4>
+                  <p className="mt-1">{selectedJobDesc.summary}</p>
+                </div>
+              )}
+              {selectedJobDesc.responsibilities && (
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground">Key Responsibilities</h4>
+                  <p className="mt-1">{selectedJobDesc.responsibilities}</p>
+                </div>
+              )}
+              {selectedJobDesc.qualifications && (
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground">Qualifications</h4>
+                  <p className="mt-1">{selectedJobDesc.qualifications}</p>
+                </div>
+              )}
+              {selectedJobDesc.requirements && (
+                <div>
+                  <h4 className="font-semibold text-sm text-muted-foreground">Skills & Requirements</h4>
+                  <p className="mt-1">{selectedJobDesc.requirements}</p>
+                </div>
+              )}
+              <div className="flex gap-4">
+                {selectedJobDesc.salary_range && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground">Salary Range</h4>
+                    <Badge variant="secondary" className="mt-1">{selectedJobDesc.salary_range}</Badge>
+                  </div>
+                )}
+                {selectedJobDesc.reporting_to && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-muted-foreground">Reports To</h4>
+                    <p className="mt-1">{selectedJobDesc.reporting_to}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewJobDescDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Onboarding Tasks Dialog */}
+      <Dialog open={onboardingDialogOpen} onOpenChange={setOnboardingDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardCheck className="h-5 w-5" />
+              Onboarding Tasks - {selectedEmployeeForOnboarding?.user?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Track onboarding progress and complete tasks
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmployeeForOnboarding && (
+            <div className="space-y-4">
+              {/* Progress Bar */}
+              <div className="bg-muted rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium">Overall Progress</span>
+                  <span className="text-sm text-muted-foreground">
+                    {onboardingProgress?.completed || 0} / {onboardingProgress?.total || 0} tasks completed
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-primary h-3 rounded-full transition-all duration-300" 
+                    style={{ width: `${onboardingProgress?.percentage || 0}%` }}
+                  />
+                </div>
+                <p className="text-center mt-2 font-semibold text-lg">{onboardingProgress?.percentage || 0}%</p>
+              </div>
+
+              {/* Initialize Onboarding Button */}
+              {(!onboardingTasks || onboardingTasks.length === 0) && user?.role === 'admin' && (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground mb-4">No onboarding tasks found for this employee.</p>
+                  <Button 
+                    onClick={() => initializeOnboardingMutation.mutate({
+                      employeeId: selectedEmployeeForOnboarding.employee.id,
+                      joinDate: selectedEmployeeForOnboarding.employee.joinDate || new Date().toISOString()
+                    })}
+                    disabled={initializeOnboardingMutation.isPending}
+                  >
+                    {initializeOnboardingMutation.isPending ? "Initializing..." : "Initialize Onboarding Tasks"}
+                  </Button>
+                </div>
+              )}
+
+              {/* Task List by Category */}
+              {onboardingTasks && onboardingTasks.length > 0 && (
+                <div className="space-y-4">
+                  {['documents', 'equipment', 'access', 'introduction', 'training', 'other'].map(category => {
+                    const categoryTasks = onboardingTasks.filter((t: any) => t.task_category === category);
+                    if (categoryTasks.length === 0) return null;
+                    return (
+                      <div key={category} className="border rounded-lg p-3">
+                        <h4 className="font-semibold capitalize mb-2 flex items-center gap-2">
+                          <Badge variant="outline">{category}</Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {categoryTasks.filter((t: any) => t.completed).length}/{categoryTasks.length}
+                          </span>
+                        </h4>
+                        <div className="space-y-2">
+                          {categoryTasks.map((task: any) => (
+                            <div key={task.id} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                              <div className="flex items-center gap-3">
+                                <Checkbox 
+                                  checked={task.completed} 
+                                  onCheckedChange={(checked) => {
+                                    updateOnboardingTaskMutation.mutate({
+                                      taskId: task.id,
+                                      completed: !!checked
+                                    });
+                                  }}
+                                />
+                                <div>
+                                  <p className={task.completed ? "line-through text-muted-foreground" : ""}>
+                                    {task.task_name}
+                                  </p>
+                                  {task.description && (
+                                    <p className="text-xs text-muted-foreground">{task.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {task.due_date && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Due: {new Date(task.due_date).toLocaleDateString()}
+                                  </span>
+                                )}
+                                {task.completed && (
+                                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                )}
+                                {user?.role === 'admin' && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => deleteOnboardingTaskMutation.mutate({ taskId: task.id })}
+                                  >
+                                    <Trash2 className="h-3 w-3 text-red-500" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add Custom Task Button */}
+              {user?.role === 'admin' && onboardingTasks && onboardingTasks.length > 0 && (
+                <Dialog open={addOnboardingTaskDialogOpen} onOpenChange={setAddOnboardingTaskDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Custom Task
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Custom Onboarding Task</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleAddOnboardingTask} className="space-y-4">
+                      <div>
+                        <Label htmlFor="ob_taskName">Task Name *</Label>
+                        <Input id="ob_taskName" name="taskName" placeholder="Task name" required />
+                      </div>
+                      <div>
+                        <Label htmlFor="ob_taskCategory">Category</Label>
+                        <Select name="taskCategory" defaultValue="other">
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="documents">Documents</SelectItem>
+                            <SelectItem value="equipment">Equipment</SelectItem>
+                            <SelectItem value="training">Training</SelectItem>
+                            <SelectItem value="access">Access</SelectItem>
+                            <SelectItem value="introduction">Introduction</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="ob_description">Description</Label>
+                        <Input id="ob_description" name="description" placeholder="Task description" />
+                      </div>
+                      <div>
+                        <Label htmlFor="ob_dueDate">Due Date</Label>
+                        <Input id="ob_dueDate" name="dueDate" type="date" />
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setAddOnboardingTaskDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={addOnboardingTaskMutation.isPending}>
+                          {addOnboardingTaskMutation.isPending ? "Adding..." : "Add Task"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOnboardingDialogOpen(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

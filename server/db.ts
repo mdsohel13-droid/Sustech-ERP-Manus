@@ -1652,3 +1652,86 @@ export async function deleteEmployeeConfidential(employeeId: number) {
   if (!db) throw new Error("Database not available");
   return await db.delete(employeeConfidential).where(eq(employeeConfidential.employeeId, employeeId));
 }
+
+
+// ============ Onboarding Tasks ============
+export async function getOnboardingTemplates() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.execute(sql`SELECT * FROM onboarding_templates WHERE is_active = 1 ORDER BY days_from_start ASC, task_category ASC`);
+  return result[0] as any[];
+}
+
+export async function createOnboardingTemplate(data: { taskName: string; taskCategory: string; description?: string; daysFromStart?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.execute(sql`INSERT INTO onboarding_templates (task_name, task_category, description, days_from_start) VALUES (${data.taskName}, ${data.taskCategory}, ${data.description || null}, ${data.daysFromStart || 0})`);
+  return result;
+}
+
+export async function deleteOnboardingTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.execute(sql`UPDATE onboarding_templates SET is_active = 0 WHERE id = ${id}`);
+}
+
+export async function getOnboardingTasksForEmployee(employeeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.execute(sql`SELECT * FROM onboarding_tasks WHERE employee_id = ${employeeId} ORDER BY task_category ASC, due_date ASC`);
+  return result[0] as any[];
+}
+
+export async function createOnboardingTasksFromTemplates(employeeId: number, joinDate: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const templates = await getOnboardingTemplates();
+  
+  for (const template of templates) {
+    const dueDate = new Date(joinDate);
+    dueDate.setDate(dueDate.getDate() + (template.days_from_start || 0));
+    
+    await db.execute(sql`INSERT INTO onboarding_tasks (employee_id, task_name, task_category, description, due_date) VALUES (${employeeId}, ${template.task_name}, ${template.task_category}, ${template.description}, ${dueDate.toISOString().split('T')[0]})`);
+  }
+  
+  return await getOnboardingTasksForEmployee(employeeId);
+}
+
+export async function updateOnboardingTask(taskId: number, data: { completed?: boolean; notes?: string; completedBy?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  if (data.completed) {
+    return await db.execute(sql`UPDATE onboarding_tasks SET completed = ${data.completed}, completed_at = NOW(), completed_by = ${data.completedBy || null}, notes = ${data.notes || null} WHERE id = ${taskId}`);
+  } else {
+    return await db.execute(sql`UPDATE onboarding_tasks SET completed = ${data.completed || false}, completed_at = NULL, completed_by = NULL, notes = ${data.notes || null} WHERE id = ${taskId}`);
+  }
+}
+
+export async function addOnboardingTask(employeeId: number, data: { taskName: string; taskCategory: string; description?: string; dueDate?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.execute(sql`INSERT INTO onboarding_tasks (employee_id, task_name, task_category, description, due_date) VALUES (${employeeId}, ${data.taskName}, ${data.taskCategory}, ${data.description || null}, ${data.dueDate || null})`);
+}
+
+export async function deleteOnboardingTask(taskId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.execute(sql`DELETE FROM onboarding_tasks WHERE id = ${taskId}`);
+}
+
+export async function getOnboardingProgress(employeeId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, completed: 0, percentage: 0 };
+  
+  const result = await db.execute(sql`SELECT COUNT(*) as total, SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed FROM onboarding_tasks WHERE employee_id = ${employeeId}`);
+  const row = (result[0] as any[])[0];
+  const total = Number(row?.total || 0);
+  const completed = Number(row?.completed || 0);
+  return {
+    total,
+    completed,
+    percentage: total > 0 ? Math.round((completed / total) * 100) : 0
+  };
+}
