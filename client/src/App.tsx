@@ -19,8 +19,10 @@ import IncomeExpenditure from "./pages/IncomeExpenditure";
 import ActionTracker from "@/pages/ActionTracker";
 import HumanResource from "@/pages/HumanResource";
 import TenderQuotation from "./pages/TenderQuotation";
+import Reports from "./pages/Reports";
 import AccessDenied from "./pages/AccessDenied";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ToastProvider } from "./components/Toast";
 
 function Router() {
   return (
@@ -98,6 +100,9 @@ function Router() {
           </ProtectedRoute>
         </DashboardLayout>
       </Route>
+      <Route path={"/reports"}>
+        <Reports />
+      </Route>
       <Route path={"/access-denied"}>
         <AccessDenied />
       </Route>
@@ -113,8 +118,10 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <CurrencyProvider>
           <TooltipProvider>
-            <Toaster />
-            <Router />
+            <ToastProvider>
+              <Toaster />
+              <Router />
+            </ToastProvider>
           </TooltipProvider>
         </CurrencyProvider>
       </ThemeProvider>
