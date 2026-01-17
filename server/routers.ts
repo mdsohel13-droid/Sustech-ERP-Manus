@@ -16,6 +16,7 @@ import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import * as db from "./db";
+import { generateQuotationPDF, generateInvoicePDF } from "./_core/pdfGenerator";
 
 export const appRouter = router({
   system: systemRouter,
