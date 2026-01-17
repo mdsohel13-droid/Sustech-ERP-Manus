@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Target, BarChart3 } from "lucide-react";
+import { Plus, TrendingUp, Target, BarChart3, Paperclip } from "lucide-react";
+import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -224,6 +225,10 @@ export default function Sales() {
                       <Label htmlFor="notes">Notes (Optional)</Label>
                       <Input id="notes" name="notes" placeholder="Additional comments" />
                     </div>
+                    <div className="grid gap-2">
+                      <Label><Paperclip className="h-4 w-4 inline mr-1" />Attachments</Label>
+                      <AttachmentUpload entityType="sales" entityId={0} />
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button type="submit" disabled={createTrackingMutation.isPending}>
@@ -317,6 +322,10 @@ export default function Sales() {
                     <div className="grid gap-2">
                       <Label htmlFor="description">Description (Optional)</Label>
                       <Input id="description" name="description" placeholder="Additional details" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label><Paperclip className="h-4 w-4 inline mr-1" />Attachments</Label>
+                      <AttachmentUpload entityType="sales_product" entityId={0} />
                     </div>
                   </div>
                   <DialogFooter>

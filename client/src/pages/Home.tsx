@@ -45,15 +45,15 @@ export default function Home() {
   const { currency } = useCurrency();
   const [, navigate] = useLocation();
 
-  // Fetch all data
-  const { data: projects } = trpc.projects.getAll.useQuery();
-  const { data: customers } = trpc.customers.getAll.useQuery();
-  const { data: salesData } = trpc.sales.getAll.useQuery();
-  const { data: arData } = trpc.financial.getAccountsReceivable.useQuery();
-  const { data: apData } = trpc.financial.getAccountsPayable.useQuery();
-  const { data: incomeExpData } = trpc.incomeExpenditure.getAll.useQuery();
-  const { data: tenderData } = trpc.tenderQuotation.getAll.useQuery();
-  const { data: actionItems } = trpc.actionTracker.getAll.useQuery();
+  // Fetch all data with real-time refresh (every 30 seconds)
+  const { data: projects, isRefetching: projectsRefetching } = trpc.projects.getAll.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: customers } = trpc.customers.getAll.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: salesData } = trpc.sales.getAll.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: arData } = trpc.financial.getAccountsReceivable.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: apData } = trpc.financial.getAccountsPayable.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: incomeExpData } = trpc.incomeExpenditure.getAll.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: tenderData } = trpc.tenderQuotation.getAll.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: actionItems } = trpc.actionTracker.getAll.useQuery(undefined, { refetchInterval: 30000 });
 
   // Calculate key metrics
   const totalRevenue = salesData?.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0) || 0;

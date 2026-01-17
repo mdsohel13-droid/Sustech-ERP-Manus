@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, Paperclip } from "lucide-react";
+import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -255,6 +256,10 @@ export default function IncomeExpenditure() {
                     placeholder="Additional details..." 
                     defaultValue={editingEntry?.description || ""}
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label><Paperclip className="h-4 w-4 inline mr-1" />Attachments</Label>
+                  <AttachmentUpload entityType="income_expenditure" entityId={editingEntry?.id || 0} />
                 </div>
               </div>
               <DialogFooter>

@@ -33,8 +33,10 @@ import {
   Trash2,
   Clock,
   User,
-  Filter
+  Filter,
+  Paperclip
 } from "lucide-react";
+import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { useState } from "react";
 import { format } from "date-fns";
 
@@ -278,6 +280,10 @@ export default function ActionTracker() {
                     value={formData.dueDate}
                     onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label><Paperclip className="h-4 w-4 inline mr-1" />Attachments</Label>
+                  <AttachmentUpload entityType="action_tracker" entityId={editingItem?.id || 0} />
                 </div>
               </div>
               <DialogFooter>
