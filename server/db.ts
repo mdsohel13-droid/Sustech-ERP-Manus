@@ -25,6 +25,7 @@ import {
   incomeExpenditure, InsertIncomeExpenditure,
   actionTracker, InsertActionTracker,
   tenderQuotation, InsertTenderQuotation,
+  quotationItems, InsertQuotationItem,
   transactionTypes, InsertTransactionType,
   departments, InsertDepartment,
   positions, InsertPosition,
@@ -1509,4 +1510,43 @@ export function getDefaultPermissionsByRole(role: string) {
     canEdit: false,
     canDelete: false,
   }));
+}
+
+
+// ============ Quotation Items ============
+export async function createQuotationItem(data: InsertQuotationItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(quotationItems).values(data);
+}
+
+export async function getQuotationItems(quotationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(quotationItems).where(eq(quotationItems.quotationId, quotationId)).orderBy(asc(quotationItems.sortOrder));
+}
+
+export async function updateQuotationItem(id: number, data: Partial<InsertQuotationItem>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(quotationItems).set(data).where(eq(quotationItems.id, id));
+}
+
+export async function deleteQuotationItem(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(quotationItems).where(eq(quotationItems.id, id));
+}
+
+export async function getQuotationTotal(quotationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select({
+    subtotal: sql<number>`COALESCE(SUM(${quotationItems.amount}), 0)`,
+    totalDiscount: sql<number>`COALESCE(SUM(${quotationItems.discountAmount}), 0)`,
+    total: sql<number>`COALESCE(SUM(${quotationItems.finalAmount}), 0)`,
+  }).from(quotationItems).where(eq(quotationItems.quotationId, quotationId));
+  
+  return result[0] || { subtotal: 0, totalDiscount: 0, total: 0 };
 }

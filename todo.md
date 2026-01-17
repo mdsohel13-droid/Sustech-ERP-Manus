@@ -190,3 +190,10 @@
 - [x] Email delivery service available via notification API
 - [ ] Create export schedule configuration UI (scheduled for next phase)
 - [ ] Create cron job for scheduled exports (scheduled for next phase)
+
+
+## Download Quotation Feature (User Requested 📄)
+- [ ] Add generateQuotationHTML procedure to tender router
+- [ ] Create Download Quotation button in Tender/Quotation UI
+- [ ] Add customizable terms dialog for quotations
+- [ ] Test quotation PDF download

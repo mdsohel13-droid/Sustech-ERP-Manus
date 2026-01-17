@@ -621,6 +621,28 @@ export const tenderQuotation = mysqlTable("tender_quotation", {
 export type TenderQuotation = typeof tenderQuotation.$inferSelect;
 export type InsertTenderQuotation = typeof tenderQuotation.$inferInsert;
 
+// Quotation Items - Line items for quotations
+export const quotationItems = mysqlTable("quotation_items", {
+  id: int("id").autoincrement().primaryKey(),
+  quotationId: int("quotationId").notNull().references(() => tenderQuotation.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  specifications: text("specifications"),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unit: varchar("unit", { length: 50 }).default("pcs").notNull(),
+  unitPrice: decimal("unitPrice", { precision: 15, scale: 2 }).notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  discount: decimal("discount", { precision: 5, scale: 2 }).default(0),
+  discountAmount: decimal("discountAmount", { precision: 15, scale: 2 }).default(0),
+  finalAmount: decimal("finalAmount", { precision: 15, scale: 2 }).notNull(),
+  notes: text("notes"),
+  sortOrder: int("sortOrder").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type QuotationItem = typeof quotationItems.$inferSelect;
+export type InsertQuotationItem = typeof quotationItems.$inferInsert;
+
 /**
  * Transaction Types - for customizable project financial transaction categories
  */
