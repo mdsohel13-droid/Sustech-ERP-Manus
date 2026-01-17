@@ -69,6 +69,15 @@ export default function HumanResource() {
   const [docsDialogOpen, setDocsDialogOpen] = useState(false);
   const [selectedUserForDocs, setSelectedUserForDocs] = useState<any>(null);
   const [addEmployeeDialogOpen, setAddEmployeeDialogOpen] = useState(false);
+  const [addDepartmentDialogOpen, setAddDepartmentDialogOpen] = useState(false);
+  const [editDepartmentDialogOpen, setEditDepartmentDialogOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const [editEmployeeDialogOpen, setEditEmployeeDialogOpen] = useState(false);
+  const [viewEmployeeDialogOpen, setViewEmployeeDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [confidentialDialogOpen, setConfidentialDialogOpen] = useState(false);
+  const [selectedEmployeeForConfidential, setSelectedEmployeeForConfidential] = useState<any>(null);
+  const [confidentialData, setConfidentialData] = useState<any>(null);
 
   const utils = trpc.useUtils();
   
@@ -76,6 +85,7 @@ export default function HumanResource() {
   const { data: employees } = trpc.hr.getAllEmployees.useQuery();
   const { data: pendingLeaves } = trpc.hr.getPendingLeaveApplications.useQuery();
   const { data: allUsers } = trpc.users.getAll.useQuery();
+  const { data: departments } = trpc.hr.getAllDepartments.useQuery();
 
   // Mutations
   const createUserMutation = trpc.users.create.useMutation({
@@ -135,6 +145,107 @@ export default function HumanResource() {
       emergencyContactName: formData.get('emergencyContactName') as string || undefined,
       emergencyContactPhone: formData.get('emergencyContactPhone') as string || undefined,
     });
+  };
+
+  // Department mutations
+  const createDepartmentMutation = trpc.hr.createDepartment.useMutation({
+    onSuccess: () => {
+      utils.hr.getAllDepartments.invalidate();
+      utils.hr.getDashboardStats.invalidate();
+      setAddDepartmentDialogOpen(false);
+      alert("Department created successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to create department: " + error.message);
+    },
+  });
+
+  const updateEmployeeMutation = trpc.hr.updateEmployee.useMutation({
+    onSuccess: () => {
+      utils.hr.getAllEmployees.invalidate();
+      setEditEmployeeDialogOpen(false);
+      alert("Employee updated successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to update employee: " + error.message);
+    },
+  });
+
+  const updateConfidentialMutation = trpc.hr.updateEmployeeConfidential.useMutation({
+    onSuccess: () => {
+      setConfidentialDialogOpen(false);
+      alert("Confidential information updated successfully!");
+    },
+    onError: (error) => {
+      alert("Failed to update confidential info: " + error.message);
+    },
+  });
+
+  const handleAddDepartment = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createDepartmentMutation.mutate({
+      name: formData.get('name') as string,
+      description: formData.get('description') as string || undefined,
+    });
+  };
+
+  const handleEditEmployee = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedEmployee) return;
+    const formData = new FormData(e.currentTarget);
+    const contractEndDate = formData.get('contractEndDate') as string;
+    const terminationDate = formData.get('terminationDate') as string;
+    
+    updateEmployeeMutation.mutate({
+      id: selectedEmployee.employee.id,
+      jobTitle: formData.get('jobTitle') as string || undefined,
+      employmentType: (formData.get('employmentType') as any) || undefined,
+      contractEndDate: contractEndDate || undefined,
+      salaryGrade: formData.get('salaryGrade') as string || undefined,
+      workLocation: formData.get('workLocation') as string || undefined,
+      workSchedule: formData.get('workSchedule') as string || undefined,
+      emergencyContactName: formData.get('emergencyContactName') as string || undefined,
+      emergencyContactPhone: formData.get('emergencyContactPhone') as string || undefined,
+      status: (formData.get('status') as any) || undefined,
+      terminationDate: terminationDate || undefined,
+      terminationReason: formData.get('terminationReason') as string || undefined,
+    });
+  };
+
+  const handleUpdateConfidential = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedEmployeeForConfidential) return;
+    const formData = new FormData(e.currentTarget);
+    
+    updateConfidentialMutation.mutate({
+      employeeId: selectedEmployeeForConfidential.employee.id,
+      baseSalary: formData.get('baseSalary') as string || undefined,
+      currency: formData.get('currency') as string || undefined,
+      benefits: formData.get('benefits') as string || undefined,
+      bankAccountNumber: formData.get('bankAccountNumber') as string || undefined,
+      bankName: formData.get('bankName') as string || undefined,
+      taxId: formData.get('taxId') as string || undefined,
+      ssn: formData.get('ssn') as string || undefined,
+      medicalRecords: formData.get('medicalRecords') as string || undefined,
+      notes: formData.get('notes') as string || undefined,
+    });
+  };
+
+  const openViewEmployee = (emp: any) => {
+    setSelectedEmployee(emp);
+    setViewEmployeeDialogOpen(true);
+  };
+
+  const openEditEmployee = (emp: any) => {
+    setSelectedEmployee(emp);
+    setEditEmployeeDialogOpen(true);
+  };
+
+  const openConfidentialDialog = (emp: any) => {
+    setSelectedEmployeeForConfidential(emp);
+    setConfidentialData(null);
+    setConfidentialDialogOpen(true);
   };
 
   const handleOpenPermissions = (targetUser: any) => {
@@ -309,13 +420,15 @@ export default function HumanResource() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users & Access</TabsTrigger>
           <TabsTrigger value="employees">Employees</TabsTrigger>
+          <TabsTrigger value="departments">Departments</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="leaves">Leaves</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          {user?.role === 'admin' && <TabsTrigger value="confidential">Confidential</TabsTrigger>}
           <TabsTrigger value="roles">Role Guide</TabsTrigger>
         </TabsList>
 
@@ -643,7 +756,15 @@ export default function HumanResource() {
                       <Badge variant={emp.employee.status === 'active' ? 'default' : 'secondary'}>
                         {emp.employee.status}
                       </Badge>
-                      <Button variant="outline" size="sm">View Details</Button>
+                      <Button variant="outline" size="sm" onClick={() => openViewEmployee(emp)}>View</Button>
+                      {user?.role === 'admin' && (
+                        <>
+                          <Button variant="outline" size="sm" onClick={() => openEditEmployee(emp)}>Edit</Button>
+                          <Button variant="ghost" size="sm" onClick={() => openConfidentialDialog(emp)} title="Confidential Info">
+                            <Shield className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -656,6 +777,171 @@ export default function HumanResource() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Departments Tab */}
+        <TabsContent value="departments" className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-2xl font-bold">Department Management</h2>
+              <p className="text-muted-foreground">Manage organizational departments and structure</p>
+            </div>
+            {user?.role === 'admin' && (
+              <Dialog open={addDepartmentDialogOpen} onOpenChange={setAddDepartmentDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Add Department
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Department</DialogTitle>
+                    <DialogDescription>
+                      Create a new department in your organization
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddDepartment} className="space-y-4">
+                    <div>
+                      <Label htmlFor="dept_name">Department Name *</Label>
+                      <Input id="dept_name" name="name" placeholder="e.g., Engineering" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="dept_description">Description</Label>
+                      <Input id="dept_description" name="description" placeholder="Brief description of the department" />
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setAddDepartmentDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={createDepartmentMutation.isPending}>
+                        {createDepartmentMutation.isPending ? "Creating..." : "Create Department"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>All Departments</CardTitle>
+              <CardDescription>List of all departments in the organization</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Department Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Employees</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {departments?.map((dept: any) => (
+                    <TableRow key={dept.id}>
+                      <TableCell className="font-medium">{dept.name}</TableCell>
+                      <TableCell>{dept.description || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {employees?.filter((e: any) => e.department?.id === dept.id).length || 0}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">View</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {(!departments || departments.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        No departments found. Add your first department to get started.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Confidential Tab - Admin Only */}
+        {user?.role === 'admin' && (
+          <TabsContent value="confidential" className="space-y-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <div className="flex items-center gap-2 text-red-700">
+                <Shield className="h-5 w-5" />
+                <span className="font-semibold">Confidential Information - Admin Access Only</span>
+              </div>
+              <p className="text-sm text-red-600 mt-1">
+                This section contains sensitive employee data including salary, benefits, and banking information.
+              </p>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Employee Confidential Records</CardTitle>
+                <CardDescription>Manage sensitive employee information securely</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Employee Code</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {employees?.map((emp: any) => (
+                      <TableRow key={emp.employee.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-semibold text-primary">
+                                {emp.user?.name?.charAt(0) || "?"}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium">{emp.user?.name}</p>
+                              <p className="text-xs text-muted-foreground">{emp.user?.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{emp.employee.employeeCode}</TableCell>
+                        <TableCell>{emp.department?.name || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant={emp.employee.status === 'active' ? 'default' : 'secondary'}>
+                            {emp.employee.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openConfidentialDialog(emp)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Shield className="h-4 w-4 mr-1" />
+                            View/Edit
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {(!employees || employees.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          No employees found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Attendance Tab */}
         <TabsContent value="attendance" className="space-y-6">
@@ -1285,6 +1571,276 @@ export default function HumanResource() {
               Close
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Employee Dialog */}
+      <Dialog open={viewEmployeeDialogOpen} onOpenChange={setViewEmployeeDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Employee Details</DialogTitle>
+            <DialogDescription>
+              Complete information about this employee
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmployee && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 pb-4 border-b">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-2xl font-semibold text-primary">
+                    {selectedEmployee.user?.name?.charAt(0) || "?"}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold">{selectedEmployee.user?.name}</h3>
+                  <p className="text-muted-foreground">{selectedEmployee.employee.jobTitle || 'No title'}</p>
+                  <p className="text-sm text-muted-foreground">{selectedEmployee.user?.email}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Employee Code</Label>
+                  <p className="font-medium">{selectedEmployee.employee.employeeCode}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Department</Label>
+                  <p className="font-medium">{selectedEmployee.department?.name || 'Not assigned'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Employment Type</Label>
+                  <p className="font-medium capitalize">{selectedEmployee.employee.employmentType?.replace('_', ' ') || 'Full Time'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <Badge variant={selectedEmployee.employee.status === 'active' ? 'default' : 'secondary'}>
+                    {selectedEmployee.employee.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Join Date</Label>
+                  <p className="font-medium">{selectedEmployee.employee.joinDate ? new Date(selectedEmployee.employee.joinDate).toLocaleDateString() : '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Salary Grade</Label>
+                  <p className="font-medium">{selectedEmployee.employee.salaryGrade || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Work Location</Label>
+                  <p className="font-medium">{selectedEmployee.employee.workLocation || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Work Schedule</Label>
+                  <p className="font-medium">{selectedEmployee.employee.workSchedule || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Emergency Contact</Label>
+                  <p className="font-medium">{selectedEmployee.employee.emergencyContactName || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Emergency Phone</Label>
+                  <p className="font-medium">{selectedEmployee.employee.emergencyContactPhone || '-'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewEmployeeDialogOpen(false)}>
+              Close
+            </Button>
+            {user?.role === 'admin' && (
+              <Button onClick={() => { setViewEmployeeDialogOpen(false); openEditEmployee(selectedEmployee); }}>
+                Edit Employee
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <Dialog open={editEmployeeDialogOpen} onOpenChange={setEditEmployeeDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Employee</DialogTitle>
+            <DialogDescription>
+              Update employee information
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmployee && (
+            <form onSubmit={handleEditEmployee} className="space-y-4">
+              <div className="flex items-center gap-4 pb-4 border-b">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-lg font-semibold text-primary">
+                    {selectedEmployee.user?.name?.charAt(0) || "?"}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-semibold">{selectedEmployee.user?.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedEmployee.employee.employeeCode}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_jobTitle">Job Title / Designation</Label>
+                  <Input id="edit_jobTitle" name="jobTitle" defaultValue={selectedEmployee.employee.jobTitle || ''} />
+                </div>
+                <div>
+                  <Label htmlFor="edit_employmentType">Employment Type</Label>
+                  <Select name="employmentType" defaultValue={selectedEmployee.employee.employmentType || 'full_time'}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full_time">Full Time</SelectItem>
+                      <SelectItem value="part_time">Part Time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="intern">Intern</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit_salaryGrade">Salary Grade</Label>
+                  <Input id="edit_salaryGrade" name="salaryGrade" defaultValue={selectedEmployee.employee.salaryGrade || ''} />
+                </div>
+                <div>
+                  <Label htmlFor="edit_workLocation">Work Location</Label>
+                  <Input id="edit_workLocation" name="workLocation" defaultValue={selectedEmployee.employee.workLocation || ''} />
+                </div>
+                <div>
+                  <Label htmlFor="edit_workSchedule">Work Schedule</Label>
+                  <Input id="edit_workSchedule" name="workSchedule" defaultValue={selectedEmployee.employee.workSchedule || ''} />
+                </div>
+                <div>
+                  <Label htmlFor="edit_status">Status</Label>
+                  <Select name="status" defaultValue={selectedEmployee.employee.status || 'active'}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="on_leave">On Leave</SelectItem>
+                      <SelectItem value="terminated">Terminated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit_contractEndDate">Contract End Date</Label>
+                  <Input id="edit_contractEndDate" name="contractEndDate" type="date" defaultValue={selectedEmployee.employee.contractEndDate ? new Date(selectedEmployee.employee.contractEndDate).toISOString().split('T')[0] : ''} />
+                </div>
+                <div>
+                  <Label htmlFor="edit_emergencyContactName">Emergency Contact Name</Label>
+                  <Input id="edit_emergencyContactName" name="emergencyContactName" defaultValue={selectedEmployee.employee.emergencyContactName || ''} />
+                </div>
+                <div>
+                  <Label htmlFor="edit_emergencyContactPhone">Emergency Contact Phone</Label>
+                  <Input id="edit_emergencyContactPhone" name="emergencyContactPhone" defaultValue={selectedEmployee.employee.emergencyContactPhone || ''} />
+                </div>
+                <div>
+                  <Label htmlFor="edit_terminationDate">Termination Date</Label>
+                  <Input id="edit_terminationDate" name="terminationDate" type="date" defaultValue={selectedEmployee.employee.terminationDate ? new Date(selectedEmployee.employee.terminationDate).toISOString().split('T')[0] : ''} />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="edit_terminationReason">Termination Reason</Label>
+                  <Input id="edit_terminationReason" name="terminationReason" defaultValue={selectedEmployee.employee.terminationReason || ''} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditEmployeeDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateEmployeeMutation.isPending}>
+                  {updateEmployeeMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Confidential Information Dialog */}
+      <Dialog open={confidentialDialogOpen} onOpenChange={setConfidentialDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Shield className="h-5 w-5" />
+              Confidential Information
+            </DialogTitle>
+            <DialogDescription>
+              Sensitive employee data - Admin access only
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmployeeForConfidential && (
+            <form onSubmit={handleUpdateConfidential} className="space-y-4">
+              <div className="flex items-center gap-4 pb-4 border-b">
+                <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <span className="text-lg font-semibold text-red-600">
+                    {selectedEmployeeForConfidential.user?.name?.charAt(0) || "?"}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-semibold">{selectedEmployeeForConfidential.user?.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedEmployeeForConfidential.employee.employeeCode} • {selectedEmployeeForConfidential.employee.jobTitle}</p>
+                </div>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                ⚠️ This information is highly confidential. Handle with care.
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="conf_baseSalary">Base Salary</Label>
+                  <Input id="conf_baseSalary" name="baseSalary" placeholder="e.g., 50000" />
+                </div>
+                <div>
+                  <Label htmlFor="conf_currency">Currency</Label>
+                  <Select name="currency" defaultValue="BDT">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BDT">BDT (Taka)</SelectItem>
+                      <SelectItem value="USD">USD (Dollar)</SelectItem>
+                      <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="conf_benefits">Benefits Package</Label>
+                  <Input id="conf_benefits" name="benefits" placeholder="e.g., Health insurance, Transport allowance" />
+                </div>
+                <div>
+                  <Label htmlFor="conf_bankName">Bank Name</Label>
+                  <Input id="conf_bankName" name="bankName" placeholder="e.g., Dutch Bangla Bank" />
+                </div>
+                <div>
+                  <Label htmlFor="conf_bankAccountNumber">Bank Account Number</Label>
+                  <Input id="conf_bankAccountNumber" name="bankAccountNumber" placeholder="Account number" />
+                </div>
+                <div>
+                  <Label htmlFor="conf_taxId">Tax ID / TIN</Label>
+                  <Input id="conf_taxId" name="taxId" placeholder="Tax identification number" />
+                </div>
+                <div>
+                  <Label htmlFor="conf_ssn">SSN / NID</Label>
+                  <Input id="conf_ssn" name="ssn" placeholder="National ID or SSN" />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="conf_medicalRecords">Medical Records Notes</Label>
+                  <Input id="conf_medicalRecords" name="medicalRecords" placeholder="Any medical conditions or notes" />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="conf_notes">Additional Notes</Label>
+                  <Input id="conf_notes" name="notes" placeholder="Any other confidential notes" />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setConfidentialDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateConfidentialMutation.isPending} className="bg-red-600 hover:bg-red-700">
+                  {updateConfidentialMutation.isPending ? "Saving..." : "Save Confidential Info"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
