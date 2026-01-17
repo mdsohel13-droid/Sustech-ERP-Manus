@@ -267,10 +267,16 @@ export default function HumanResource() {
     setEditEmployeeDialogOpen(true);
   };
 
-  const openConfidentialDialog = (emp: any) => {
+  const openConfidentialDialog = async (emp: any) => {
     setSelectedEmployeeForConfidential(emp);
-    setConfidentialData(null);
     setConfidentialDialogOpen(true);
+    // Fetch existing confidential data
+    try {
+      const data = await utils.hr.getEmployeeConfidential.fetch({ employeeId: emp.employee.id });
+      setConfidentialData(data);
+    } catch (error) {
+      setConfidentialData(null);
+    }
   };
 
   // Job Description mutations
@@ -2168,11 +2174,11 @@ export default function HumanResource() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="conf_baseSalary">Base Salary</Label>
-                  <Input id="conf_baseSalary" name="baseSalary" placeholder="e.g., 50000" />
+                  <Input id="conf_baseSalary" name="baseSalary" placeholder="e.g., 50000" defaultValue={confidentialData?.baseSalary || ''} key={`salary-${confidentialData?.baseSalary}`} />
                 </div>
                 <div>
                   <Label htmlFor="conf_currency">Currency</Label>
-                  <Select name="currency" defaultValue="BDT">
+                  <Select name="currency" defaultValue={confidentialData?.currency || 'BDT'} key={`currency-${confidentialData?.currency}`}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -2185,31 +2191,31 @@ export default function HumanResource() {
                 </div>
                 <div className="col-span-2">
                   <Label htmlFor="conf_benefits">Benefits Package</Label>
-                  <Input id="conf_benefits" name="benefits" placeholder="e.g., Health insurance, Transport allowance" />
+                  <Input id="conf_benefits" name="benefits" placeholder="e.g., Health insurance, Transport allowance" defaultValue={confidentialData?.benefits || ''} key={`benefits-${confidentialData?.benefits}`} />
                 </div>
                 <div>
                   <Label htmlFor="conf_bankName">Bank Name</Label>
-                  <Input id="conf_bankName" name="bankName" placeholder="e.g., Dutch Bangla Bank" />
+                  <Input id="conf_bankName" name="bankName" placeholder="e.g., Dutch Bangla Bank" defaultValue={confidentialData?.bankName || ''} key={`bankName-${confidentialData?.bankName}`} />
                 </div>
                 <div>
                   <Label htmlFor="conf_bankAccountNumber">Bank Account Number</Label>
-                  <Input id="conf_bankAccountNumber" name="bankAccountNumber" placeholder="Account number" />
+                  <Input id="conf_bankAccountNumber" name="bankAccountNumber" placeholder="Account number" defaultValue={confidentialData?.bankAccountNumber || ''} key={`bankAccount-${confidentialData?.bankAccountNumber}`} />
                 </div>
                 <div>
                   <Label htmlFor="conf_taxId">Tax ID / TIN</Label>
-                  <Input id="conf_taxId" name="taxId" placeholder="Tax identification number" />
+                  <Input id="conf_taxId" name="taxId" placeholder="Tax identification number" defaultValue={confidentialData?.taxId || ''} key={`taxId-${confidentialData?.taxId}`} />
                 </div>
                 <div>
                   <Label htmlFor="conf_ssn">SSN / NID</Label>
-                  <Input id="conf_ssn" name="ssn" placeholder="National ID or SSN" />
+                  <Input id="conf_ssn" name="ssn" placeholder="National ID or SSN" defaultValue={confidentialData?.ssn || ''} key={`ssn-${confidentialData?.ssn}`} />
                 </div>
                 <div className="col-span-2">
                   <Label htmlFor="conf_medicalRecords">Medical Records Notes</Label>
-                  <Input id="conf_medicalRecords" name="medicalRecords" placeholder="Any medical conditions or notes" />
+                  <Input id="conf_medicalRecords" name="medicalRecords" placeholder="Any medical conditions or notes" defaultValue={confidentialData?.medicalRecords || ''} key={`medical-${confidentialData?.medicalRecords}`} />
                 </div>
                 <div className="col-span-2">
                   <Label htmlFor="conf_notes">Additional Notes</Label>
-                  <Input id="conf_notes" name="notes" placeholder="Any other confidential notes" />
+                  <Input id="conf_notes" name="notes" placeholder="Any other confidential notes" defaultValue={confidentialData?.notes || ''} key={`notes-${confidentialData?.notes}`} />
                 </div>
               </div>
               <DialogFooter>

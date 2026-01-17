@@ -235,3 +235,9 @@
 - [x] Create onboarding task templates (documents, equipment, training, etc.)
 - [x] Add onboarding progress tracking per employee
 - [x] Test all new features
+
+
+## HR Module - Confidential Information Setup
+- [x] Add confidential information for existing employee (Asib)
+- [x] Include salary, benefits, and banking details
+- [x] Test confidential information view/edit functionality
