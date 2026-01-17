@@ -30,7 +30,7 @@ export default function Projects() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draggedProject, setDraggedProject] = useState<number | null>(null);
   const [editingProject, setEditingProject] = useState<any>(null);
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('list');  // Default to List view
   const [sortField, setSortField] = useState<'name' | 'value' | 'createdAt'>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [financialsOpen, setFinancialsOpen] = useState(false);

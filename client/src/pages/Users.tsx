@@ -26,7 +26,7 @@ export default function Users() {
     onSuccess: () => {
       utils.users.getAll.invalidate();
       toast.success("User role updated successfully");
-      setEditingUserId(null);
+      setEditingUserId(null);  // Close the dropdown after successful update
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update role");
@@ -65,10 +65,17 @@ export default function Users() {
   };
 
   const handleRoleChange = (userId: number, newRole: string) => {
-    updateRoleMutation.mutate({
-      userId,
-      role: newRole as "admin" | "manager" | "viewer" | "user",
-    });
+    updateRoleMutation.mutate(
+      {
+        userId,
+        role: newRole as "admin" | "manager" | "viewer" | "user",
+      },
+      {
+        onSuccess: () => {
+          setEditingUserId(null);  // Immediately close dropdown after change
+        },
+      }
+    );
   };
 
   const getRoleBadgeColor = (role: string) => {

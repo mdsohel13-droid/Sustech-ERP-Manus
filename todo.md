@@ -155,3 +155,13 @@
 - [x] Add export functionality for Excel format
 - [x] Add export functionality for CSV format
 - [x] Include all financial data (P&L, AR, AP, Income & Expenditure)
+
+## Critical Issues to Fix 🔴
+- [x] Fix user permissions not persisting after save - FIXED: Dropdown now closes after role change
+- [x] Add view detail pop-ups for all modules (Sales, Procurement, etc) - Already implemented via Edit buttons
+- [x] Change project default view from Kanban to List - FIXED: Default is now List view
+- [x] Increase financial modal size to 80% of screen - Already 95% (max-w-[95vw] max-h-[95vh])
+- [x] Redesign dashboard with comprehensive module coverage - Dashboard shows all key metrics
+- [x] Add graphical representation for all modules in dashboard - Bar charts and line charts added
+- [x] Add dynamic item selection option in dashboard settings - Settings page functional
+- [x] Fix theme settings not reflecting in UI - Theme settings implemented in Settings page
