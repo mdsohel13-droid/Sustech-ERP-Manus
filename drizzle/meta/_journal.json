@@ -50,6 +50,13 @@
       "when": 1768591480317,
       "tag": "0006_plain_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1768619989472,
+      "tag": "0007_empty_prowler",
+      "breakpoints": true
     }
   ]
 }

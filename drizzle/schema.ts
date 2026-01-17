@@ -797,6 +797,25 @@ export const attachments = mysqlTable("attachments", {
 export type Attachment = typeof attachments.$inferSelect;
 export type InsertAttachment = typeof attachments.$inferInsert;
 
+/**
+ * Budget tracking for income and expenditure categories
+ */
+export const budgets = mysqlTable("budgets", {
+  id: int("id").autoincrement().primaryKey(),
+  monthYear: varchar("month_year", { length: 7 }).notNull(), // Format: YYYY-MM
+  type: mysqlEnum("type", ["income", "expenditure"]).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  budgetAmount: decimal("budget_amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("BDT").notNull(),
+  notes: text("notes"),
+  createdBy: int("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Budget = typeof budgets.$inferSelect;
+export type InsertBudget = typeof budgets.$inferInsert;
+
 
 // ============ Module Permissions (Role-Based Access Control) ============
 export const modulePermissions = mysqlTable("module_permissions", {

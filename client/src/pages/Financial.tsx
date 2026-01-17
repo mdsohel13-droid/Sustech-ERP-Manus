@@ -12,14 +12,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { Link } from "wouter";
+import { toast } from "sonner";
 
 export default function Financial() {
   const { currency } = useCurrency();
+  const utils = trpc.useUtils();
+
+  const notifyOverdueMutation = trpc.financial.notifyOverdueAR.useMutation({
+    onSuccess: (data) => {
+      if (data.count === 0) {
+        toast.info("No overdue receivables found");
+      } else {
+        toast.success(`Notification sent for ${data.count} overdue receivables (Total: ${formatCurrency(data.totalOverdue, currency)})`);
+      }
+    },
+    onError: () => {
+      toast.error("Failed to send notification");
+    },
+  });
 
   // Queries
   const { data: arData } = trpc.financial.getAllAR.useQuery();
@@ -69,13 +84,23 @@ export default function Financial() {
             Comprehensive financial tracking with P&L, receivables, and payables
           </p>
         </div>
-        <Link href="/income-expenditure">
-          <Button>
-            <FileText className="h-4 w-4 mr-2" />
-            Income & Expenditure
-            <ArrowRight className="h-4 w-4 ml-2" />
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => notifyOverdueMutation.mutate()}
+            disabled={notifyOverdueMutation.isPending}
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            {notifyOverdueMutation.isPending ? "Sending..." : "Notify Overdue AR"}
           </Button>
-        </Link>
+          <Link href="/income-expenditure">
+            <Button>
+              <FileText className="h-4 w-4 mr-2" />
+              Income & Expenditure
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Financial Summary Cards */}

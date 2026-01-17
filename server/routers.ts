@@ -79,6 +79,28 @@ export const appRouter = router({
       return await db.getARSummary();
     }),
 
+    notifyOverdueAR: protectedProcedure
+      .mutation(async () => {
+        const overdueAR = await db.getOverdueAR(90); // 90+ days overdue
+        
+        if (overdueAR.length === 0) {
+          return { success: true, message: "No overdue receivables found" };
+        }
+
+        const totalOverdue = overdueAR.reduce((sum, ar) => sum + Number(ar.amount), 0);
+        const content = `You have ${overdueAR.length} overdue receivables (90+ days) totaling ${totalOverdue.toFixed(2)}:\n\n` +
+          overdueAR.map((ar, idx) => 
+            `${idx + 1}. ${ar.customerName}: ${ar.amount} (Invoice: ${ar.invoiceNumber || 'N/A'}, Due: ${ar.dueDate})`
+          ).join('\n');
+
+        const notified = await notifyOwner({
+          title: `⚠️ ${overdueAR.length} Overdue Receivables (90+ days)`,
+          content,
+        });
+
+        return { success: notified, count: overdueAR.length, totalOverdue };
+      }),
+
     // Accounts Payable
     createAP: protectedProcedure
       .input(z.object({
@@ -1025,6 +1047,55 @@ Provide 2-3 actionable business insights.`;
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteIncomeExpenditure(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============ Budget Module ============
+  budget: router({  
+    create: protectedProcedure
+      .input(z.object({
+        monthYear: z.string(), // Format: YYYY-MM
+        type: z.enum(["income", "expenditure"]),
+        category: z.string(),
+        budgetAmount: z.string(),
+        currency: z.string().default("BDT"),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.createBudget({
+          ...input,
+          createdBy: ctx.user.id,
+        } as any);
+        return { success: true };
+      }),
+
+    getAll: protectedProcedure.query(async () => {
+      return await db.getAllBudgets();
+    }),
+
+    getByMonthYear: protectedProcedure
+      .input(z.object({ monthYear: z.string() }))
+      .query(async ({ input }) => {
+        return await db.getBudgetsByMonthYear(input.monthYear);
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        budgetAmount: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateBudget(id, data as any);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteBudget(input.id);
         return { success: true };
       }),
   }),

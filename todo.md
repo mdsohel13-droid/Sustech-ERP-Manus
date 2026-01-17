@@ -134,3 +134,24 @@
 - [ ] Add bar charts to Projects module for project status distribution
 - [x] Add bar charts to Income & Expenditure for category breakdown
 - [ ] Ensure all bar charts are mobile-responsive
+
+
+## Budget Tracking Feature 💰
+- [x] Create budget table in database schema
+- [x] Add budget CRUD procedures in routers
+- [x] Build budget management UI in Income & Expenditure page
+- [x] Add monthly budget vs actual comparison charts
+- [x] Show budget alerts when approaching or exceeding limits
+
+## Email Notifications for Overdue Receivables 📧
+- [x] Create notification system for 90+ days overdue AR
+- [x] Add email notification procedure using built-in notification API
+- [x] Create scheduled task to check and send daily notifications
+- [x] Add notification preferences in settings
+
+## Enhanced Reports Module 📊
+- [x] Create Reports page with date range filters
+- [x] Add export functionality for PDF format
+- [x] Add export functionality for Excel format
+- [x] Add export functionality for CSV format
+- [x] Include all financial data (P&L, AR, AP, Income & Expenditure)

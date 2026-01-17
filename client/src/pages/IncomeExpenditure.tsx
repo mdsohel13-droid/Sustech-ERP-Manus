@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, Paperclip } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, Paperclip, Target, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
@@ -410,6 +410,13 @@ export default function IncomeExpenditure() {
         </Card>
       </div>
 
+      {/* Budget Tracking Section */}
+      <BudgetTrackingSection 
+        incomeCategoryData={incomeCategoryData}
+        expenditureCategoryData={expenditureCategoryData}
+        currency={currency}
+      />
+
       {/* Transaction Tables */}
       <Tabs defaultValue="all" className="space-y-4">
         <TabsList>
@@ -625,5 +632,259 @@ export default function IncomeExpenditure() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// Budget Tracking Component
+function BudgetTrackingSection({ incomeCategoryData, expenditureCategoryData, currency }: {
+  incomeCategoryData: Array<{ category: string; total: number }>;
+  expenditureCategoryData: Array<{ category: string; total: number }>;
+  currency: string;
+}) {
+  const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
+  const [editingBudget, setEditingBudget] = useState<any>(null);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const utils = trpc.useUtils();
+  const { data: budgets } = trpc.budget.getByMonthYear.useQuery({ monthYear: selectedMonth });
+
+  const createBudgetMutation = trpc.budget.create.useMutation({
+    onSuccess: () => {
+      utils.budget.getByMonthYear.invalidate();
+      toast.success("Budget created successfully");
+      setBudgetDialogOpen(false);
+      setEditingBudget(null);
+    },
+  });
+
+  const updateBudgetMutation = trpc.budget.update.useMutation({
+    onSuccess: () => {
+      utils.budget.getByMonthYear.invalidate();
+      toast.success("Budget updated");
+      setBudgetDialogOpen(false);
+      setEditingBudget(null);
+    },
+  });
+
+  const deleteBudgetMutation = trpc.budget.delete.useMutation({
+    onSuccess: () => {
+      utils.budget.getByMonthYear.invalidate();
+      toast.success("Budget deleted");
+    },
+  });
+
+  const handleBudgetSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const data = {
+      monthYear: selectedMonth,
+      type: formData.get("type") as "income" | "expenditure",
+      category: formData.get("category") as string,
+      budgetAmount: formData.get("budgetAmount") as string,
+      currency: formData.get("currency") as string || currency,
+      notes: formData.get("notes") as string || undefined,
+    };
+
+    if (editingBudget) {
+      updateBudgetMutation.mutate({ id: editingBudget.id, budgetAmount: data.budgetAmount, notes: data.notes });
+    } else {
+      createBudgetMutation.mutate(data);
+    }
+  };
+
+  // Calculate budget vs actual
+  const budgetComparison = budgets?.map((budget) => {
+    const actualData = budget.type === "income" ? incomeCategoryData : expenditureCategoryData;
+    const actual = actualData.find((item) => item.category === budget.category)?.total || 0;
+    const budgetAmount = Number(budget.budgetAmount);
+    const percentage = budgetAmount > 0 ? (actual / budgetAmount) * 100 : 0;
+
+    return {
+      ...budget,
+      actual,
+      budgetAmount,
+      percentage,
+      status: percentage >= 100 ? "exceeded" : percentage >= 80 ? "warning" : "ok",
+    };
+  }) || [];
+
+  return (
+    <Card className="editorial-card">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Budget Tracking
+            </CardTitle>
+            <CardDescription>Set and monitor monthly budgets for income and expenditure categories</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-40"
+            />
+            <Dialog open={budgetDialogOpen} onOpenChange={(open) => {
+              setBudgetDialogOpen(open);
+              if (!open) setEditingBudget(null);
+            }}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Set Budget
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingBudget ? "Edit Budget" : "Set New Budget"}</DialogTitle>
+                  <DialogDescription>
+                    Define budget limits for {selectedMonth}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleBudgetSubmit}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="budget-type">Type *</Label>
+                      <Select name="type" defaultValue={editingBudget?.type || "expenditure"} disabled={!!editingBudget}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="income">Income</SelectItem>
+                          <SelectItem value="expenditure">Expenditure</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="budget-category">Category *</Label>
+                      <Input
+                        id="budget-category"
+                        name="category"
+                        required
+                        disabled={!!editingBudget}
+                        defaultValue={editingBudget?.category || ""}
+                        placeholder="e.g., salary, equipment, sales_product"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="budgetAmount">Budget Amount *</Label>
+                      <Input
+                        id="budgetAmount"
+                        name="budgetAmount"
+                        type="number"
+                        step="0.01"
+                        required
+                        defaultValue={editingBudget?.budgetAmount || ""}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="budget-currency">Currency</Label>
+                      <Select name="currency" defaultValue={editingBudget?.currency || currency}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="BDT">BDT (৳)</SelectItem>
+                          <SelectItem value="USD">USD ($)</SelectItem>
+                          <SelectItem value="EUR">EUR (€)</SelectItem>
+                          <SelectItem value="CNY">CNY (¥)</SelectItem>
+                          <SelectItem value="INR">INR (₹)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="budget-notes">Notes</Label>
+                      <Textarea
+                        id="budget-notes"
+                        name="notes"
+                        rows={2}
+                        defaultValue={editingBudget?.notes || ""}
+                        placeholder="Optional notes about this budget"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={createBudgetMutation.isPending || updateBudgetMutation.isPending}>
+                      {editingBudget ? (updateBudgetMutation.isPending ? "Updating..." : "Update Budget") : (createBudgetMutation.isPending ? "Creating..." : "Create Budget")}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {budgetComparison.length > 0 ? (
+          <div className="space-y-4">
+            {budgetComparison.map((item) => (
+              <div key={item.id} className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={item.type === "income" ? "default" : "destructive"}>
+                      {item.type}
+                    </Badge>
+                    <span className="font-medium capitalize">{item.category.replace(/_/g, " ")}</span>
+                    {item.status === "exceeded" && (
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                    )}
+                    {item.status === "warning" && (
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setEditingBudget(item); setBudgetDialogOpen(true); }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm("Delete this budget?")) {
+                          deleteBudgetMutation.mutate({ id: item.id });
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Budget: {formatCurrency(item.budgetAmount, item.currency || currency)}</span>
+                    <span>Actual: {formatCurrency(item.actual, item.currency || currency)}</span>
+                    <span className={item.percentage >= 100 ? "text-red-600 font-semibold" : item.percentage >= 80 ? "text-yellow-600 font-semibold" : "text-green-600"}>
+                      {item.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div
+                      className={`h-2.5 rounded-full ${
+                        item.percentage >= 100 ? "bg-red-500" :
+                        item.percentage >= 80 ? "bg-yellow-500" :
+                        "bg-green-500"
+                      }`}
+                      style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <Target className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p>No budgets set for {selectedMonth}</p>
+            <p className="text-sm">Click "Set Budget" to create your first budget</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

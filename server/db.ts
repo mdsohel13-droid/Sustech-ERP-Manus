@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, desc, asc, sql, isNull, lt } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql, isNull, lt, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   attachments, Attachment, InsertAttachment,
@@ -32,7 +32,8 @@ import {
   attendanceRecords, InsertAttendanceRecord,
   leaveBalances, InsertLeaveBalance,
   leaveApplications, InsertLeaveApplication,
-  performanceReviews, InsertPerformanceReview
+  performanceReviews, InsertPerformanceReview,
+  budgets, InsertBudget
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -164,6 +165,25 @@ export async function getARSummary() {
   }).from(accountsReceivable);
   
   return result[0] || { total: 0, overdue: 0, pending: 0 };
+}
+
+export async function getOverdueAR(daysOverdue: number = 90) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysOverdue);
+  
+  return await db
+    .select()
+    .from(accountsReceivable)
+    .where(
+      and(
+        lte(accountsReceivable.dueDate, cutoffDate),
+        ne(accountsReceivable.status, "paid")
+      )
+    )
+    .orderBy(accountsReceivable.dueDate);
 }
 
 // ============ Accounts Payable ============
@@ -868,6 +888,43 @@ export async function deleteIncomeExpenditure(id: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(incomeExpenditure).where(eq(incomeExpenditure.id, id));
+}
+
+// ============ Budget Module ============
+export async function createBudget(data: InsertBudget) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(budgets).values(data);
+  return result;
+}
+
+export async function getAllBudgets() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(budgets).orderBy(desc(budgets.monthYear));
+}
+
+export async function getBudgetsByMonthYear(monthYear: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(budgets).where(eq(budgets.monthYear, monthYear));
+}
+
+export async function updateBudget(id: number, data: Partial<InsertBudget>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(budgets).set(data).where(eq(budgets.id, id));
+}
+
+export async function deleteBudget(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(budgets).where(eq(budgets.id, id));
 }
 
 
