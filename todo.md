@@ -115,3 +115,22 @@
 - [ ] Implement proper edit dialogs for Sales tracking
 - [ ] Implement proper edit dialogs for Team attendance
 - [ ] Test all CRUD operations (Create, Read, Update, Delete)
+
+
+## Attachment System Enhancement
+- [x] Make attachment upload buttons clearly visible in Sales module
+- [x] Make attachment upload buttons clearly visible in Tender/Quotation module
+- [x] Make attachment upload buttons clearly visible in Income & Expenditure module
+- [x] Make attachment upload buttons clearly visible in Action Tracker module
+- [x] Test attachment upload functionality in all modules
+- [x] Test attachment download functionality in all modules
+- [x] Test attachment delete functionality in all modules
+
+
+## Bar Charts Enhancement (User Requested 📈📊)
+- [x] Add bar charts to Dashboard for key metrics visualization
+- [x] Add bar charts to Sales module for product performance
+- [x] Add bar charts to Financial module for AR/AP aging
+- [ ] Add bar charts to Projects module for project status distribution
+- [x] Add bar charts to Income & Expenditure for category breakdown
+- [ ] Ensure all bar charts are mobile-responsive

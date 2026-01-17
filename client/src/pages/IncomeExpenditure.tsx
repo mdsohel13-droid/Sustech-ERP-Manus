@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, Paperclip } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -329,14 +330,36 @@ export default function IncomeExpenditure() {
           </CardHeader>
           <CardContent>
             {incomeCategoryData.length > 0 ? (
-              <div className="space-y-3">
-                {incomeCategoryData.map((cat) => (
-                  <div key={cat.category} className="flex items-center justify-between">
-                    <span className="text-sm capitalize">{cat.category.replace(/_/g, " ")}</span>
-                    <span className="font-semibold">{formatCurrency(cat.total, currency)}</span>
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="space-y-3 mb-6">
+                  {incomeCategoryData.map((cat) => (
+                    <div key={cat.category} className="flex items-center justify-between">
+                      <span className="text-sm capitalize">{cat.category.replace(/_/g, " ")}</span>
+                      <span className="font-semibold">{formatCurrency(cat.total, currency)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="h-64 mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={incomeCategoryData.map((cat) => ({
+                        name: cat.category.replace(/_/g, " "),
+                        amount: cat.total,
+                      }))}
+                      margin={{ top: 10, right: 10, left: 10, bottom: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value, currency)}
+                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px' }}
+                      />
+                      <Bar dataKey="amount" fill="#10b981" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
             ) : (
               <p className="text-sm text-muted-foreground">No income entries yet</p>
             )}
@@ -350,14 +373,36 @@ export default function IncomeExpenditure() {
           </CardHeader>
           <CardContent>
             {expenditureCategoryData.length > 0 ? (
-              <div className="space-y-3">
-                {expenditureCategoryData.map((cat) => (
-                  <div key={cat.category} className="flex items-center justify-between">
-                    <span className="text-sm capitalize">{cat.category.replace(/_/g, " ")}</span>
-                    <span className="font-semibold">{formatCurrency(cat.total, currency)}</span>
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="space-y-3 mb-6">
+                  {expenditureCategoryData.map((cat) => (
+                    <div key={cat.category} className="flex items-center justify-between">
+                      <span className="text-sm capitalize">{cat.category.replace(/_/g, " ")}</span>
+                      <span className="font-semibold">{formatCurrency(cat.total, currency)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="h-64 mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={expenditureCategoryData.map((cat) => ({
+                        name: cat.category.replace(/_/g, " "),
+                        amount: cat.total,
+                      }))}
+                      margin={{ top: 10, right: 10, left: 10, bottom: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value, currency)}
+                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px' }}
+                      />
+                      <Bar dataKey="amount" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
             ) : (
               <p className="text-sm text-muted-foreground">No expenditure entries yet</p>
             )}

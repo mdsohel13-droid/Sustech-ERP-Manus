@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { Link } from "wouter";
@@ -192,6 +193,31 @@ export default function Financial() {
                   {formatCurrency(agingAnalysis["90+"] || 0, currency)}
                 </p>
               </div>
+            </div>
+            
+            {/* Bar Chart Visualization */}
+            <div className="mt-6 h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    { name: 'Current', amount: agingAnalysis.current || 0, fill: '#10b981' },
+                    { name: '1-30 Days', amount: agingAnalysis["1-30"] || 0, fill: '#eab308' },
+                    { name: '31-60 Days', amount: agingAnalysis["31-60"] || 0, fill: '#f97316' },
+                    { name: '61-90 Days', amount: agingAnalysis["61-90"] || 0, fill: '#ef4444' },
+                    { name: '90+ Days', amount: agingAnalysis["90+"] || 0, fill: '#dc2626' },
+                  ]}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value: number) => formatCurrency(value, currency)}
+                    contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="amount" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>

@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Target, BarChart3, Paperclip } from "lucide-react";
+import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText } from "lucide-react";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek } from "date-fns";
@@ -18,6 +18,10 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 export default function Sales() {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
+  const [viewTrackingDialogOpen, setViewTrackingDialogOpen] = useState(false);
+  const [viewProductDialogOpen, setViewProductDialogOpen] = useState(false);
+  const [selectedTracking, setSelectedTracking] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const utils = trpc.useUtils();
   const { data: products } = trpc.sales.getAllProducts.useQuery();
@@ -100,32 +104,32 @@ export default function Sales() {
         </Card>
         <Card className="editorial-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm label-text">Total Target (All Time)</CardTitle>
+            <CardTitle className="text-sm label-text">This Week Target</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ${performance?.reduce((sum, p) => sum + Number(p.totalTarget || 0), 0).toLocaleString() || 0}
+              ${tracking?.slice(0, 1).reduce((sum, t) => sum + Number(t.target), 0).toLocaleString() || 0}
             </div>
           </CardContent>
         </Card>
         <Card className="editorial-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm label-text">Total Actual (All Time)</CardTitle>
+            <CardTitle className="text-sm label-text">This Week Actual</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ${performance?.reduce((sum, p) => sum + Number(p.totalActual || 0), 0).toLocaleString() || 0}
+              ${tracking?.slice(0, 1).reduce((sum, t) => sum + Number(t.actual), 0).toLocaleString() || 0}
             </div>
           </CardContent>
         </Card>
         <Card className="editorial-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm label-text">Avg Achievement Rate</CardTitle>
+            <CardTitle className="text-sm label-text">Achievement Rate</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
               {performance && performance.length > 0
-                ? Math.round(performance.reduce((sum, p) => sum + Number(p.achievementRate || 0), 0) / performance.length)
+                ? (performance.reduce((sum, p) => sum + Number(p.achievementRate), 0) / performance.length).toFixed(1)
                 : 0}%
             </div>
           </CardContent>
@@ -136,7 +140,10 @@ export default function Sales() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="editorial-card">
           <CardHeader>
-            <CardTitle>Weekly Performance Trend</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Target vs Actual Trend
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -146,8 +153,8 @@ export default function Sales() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="target" stroke="#8884d8" name="Target" />
-                <Line type="monotone" dataKey="actual" stroke="#82ca9d" name="Actual" />
+                <Line type="monotone" dataKey="target" stroke="#8884d8" strokeWidth={2} name="Target" />
+                <Line type="monotone" dataKey="actual" stroke="#82ca9d" strokeWidth={2} name="Actual" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -155,11 +162,14 @@ export default function Sales() {
 
         <Card className="editorial-card">
           <CardHeader>
-            <CardTitle>Target vs Actual Comparison</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Weekly Comparison
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData.slice(-6)}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="week" />
                 <YAxis />
@@ -173,6 +183,7 @@ export default function Sales() {
         </Card>
       </div>
 
+      {/* Tabs */}
       <Tabs defaultValue="tracking" className="space-y-4">
         <TabsList>
           <TabsTrigger value="tracking">Sales Tracking</TabsTrigger>
@@ -182,7 +193,7 @@ export default function Sales() {
 
         <TabsContent value="tracking" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-medium">Weekly Sales Data</h3>
+            <h3 className="text-2xl font-medium">Weekly Sales Records</h3>
             <Dialog open={trackingDialogOpen} onOpenChange={setTrackingDialogOpen}>
               <DialogTrigger asChild>
                 <Button><Plus className="h-4 w-4 mr-2" />Record Sales</Button>
@@ -191,7 +202,7 @@ export default function Sales() {
                 <form onSubmit={handleTrackingSubmit}>
                   <DialogHeader>
                     <DialogTitle>Record Weekly Sales</DialogTitle>
-                    <DialogDescription>Enter target and actual sales for the week</DialogDescription>
+                    <DialogDescription>Enter target and actual sales for a product this week</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
@@ -225,10 +236,6 @@ export default function Sales() {
                       <Label htmlFor="notes">Notes (Optional)</Label>
                       <Input id="notes" name="notes" placeholder="Additional comments" />
                     </div>
-                    <div className="grid gap-2">
-                      <Label><Paperclip className="h-4 w-4 inline mr-1" />Attachments</Label>
-                      <AttachmentUpload entityType="sales" entityId={0} />
-                    </div>
                   </div>
                   <DialogFooter>
                     <Button type="submit" disabled={createTrackingMutation.isPending}>
@@ -250,6 +257,9 @@ export default function Sales() {
                   <TableHead className="text-right">Actual</TableHead>
                   <TableHead className="text-right">Achievement</TableHead>
                   <TableHead>Notes</TableHead>
+                  <TableHead className="text-center">
+                    <FileText className="h-4 w-4 inline" />
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -258,7 +268,14 @@ export default function Sales() {
                     const product = products?.find(p => p.id === item.productId);
                     const achievement = (Number(item.actual) / Number(item.target)) * 100;
                     return (
-                      <TableRow key={item.id}>
+                      <TableRow 
+                        key={item.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => {
+                          setSelectedTracking(item);
+                          setViewTrackingDialogOpen(true);
+                        }}
+                      >
                         <TableCell>{format(new Date(item.weekStartDate), "MMM dd, yyyy")}</TableCell>
                         <TableCell>{product?.name || `Product ${item.productId}`}</TableCell>
                         <TableCell className="text-right">${Number(item.target).toLocaleString()}</TableCell>
@@ -269,12 +286,15 @@ export default function Sales() {
                           </Badge>
                         </TableCell>
                         <TableCell>{item.notes || "-"}</TableCell>
+                        <TableCell className="text-center">
+                          <Paperclip className="h-4 w-4 inline text-muted-foreground" />
+                        </TableCell>
                       </TableRow>
                     );
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">No sales data recorded yet.</TableCell>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">No sales data recorded yet.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -323,10 +343,6 @@ export default function Sales() {
                       <Label htmlFor="description">Description (Optional)</Label>
                       <Input id="description" name="description" placeholder="Additional details" />
                     </div>
-                    <div className="grid gap-2">
-                      <Label><Paperclip className="h-4 w-4 inline mr-1" />Attachments</Label>
-                      <AttachmentUpload entityType="sales_product" entityId={0} />
-                    </div>
                   </div>
                   <DialogFooter>
                     <Button type="submit" disabled={createProductMutation.isPending}>
@@ -341,9 +357,19 @@ export default function Sales() {
           <div className="grid gap-4 md:grid-cols-3">
             {products && products.length > 0 ? (
               products.map((product) => (
-                <Card key={product.id} className="editorial-card">
+                <Card 
+                  key={product.id} 
+                  className="editorial-card cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    setViewProductDialogOpen(true);
+                  }}
+                >
                   <CardHeader>
-                    <CardTitle className="text-lg">{product.name}</CardTitle>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      {product.name}
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    </CardTitle>
                     <Badge variant="outline" className="w-fit">{product.category}</Badge>
                   </CardHeader>
                   <CardContent>
@@ -405,6 +431,106 @@ export default function Sales() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* View/Edit Sales Tracking Dialog with Attachments */}
+      <Dialog open={viewTrackingDialogOpen} onOpenChange={setViewTrackingDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Sales Record Details</DialogTitle>
+            <DialogDescription>
+              Week of {selectedTracking && format(new Date(selectedTracking.weekStartDate), "MMM dd, yyyy")}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTracking && (
+            <div className="space-y-6">
+              <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Product</Label>
+                    <p className="font-medium">{products?.find(p => p.id === selectedTracking.productId)?.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Week</Label>
+                    <p className="font-medium">{format(new Date(selectedTracking.weekStartDate), "MMM dd, yyyy")}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Target</Label>
+                    <p className="font-medium text-2xl">${Number(selectedTracking.target).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Actual</Label>
+                    <p className="font-medium text-2xl">${Number(selectedTracking.actual).toLocaleString()}</p>
+                  </div>
+                </div>
+                {selectedTracking.notes && (
+                  <div>
+                    <Label className="text-muted-foreground">Notes</Label>
+                    <p className="font-medium">{selectedTracking.notes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Attachments Section - Highly Visible */}
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Paperclip className="h-5 w-5 text-primary" />
+                  <Label className="text-lg font-semibold">Documents & Attachments</Label>
+                </div>
+                <AttachmentUpload 
+                  entityType="sales_tracking" 
+                  entityId={selectedTracking.id}
+                />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View/Edit Product Dialog with Attachments */}
+      <Dialog open={viewProductDialogOpen} onOpenChange={setViewProductDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Product Details</DialogTitle>
+            <DialogDescription>{selectedProduct?.name}</DialogDescription>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-6">
+              <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Category</Label>
+                    <p className="font-medium">{selectedProduct.category}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Unit</Label>
+                    <p className="font-medium">{selectedProduct.unit}</p>
+                  </div>
+                </div>
+                {selectedProduct.description && (
+                  <div>
+                    <Label className="text-muted-foreground">Description</Label>
+                    <p className="font-medium">{selectedProduct.description}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Attachments Section - Highly Visible */}
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Paperclip className="h-5 w-5 text-primary" />
+                  <Label className="text-lg font-semibold">Product Documents & Specs</Label>
+                </div>
+                <AttachmentUpload 
+                  entityType="sales_product" 
+                  entityId={selectedProduct.id}
+                />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
