@@ -93,6 +93,21 @@ export default function Financial() {
             <Bell className="h-4 w-4 mr-2" />
             {notifyOverdueMutation.isPending ? "Sending..." : "Notify Overdue AR"}
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const phoneNumbers = arData?.filter((ar: any) => ar.status === 'overdue').map((ar: any) => ar.customerPhone || '').filter(Boolean) || [];
+              if (phoneNumbers.length === 0) {
+                toast.info("No customer phone numbers found");
+                return;
+              }
+              sendSMSMutation.mutate({ phoneNumbers });
+            }}
+            disabled={sendSMSMutation.isPending}
+          >
+            <AlertCircle className="h-4 w-4 mr-2" />
+            {sendSMSMutation.isPending ? "Sending SMS..." : "Send SMS Reminders"}
+          </Button>
           <Link href="/income-expenditure">
             <Button>
               <FileText className="h-4 w-4 mr-2" />

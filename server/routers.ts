@@ -105,6 +105,25 @@ export const appRouter = router({
         return { success: notified, count: overdueAR.length, totalOverdue };
       }),
 
+    sendSMSReminders: protectedProcedure
+      .input(z.object({
+        phoneNumbers: z.array(z.string()),
+        customMessage: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { sendSMS } = await import("./_core/sms");
+        const results = [];
+        
+        for (const phoneNumber of input.phoneNumbers) {
+          const message = input.customMessage || "Please settle your overdue invoice at your earliest convenience. Thank you!";
+          const sent = await sendSMS({ phoneNumber, message });
+          results.push({ phoneNumber, sent });
+        }
+        
+        const successCount = results.filter(r => r.sent).length;
+        return { success: successCount === results.length, sent: successCount, total: results.length, results };
+      }),
+
     // Accounts Payable
     createAP: protectedProcedure
       .input(z.object({
