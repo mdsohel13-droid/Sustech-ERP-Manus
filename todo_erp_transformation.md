@@ -399,3 +399,56 @@
 - [ ] Pagination and server-side filtering
 - [ ] Lazy loading for large tables
 - [ ] Client-side caching of reference data
+
+
+## Feature Integration & Dashboard Enhancement (Jan 17, 2026 - Phase 2)
+
+### Restore Previous Features in New UI
+- [ ] Integrate Sales module with new world-class UI design
+- [ ] Integrate Financial module (AR/AP) with new UI
+- [ ] Integrate Tender/Quotation module with new UI
+- [ ] Integrate Income & Expenditure module with new UI
+- [ ] Integrate Action Tracker module with new UI
+- [ ] Update all modules to use consistent card-based layouts
+- [ ] Apply three-layer navigation to all restored modules
+
+### Universal Attachment System Integration
+- [ ] Add attachment upload to Sales entries
+- [ ] Add attachment upload to Financial transactions (AR/AP)
+- [ ] Add attachment upload to Tender/Quotation entries
+- [ ] Add attachment upload to Income & Expenditure records
+- [ ] Add attachment upload to Action Tracker items
+- [ ] Add attachment upload to Customer records
+- [ ] Add attachment upload to Project entries
+- [ ] Add attachment upload to Products module
+- [ ] Add attachment upload to Inventory transactions
+- [ ] Add attachment upload to Purchase orders
+- [ ] Add attachment upload to HR employee records (already done)
+- [ ] Display attachments list with download/delete options in all modules
+
+### Dashboard Graphics & Charts Enhancement
+- [ ] Add Revenue Trend chart (Line/Area chart with monthly data)
+- [ ] Add Expense Breakdown chart (Pie/Donut chart by category)
+- [ ] Add Sales Performance chart (Bar chart by salesperson)
+- [ ] Add Project Status chart (Stacked bar chart by stage)
+- [ ] Add Cash Flow chart (Waterfall chart showing inflows/outflows)
+- [ ] Add Accounts Receivable Aging chart (Bar chart 30/60/90 days)
+- [ ] Add Top Customers table (sortable, with revenue contribution)
+- [ ] Add Recent Transactions table (last 10 transactions with details)
+- [ ] Add Overdue Items table (tenders, quotations, invoices)
+- [ ] Add Key Metrics cards (Total Revenue, Net Profit, Outstanding AR, Active Projects)
+- [ ] Add Quick Stats section (Today's sales, This week, This month)
+- [ ] Add Alerts & Notifications panel (overdue items, low stock, pending approvals)
+- [ ] Implement responsive grid layout for charts
+- [ ] Add date range selector for dashboard data
+- [ ] Add export dashboard as PDF functionality
+
+### Navigation & Module Organization
+- [ ] Update sidebar navigation to include all modules
+- [ ] Group modules: Operations (Sales, Purchases, Inventory, Products)
+- [ ] Group modules: Finance (Accounts, Financial, Expenses, Income & Expenditure)
+- [ ] Group modules: Business (CRM, Projects, Tender/Quotation, Action Tracker)
+- [ ] Group modules: People (HRM, Team)
+- [ ] Group modules: Reports & Analytics
+- [ ] Ensure all navigation links work correctly
+- [ ] Add module icons for visual clarity
