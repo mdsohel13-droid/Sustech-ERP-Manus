@@ -1520,7 +1520,15 @@ export function getDefaultPermissionsByRole(role: string) {
 export async function createQuotationItem(data: InsertQuotationItem) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.insert(quotationItems).values(data);
+  // Convert decimal fields to strings for Drizzle ORM compatibility
+  const processedData: any = { ...data };
+  if (data.quantity !== undefined) processedData.quantity = String(data.quantity);
+  if (data.unitPrice !== undefined) processedData.unitPrice = String(data.unitPrice);
+  if (data.amount !== undefined) processedData.amount = String(data.amount);
+  if (data.discount !== undefined) processedData.discount = String(data.discount);
+  if (data.discountAmount !== undefined) processedData.discountAmount = String(data.discountAmount);
+  if (data.finalAmount !== undefined) processedData.finalAmount = String(data.finalAmount);
+  return await db.insert(quotationItems).values(processedData);
 }
 
 export async function getQuotationItems(quotationId: number) {
@@ -1532,7 +1540,15 @@ export async function getQuotationItems(quotationId: number) {
 export async function updateQuotationItem(id: number, data: Partial<InsertQuotationItem>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.update(quotationItems).set(data).where(eq(quotationItems.id, id));
+  // Convert decimal fields to strings for Drizzle ORM compatibility
+  const processedData: any = { ...data };
+  if (data.quantity !== undefined) processedData.quantity = String(data.quantity);
+  if (data.unitPrice !== undefined) processedData.unitPrice = String(data.unitPrice);
+  if (data.amount !== undefined) processedData.amount = String(data.amount);
+  if (data.discount !== undefined) processedData.discount = String(data.discount);
+  if (data.discountAmount !== undefined) processedData.discountAmount = String(data.discountAmount);
+  if (data.finalAmount !== undefined) processedData.finalAmount = String(data.finalAmount);
+  return await db.update(quotationItems).set(processedData).where(eq(quotationItems.id, id));
 }
 
 export async function deleteQuotationItem(id: number) {
@@ -1659,7 +1675,7 @@ export async function getOnboardingTemplates() {
   const db = await getDb();
   if (!db) return [];
   const result = await db.execute(sql`SELECT * FROM onboarding_templates WHERE is_active = 1 ORDER BY days_from_start ASC, task_category ASC`);
-  return result[0] as any[];
+  return (result[0] as unknown) as any[];
 }
 
 export async function createOnboardingTemplate(data: { taskName: string; taskCategory: string; description?: string; daysFromStart?: number }) {
@@ -1679,7 +1695,7 @@ export async function getOnboardingTasksForEmployee(employeeId: number) {
   const db = await getDb();
   if (!db) return [];
   const result = await db.execute(sql`SELECT * FROM onboarding_tasks WHERE employee_id = ${employeeId} ORDER BY task_category ASC, due_date ASC`);
-  return result[0] as any[];
+  return (result[0] as unknown) as any[];
 }
 
 export async function createOnboardingTasksFromTemplates(employeeId: number, joinDate: Date) {
@@ -1726,7 +1742,7 @@ export async function getOnboardingProgress(employeeId: number) {
   if (!db) return { total: 0, completed: 0, percentage: 0 };
   
   const result = await db.execute(sql`SELECT COUNT(*) as total, SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed FROM onboarding_tasks WHERE employee_id = ${employeeId}`);
-  const row = (result[0] as any[])[0];
+  const row = ((result[0] as unknown) as any[])[0];
   const total = Number(row?.total || 0);
   const completed = Number(row?.completed || 0);
   return {

@@ -1351,7 +1351,17 @@ Provide 2-3 actionable business insights.`;
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        return await db.createQuotationItem(input);
+        // Convert numbers to strings for decimal fields
+        const processedInput = {
+          ...input,
+          quantity: String(input.quantity),
+          unitPrice: String(input.unitPrice),
+          amount: String(input.amount),
+          discount: String(input.discount),
+          discountAmount: String(input.discountAmount),
+          finalAmount: String(input.finalAmount),
+        };
+        return await db.createQuotationItem(processedInput as any);
       }),
 
     updateQuotationItem: protectedProcedure
@@ -1370,7 +1380,15 @@ Provide 2-3 actionable business insights.`;
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        return await db.updateQuotationItem(id, data);
+        // Convert numbers to strings for decimal fields
+        const processedData: any = { ...data };
+        if (data.quantity !== undefined) processedData.quantity = String(data.quantity);
+        if (data.unitPrice !== undefined) processedData.unitPrice = String(data.unitPrice);
+        if (data.amount !== undefined) processedData.amount = String(data.amount);
+        if (data.discount !== undefined) processedData.discount = String(data.discount);
+        if (data.discountAmount !== undefined) processedData.discountAmount = String(data.discountAmount);
+        if (data.finalAmount !== undefined) processedData.finalAmount = String(data.finalAmount);
+        return await db.updateQuotationItem(id, processedData);
       }),
 
     deleteQuotationItem: protectedProcedure
