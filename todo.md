@@ -245,14 +245,24 @@
 
 ## ERP Comprehensive Implementation - Hyperlinks & Real Data
 
-### Phase 1: Hyperlink Navigation for Core Modules
+### Phase 1: Reusable Form Components (IN PROGRESS)
+- [ ] Create FormField component with label, input, error display
+- [ ] Create FormDialog component with header and footer
+- [ ] Create FormButton component with loading state
+- [ ] Create DatePicker component
+- [ ] Create SelectField component with options
+- [ ] Create TextareaField component
+- [ ] Create FileUploadField component
+- [ ] Create validation utilities
+
+### Phase 1B: Hyperlink Navigation for Core Modules
 - [ ] Add hyperlink-based detail views for Sales module
 - [ ] Add hyperlink-based detail views for Products module  
 - [ ] Add hyperlink-based detail views for Customers module
 - [ ] Add hyperlink-based detail views for Purchases module
 - [ ] Create reusable detail view component pattern
 
-### Phase 2: Data Entry Forms (IN PROGRESS)
+### Phase 2A: Core Module Data Entry Forms (IN PROGRESS)
 - [ ] Create working data entry form for Sales
 - [ ] Create working data entry form for Products
 - [ ] Create working data entry form for Customers
