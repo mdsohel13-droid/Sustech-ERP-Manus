@@ -36,6 +36,15 @@ export default function Financial() {
     },
   });
 
+  const sendSMSMutation = trpc.system.sendSMS.useMutation({
+    onSuccess: () => {
+      toast.success("SMS reminders sent successfully");
+    },
+    onError: () => {
+      toast.error("Failed to send SMS reminders");
+    },
+  });
+
   // Queries
   const { data: arData } = trpc.financial.getAllAR.useQuery();
   const { data: apData } = trpc.financial.getAllAP.useQuery();
@@ -101,7 +110,11 @@ export default function Financial() {
                 toast.info("No customer phone numbers found");
                 return;
               }
-              sendSMSMutation.mutate({ phoneNumbers });
+              if (sendSMSMutation) {
+                sendSMSMutation.mutate({ phoneNumbers, message: "Payment reminder: Please settle your outstanding invoice at your earliest convenience." });
+              } else {
+                toast.error("SMS service not available");
+              }
             }}
             disabled={sendSMSMutation.isPending}
           >
