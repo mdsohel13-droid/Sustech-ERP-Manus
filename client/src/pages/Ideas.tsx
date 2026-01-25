@@ -94,7 +94,7 @@ export default function Ideas() {
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-                {idea.title && <CardTitle className="text-lg mt-2">{idea.title}</CardTitle>}
+                {idea.title && <button onClick={() => setDialogOpen(true)} className="text-lg mt-2 font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{idea.title}</button>}
                 {idea.category && <Badge variant="outline" className="mt-2 w-fit">{idea.category}</Badge>}
               </CardHeader>
               <CardContent>

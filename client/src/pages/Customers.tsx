@@ -182,7 +182,7 @@ export default function Customers() {
             {customers && customers.length > 0 ? (
               customers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell className="font-medium"><button onClick={() => { setSelectedCustomer(customer.id); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{customer.name}</button></TableCell>
                   <TableCell>{customer.company || "-"}</TableCell>
                   <TableCell>
                     <div className="space-y-1 text-xs">

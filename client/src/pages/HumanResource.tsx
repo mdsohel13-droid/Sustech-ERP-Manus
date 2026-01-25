@@ -1284,17 +1284,17 @@ export default function HumanResource() {
                     {employees?.map((emp: any) => (
                       <TableRow key={emp.employee.id}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <button onClick={() => { setSelectedEmployee(emp); setViewEmployeeDialogOpen(true); }} className="flex items-center gap-2 text-left w-full hover:opacity-70">
                             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                               <span className="text-sm font-semibold text-primary">
                                 {emp.user?.name?.charAt(0) || "?"}
                               </span>
                             </div>
                             <div>
-                              <p className="font-medium">{emp.user?.name}</p>
+                              <p className="font-medium text-blue-600 hover:text-blue-800 hover:underline">{emp.user?.name}</p>
                               <p className="text-xs text-muted-foreground">{emp.user?.email}</p>
                             </div>
-                          </div>
+                          </button>
                         </TableCell>
                         <TableCell>{emp.employee.employeeCode}</TableCell>
                         <TableCell>{emp.department?.name || '-'}</TableCell>

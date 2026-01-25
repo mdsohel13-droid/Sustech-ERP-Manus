@@ -440,10 +440,10 @@ export default function Products() {
                   <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
                     <Package className="w-12 h-12 text-muted-foreground/50" />
                   </div>
-                  <div className="space-y-2">
+                    <div className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="font-medium text-sm line-clamp-1">{product.name}</h3>
+                        <button onClick={() => setShowAddDialog(true)} className="font-medium text-sm line-clamp-1 text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{product.name}</button>
                         <p className="text-xs text-muted-foreground">{product.sku}</p>
                       </div>
                       <button className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -489,12 +489,12 @@ export default function Products() {
                   {filteredProducts.map(product => (
                     <tr key={product.id} className="hover:bg-muted/30">
                       <td className="p-4">
-                        <div className="flex items-center gap-3">
+                        <button onClick={() => setShowAddDialog(true)} className="flex items-center gap-3 text-left w-full hover:opacity-70">
                           <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
                             <Package className="w-5 h-5 text-muted-foreground" />
                           </div>
-                          <span className="font-medium text-sm">{product.name}</span>
-                        </div>
+                          <span className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{product.name}</span>
+                        </button>
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">{product.sku}</td>
                       <td className="p-4">

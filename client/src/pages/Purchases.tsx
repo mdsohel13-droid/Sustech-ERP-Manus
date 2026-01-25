@@ -324,15 +324,15 @@ export default function Purchases() {
                       {filteredPOs.map(po => (
                         <tr key={po.id} className="hover:bg-muted/30">
                           <td className="p-4">
-                            <span className="font-medium text-sm text-primary">{po.poNumber}</span>
+                            <button onClick={() => handleViewPO(po)} className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{po.poNumber}</button>
                           </td>
                           <td className="p-4">
-                            <div className="flex items-center gap-2">
+                            <button onClick={() => handleViewPO(po)} className="flex items-center gap-2 text-left w-full hover:opacity-70">
                               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                                 <Building2 className="w-4 h-4 text-muted-foreground" />
                               </div>
-                              <span className="text-sm">{po.vendor}</span>
-                            </div>
+                              <span className="text-sm text-blue-600 hover:text-blue-800 hover:underline">{po.vendor}</span>
+                            </button>
                           </td>
                           <td className="p-4 text-sm text-muted-foreground">{po.date}</td>
                           <td className="p-4 text-sm text-muted-foreground">{po.expectedDate}</td>
@@ -367,15 +367,15 @@ export default function Purchases() {
                 <Card key={vendor.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
+                      <button onClick={() => {}} className="flex items-center gap-3 text-left flex-1 hover:opacity-70">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
                           {vendor.name.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="font-medium">{vendor.name}</h3>
+                          <h3 className="font-medium text-blue-600 hover:text-blue-800 hover:underline">{vendor.name}</h3>
                           <p className="text-xs text-muted-foreground">{vendor.address}</p>
                         </div>
-                      </div>
+                      </button>
                       <div className="flex items-center gap-1 text-yellow-500">
                         <span className="text-sm font-medium">{vendor.rating}</span>
                         <span>★</span>

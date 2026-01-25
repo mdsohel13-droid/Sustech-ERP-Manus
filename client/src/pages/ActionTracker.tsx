@@ -383,7 +383,7 @@ export default function ActionTracker() {
                             {statusConfig[item.status as keyof typeof statusConfig].label}
                           </Badge>
                         </div>
-                        <CardTitle className="text-xl mb-2">{item.title}</CardTitle>
+                        <button onClick={() => handleEdit(item)} className="text-xl mb-2 font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{item.title}</button>
                         {item.description && (
                           <CardDescription className="text-sm">{item.description}</CardDescription>
                         )}

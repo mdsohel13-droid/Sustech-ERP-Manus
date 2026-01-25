@@ -466,7 +466,7 @@ export default function IncomeExpenditure() {
                         <TableCell className={entry.type === "income" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
                           {formatCurrency(entry.amount, entry.currency || currency)}
                         </TableCell>
-                        <TableCell>{entry.referenceNumber || "-"}</TableCell>
+                        <TableCell><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
                         <TableCell className="capitalize">{entry.paymentMethod?.replace(/_/g, " ") || "-"}</TableCell>
                         <TableCell className="text-right">
                           <Button 
@@ -530,8 +530,8 @@ export default function IncomeExpenditure() {
                         <TableCell className="text-green-600 font-semibold">
                           {formatCurrency(entry.amount, entry.currency || currency)}
                         </TableCell>
-                        <TableCell>{entry.referenceNumber || "-"}</TableCell>
-                        <TableCell className="max-w-xs truncate">{entry.description || "-"}</TableCell>
+                        <TableCell><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
+                        <TableCell className="max-w-xs truncate"><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.description || "-"}</button></TableCell>
                         <TableCell className="text-right">
                           <Button 
                             variant="ghost" 
@@ -594,8 +594,8 @@ export default function IncomeExpenditure() {
                         <TableCell className="text-red-600 font-semibold">
                           {formatCurrency(entry.amount, entry.currency || currency)}
                         </TableCell>
-                        <TableCell>{entry.referenceNumber || "-"}</TableCell>
-                        <TableCell className="max-w-xs truncate">{entry.description || "-"}</TableCell>
+                        <TableCell><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
+                        <TableCell className="max-w-xs truncate"><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.description || "-"}</button></TableCell>
                         <TableCell className="text-right">
                           <Button 
                             variant="ghost" 

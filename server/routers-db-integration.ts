@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { publicProcedure, protectedProcedure, router } from './routers';
+import { publicProcedure, protectedProcedure, router } from './_core/trpc';
 import * as dbIntegration from './db-integration';
 
 // ============================================================================

@@ -185,8 +185,8 @@ export default function TenderQuotation() {
             return (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell className="font-mono text-sm">{item.referenceId}</TableCell>
-                <TableCell className="max-w-xs truncate">{item.description}</TableCell>
+                <TableCell className="font-mono text-sm"><button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{item.referenceId}</button></TableCell>
+                <TableCell className="max-w-xs truncate"><button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{item.description}</button></TableCell>
                 <TableCell>{item.clientName}</TableCell>
                 <TableCell>{format(new Date(item.submissionDate), "MMM dd, yyyy")}</TableCell>
                 <TableCell>

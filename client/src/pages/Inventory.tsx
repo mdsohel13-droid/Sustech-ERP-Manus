@@ -287,12 +287,12 @@ export default function Inventory() {
                       {filteredStock.map(item => (
                         <tr key={item.id} className="hover:bg-muted/30">
                           <td className="p-4">
-                            <div className="flex items-center gap-3">
+                            <button onClick={() => { setSelectedItem(item); setShowAdjustDialog(true); }} className="flex items-center gap-3 text-left w-full hover:opacity-70">
                               <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                                 <Package className="w-4 h-4 text-muted-foreground" />
                               </div>
-                              <span className="font-medium text-sm">{item.productName}</span>
-                            </div>
+                              <span className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{item.productName}</span>
+                            </button>
                           </td>
                           <td className="p-4 text-sm text-muted-foreground">{item.sku}</td>
                           <td className="p-4 text-right font-medium">{item.inStock}</td>
@@ -342,10 +342,10 @@ export default function Inventory() {
                         <tr key={movement.id} className="hover:bg-muted/30">
                           <td className="p-4 text-sm">{movement.date}</td>
                           <td className="p-4">
-                            <div>
-                              <p className="font-medium text-sm">{movement.productName}</p>
+                            <button onClick={() => {}} className="text-left w-full hover:opacity-70">
+                              <p className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{movement.productName}</p>
                               <p className="text-xs text-muted-foreground">{movement.sku}</p>
-                            </div>
+                            </button>
                           </td>
                           <td className="p-4 text-center">
                             <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${getMovementColor(movement.type)}`}>

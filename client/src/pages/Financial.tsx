@@ -394,8 +394,8 @@ export default function Financial() {
                   <TableBody>
                     {arData.filter((ar: any) => ar.status !== 'paid').slice(0, 10).map((ar: any) => (
                       <TableRow key={ar.id}>
-                        <TableCell>{ar.customerName}</TableCell>
-                        <TableCell>{ar.invoiceNumber}</TableCell>
+                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.customerName}</button></TableCell>
+                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.invoiceNumber}</button></TableCell>
                         <TableCell>
                           <span className={new Date(ar.dueDate) < new Date() ? 'text-red-600 font-medium' : ''}>
                             {new Date(ar.dueDate).toLocaleDateString()}
@@ -441,8 +441,8 @@ export default function Financial() {
                   <TableBody>
                     {apData.filter((ap: any) => ap.status !== 'paid').slice(0, 10).map((ap: any) => (
                       <TableRow key={ap.id}>
-                        <TableCell>{ap.vendorName}</TableCell>
-                        <TableCell>{ap.invoiceNumber}</TableCell>
+                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.vendorName}</button></TableCell>
+                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.invoiceNumber}</button></TableCell>
                         <TableCell>
                           <span className={new Date(ap.dueDate) < new Date() ? 'text-red-600 font-medium' : ''}>
                             {new Date(ap.dueDate).toLocaleDateString()}
