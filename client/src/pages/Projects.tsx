@@ -261,7 +261,7 @@ export default function Projects() {
                   <div key={project.id} className="kanban-card" draggable onDragStart={() => handleDragStart(project.id)}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setEditingProject(project); setDialogOpen(true); }} className="font-semibold text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">{project.name}</button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditingProject(project); setDialogOpen(true); }} className="font-semibold text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{project.name}</button>
                         <p className="text-xs text-muted-foreground mt-1">{project.customerName}</p>
                       </div>
                       <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
@@ -340,7 +340,7 @@ export default function Projects() {
                         project.stage === 'execution' ? 'bg-purple-50/30' :
                         'bg-gray-50/30'
                       }`}>
-                        <td className="p-4 font-medium"><button onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">{project.name}</button></td>
+                        <td className="p-4 font-medium text-left"><button onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{project.name}</button></td>
                         <td className="p-4">{project.customerName}</td>
                         <td className="p-4">{formatCurrency(project.value, project.currency)}</td>
                         <td className="p-4">

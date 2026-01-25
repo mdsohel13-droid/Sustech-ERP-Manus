@@ -518,3 +518,5 @@
 
 - [x] Fix ProjectFinancials popup to be truly full screen (custom full-screen modal)
 - [x] Add hyperlinks to open projects in Projects module list and kanban views
+
+- [x] Fix project name hyperlink alignment issues (left vs mid alignment)
