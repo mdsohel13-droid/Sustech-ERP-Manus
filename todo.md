@@ -312,7 +312,8 @@
 
 ## Critical Modules Implementation (Phase 3)
 
-### Purchases Module
+### Purchases Module (IN PROGRESS)
+- [ ] Create Vendors table and management interface
 - [ ] Create Purchases data entry form with vendor selection
 - [ ] Implement GRN (Goods Receipt Note) tracking
 - [ ] Add purchase order hyperlink navigation
