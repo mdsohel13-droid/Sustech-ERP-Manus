@@ -26,6 +26,7 @@ import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
 import AccessDenied from "./pages/AccessDenied";
 import { HyperlinkAnalyticsDashboard } from "./pages/HyperlinkAnalyticsDashboard";
+import AIAssistant from "./pages/AIAssistant";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ToastProvider } from "./components/Toast";
 import { BreadcrumbProvider, BreadcrumbNavigation } from "./components/BreadcrumbNavigation";
@@ -131,6 +132,11 @@ function Router() {
           <ProtectedRoute module="admin">
             <HyperlinkAnalyticsDashboard />
           </ProtectedRoute>
+        </DashboardLayout>
+      </Route>
+      <Route path={"/ai-assistant"}>
+        <DashboardLayout>
+          <AIAssistant />
         </DashboardLayout>
       </Route>
       <Route path={"/404"} component={NotFound} />

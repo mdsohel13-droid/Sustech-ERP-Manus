@@ -367,7 +367,7 @@ export default function Sales() {
                 >
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center justify-between">
-                      {product.name}
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); setViewProductDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex-1 text-left">{product.name}</button>
                       <Paperclip className="h-4 w-4 text-muted-foreground" />
                     </CardTitle>
                     <Badge variant="outline" className="w-fit">{product.category}</Badge>

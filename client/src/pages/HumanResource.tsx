@@ -650,15 +650,15 @@ export default function HumanResource() {
                   <UserPlus className="h-6 w-6 mb-2" />
                   <span>Add User</span>
                 </Button>
-                <Button variant="outline" className="h-auto flex-col py-4">
+                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => alert("Attendance marking feature coming soon!")}>
                   <Clock className="h-6 w-6 mb-2" />
                   <span>Mark Attendance</span>
                 </Button>
-                <Button variant="outline" className="h-auto flex-col py-4">
+                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => alert("Report generation feature coming soon!")}>
                   <FileText className="h-6 w-6 mb-2" />
                   <span>Generate Report</span>
                 </Button>
-                <Button variant="outline" className="h-auto flex-col py-4">
+                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => alert("Performance review feature coming soon!")}>
                   <Award className="h-6 w-6 mb-2" />
                   <span>Performance Review</span>
                 </Button>

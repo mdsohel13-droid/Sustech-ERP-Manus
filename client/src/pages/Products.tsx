@@ -61,6 +61,7 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formStep, setFormStep] = useState(1);
 
   // Form state
@@ -269,7 +270,7 @@ export default function Products() {
             <h1 className="text-2xl font-bold">Products</h1>
             <p className="text-muted-foreground">Manage your product catalog and inventory</p>
           </div>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <Dialog open={showAddDialog} onOpenChange={(open) => { setShowAddDialog(open); if (!open) setEditingProduct(null); }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
@@ -443,7 +444,7 @@ export default function Products() {
                     <div className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
-                        <button onClick={() => setShowAddDialog(true)} className="font-medium text-sm line-clamp-1 text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{product.name}</button>
+                        <button onClick={() => { setEditingProduct(product); setShowAddDialog(true); }} className="font-medium text-sm line-clamp-1 text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{product.name}</button>
                         <p className="text-xs text-muted-foreground">{product.sku}</p>
                       </div>
                       <button className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -493,7 +494,7 @@ export default function Products() {
                           <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
                             <Package className="w-5 h-5 text-muted-foreground" />
                           </div>
-                          <span className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{product.name}</span>
+                          <span className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline" onClick={() => { setEditingProduct(product); setShowAddDialog(true); }}>{product.name}</span>
                         </button>
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">{product.sku}</td>

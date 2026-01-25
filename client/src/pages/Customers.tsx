@@ -17,6 +17,7 @@ import { format } from "date-fns";
 export default function Customers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [interactionDialogOpen, setInteractionDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
@@ -64,14 +65,27 @@ export default function Customers() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    createMutation.mutate({
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      company: formData.get("company") as string,
-      status: formData.get("status") as any,
-      notes: formData.get("notes") as string,
-    });
+    if (editingCustomer) {
+      updateMutation.mutate({
+        id: editingCustomer.id,
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        phone: formData.get("phone") as string,
+        company: formData.get("company") as string,
+        status: formData.get("status") as any,
+        notes: formData.get("notes") as string,
+      });
+      setEditingCustomer(null);
+    } else {
+      createMutation.mutate({
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        phone: formData.get("phone") as string,
+        company: formData.get("company") as string,
+        status: formData.get("status") as any,
+        notes: formData.get("notes") as string,
+      });
+    }
   };
 
   const handleInteractionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -98,38 +112,38 @@ export default function Customers() {
           <h1>Customer CRM</h1>
           <p className="text-muted-foreground text-lg mt-2">Manage customer relationships and track interactions</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingCustomer(null); }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />New Customer</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>Add New Customer</DialogTitle>
-                <DialogDescription>Create a new customer record</DialogDescription>
+                <DialogTitle>{editingCustomer ? "Edit" : "Add New"} Customer</DialogTitle>
+                <DialogDescription>{editingCustomer ? "Update customer" : "Create a new customer"} record</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Customer Name</Label>
-                  <Input id="name" name="name" required />
+                  <Input id="name" name="name" defaultValue={editingCustomer?.name || ""} required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" name="email" type="email" />
+                    <Input id="email" name="email" type="email" defaultValue={editingCustomer?.email || ""} />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" name="phone" />
+                    <Input id="phone" name="phone" defaultValue={editingCustomer?.phone || ""} />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="company">Company</Label>
-                  <Input id="company" name="company" />
+                  <Input id="company" name="company" defaultValue={editingCustomer?.company || ""} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select name="status" defaultValue="warm">
+                  <Select name="status" defaultValue={editingCustomer?.status || "warm"}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="hot">Hot</SelectItem>
@@ -140,12 +154,12 @@ export default function Customers() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="notes">Notes</Label>
-                  <Textarea id="notes" name="notes" rows={3} />
+                  <Textarea id="notes" name="notes" rows={3} defaultValue={editingCustomer?.notes || ""} />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Creating..." : "Create Customer"}
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingCustomer ? (updateMutation.isPending ? "Updating..." : "Update Customer") : (createMutation.isPending ? "Creating..." : "Create Customer")}
                 </Button>
               </DialogFooter>
             </form>
@@ -182,7 +196,7 @@ export default function Customers() {
             {customers && customers.length > 0 ? (
               customers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium"><button onClick={() => { setSelectedCustomer(customer.id); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{customer.name}</button></TableCell>
+                  <TableCell className="font-medium"><button onClick={() => { setEditingCustomer(customer); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{customer.name}</button></TableCell>
                   <TableCell>{customer.company || "-"}</TableCell>
                   <TableCell>
                     <div className="space-y-1 text-xs">

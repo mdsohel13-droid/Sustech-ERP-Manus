@@ -324,10 +324,10 @@ export default function Purchases() {
                       {filteredPOs.map(po => (
                         <tr key={po.id} className="hover:bg-muted/30">
                           <td className="p-4">
-                            <button onClick={() => handleViewPO(po)} className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{po.poNumber}</button>
+                            <button onClick={() => handleEditPO(po)} className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{po.poNumber}</button>
                           </td>
                           <td className="p-4">
-                            <button onClick={() => handleViewPO(po)} className="flex items-center gap-2 text-left w-full hover:opacity-70">
+                            <button onClick={() => handleEditPO(po)} className="flex items-center gap-2 text-left w-full hover:opacity-70">
                               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                                 <Building2 className="w-4 h-4 text-muted-foreground" />
                               </div>
@@ -367,7 +367,7 @@ export default function Purchases() {
                 <Card key={vendor.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
-                      <button onClick={() => {}} className="flex items-center gap-3 text-left flex-1 hover:opacity-70">
+                      <button onClick={() => {}} className="flex items-center gap-3 text-left flex-1 hover:opacity-70" title="Vendor details">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
                           {vendor.name.charAt(0)}
                         </div>
