@@ -43,7 +43,8 @@ import {
   Warehouse,
   BarChart3,
   UserCircle,
-  HelpCircle
+  HelpCircle,
+  Activity
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
@@ -71,6 +72,7 @@ const ALL_MENU_ITEMS = [
   { icon: BarChart3, label: "Reports", path: "/reports", module: "reports", group: "analytics" },
   { icon: Lightbulb, label: "Ideas", path: "/ideas", module: "ideas", group: "tools" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant", module: "ai_assistant", group: "tools" },
+  { icon: Activity, label: "Hyperlink Analytics", path: "/hyperlink-analytics", module: "admin", group: "system" },
   { icon: Settings, label: "Settings", path: "/settings", module: "settings", group: "system" },
 ];
 
@@ -87,7 +89,7 @@ const MODULE_GROUPS = [
 const getMenuItems = (userRole?: string, hasModuleAccess?: (module: string) => boolean) => {
   return ALL_MENU_ITEMS.filter(item => {
     if (item.module === 'dashboard') return true;
-    if (item.module === 'settings') return userRole === 'admin';
+    if (item.module === 'settings' || item.module === 'admin') return userRole === 'admin';
     if (hasModuleAccess) {
       return hasModuleAccess(item.module);
     }

@@ -25,12 +25,16 @@ import Contacts from "./pages/Contacts";
 import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
 import AccessDenied from "./pages/AccessDenied";
+import { HyperlinkAnalyticsDashboard } from "./pages/HyperlinkAnalyticsDashboard";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ToastProvider } from "./components/Toast";
+import { BreadcrumbProvider, BreadcrumbNavigation } from "./components/BreadcrumbNavigation";
 
 function Router() {
   return (
-    <Switch>
+    <>
+      <BreadcrumbNavigation />
+      <Switch>
       <Route path={"/"}>
         <DashboardLayout>
           <Home />
@@ -122,9 +126,17 @@ function Router() {
       <Route path={"/access-denied"}>
         <AccessDenied />
       </Route>
+      <Route path={"/hyperlink-analytics"}>
+        <DashboardLayout>
+          <ProtectedRoute module="admin">
+            <HyperlinkAnalyticsDashboard />
+          </ProtectedRoute>
+        </DashboardLayout>
+      </Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
-    </Switch>
+      </Switch>
+    </>
   );
 }
 
@@ -135,8 +147,10 @@ function App() {
         <CurrencyProvider>
           <TooltipProvider>
             <ToastProvider>
-              <Toaster />
-              <Router />
+              <BreadcrumbProvider>
+                <Toaster />
+                <Router />
+              </BreadcrumbProvider>
             </ToastProvider>
           </TooltipProvider>
         </CurrencyProvider>
