@@ -135,8 +135,8 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[90vw] w-[90vw] max-h-[90vh] h-[90vh] p-0 flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+        <DialogContent className="fixed inset-4 w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-w-none max-h-none p-0 flex flex-col rounded-lg shadow-2xl">
+          <DialogHeader className="px-8 py-4 border-b bg-background sticky top-0 z-10">
             <div className="flex items-center justify-between">
               <div>
                 <DialogTitle className="text-2xl">Project Financials - {projectName}</DialogTitle>
@@ -149,7 +149,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
             </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto flex-1 px-6 py-4">
+          <div className="overflow-y-auto flex-1 px-8 py-6 bg-background">
             {/* Financial Summary */}
             {summary && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

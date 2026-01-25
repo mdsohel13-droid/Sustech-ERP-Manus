@@ -514,4 +514,4 @@
 
 ## Bug Fixes & UI Improvements
 
-- [x] Fix Financials popup in Projects module to display in landscape mode with 80-90% screen coverage
+- [x] Fix Financials popup in Projects module to display in true landscape mode covering most of the screen
