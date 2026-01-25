@@ -520,3 +520,25 @@
 - [x] Add hyperlinks to open projects in Projects module list and kanban views
 
 - [x] Fix project name hyperlink alignment issues (left vs mid alignment)
+
+
+## Phase 18: Universal Hyperlinks Implementation Across All 22 Modules
+
+- [x] Create HyperlinkCell utility component for consistent hyperlink styling
+- [x] Create HyperlinkCell variants (TableCell, CardCell, ListItem)
+- [x] Create comprehensive implementation guide
+- [x] Create hyperlink configuration for all 22 modules
+- [ ] Add hyperlinks to Sales module (order names, customer names)
+- [ ] Add hyperlinks to Products module (product names, categories)
+- [ ] Add hyperlinks to Customers module (customer names, contact names)
+- [ ] Add hyperlinks to Purchases module (purchase order names, vendor names)
+- [ ] Add hyperlinks to Inventory module (item names, warehouse names)
+- [ ] Add hyperlinks to Financial module (invoice numbers, account names)
+- [ ] Add hyperlinks to Income & Expenditure module (transaction descriptions, account names)
+- [ ] Add hyperlinks to Budget module (budget names, department names)
+- [ ] Add hyperlinks to Tender/Quotation module (tender names, vendor names)
+- [ ] Add hyperlinks to CRM module (lead names, company names, contact names)
+- [ ] Add hyperlinks to Action Tracker module (action titles, assignee names)
+- [ ] Add hyperlinks to HR module (employee names, department names)
+- [ ] Add hyperlinks to Reporting & Analytics module (report names, metric names)
+- [ ] Test all hyperlinks across all modules
