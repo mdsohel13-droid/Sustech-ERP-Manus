@@ -42,7 +42,10 @@ export default function Customers() {
     onSuccess: () => {
       utils.customers.getAll.invalidate();
       utils.customers.getStats.invalidate();
-      toast.success("Customer updated");
+      utils.dashboard.getOverview.invalidate();
+      toast.success("Customer updated successfully");
+      setDialogOpen(false);
+      setEditingCustomer(null);
     },
   });
 
@@ -75,7 +78,6 @@ export default function Customers() {
         status: formData.get("status") as any,
         notes: formData.get("notes") as string,
       });
-      setEditingCustomer(null);
     } else {
       createMutation.mutate({
         name: formData.get("name") as string,

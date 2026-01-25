@@ -731,3 +731,68 @@
 - [ ] Create role management UI
 - [ ] Test role-based access restrictions
 - [ ] Add audit logging for permission changes
+
+
+## CURRENT SPRINT: CRUD Operations & HR Quick Actions
+
+### Phase 1: CRUD Operations - Core Modules
+- [x] Sales Module - Implement Create, Update, Delete Product with form validation
+- [x] Sales Module - Implement Create, Update, Delete Sales Tracking
+- [x] Customers Module - Implement Create, Update, Delete Customer with form validation
+- [x] Products Module - Implement Create, Update, Delete Product with form validation
+- [x] Financial Module - Implement Create, Update, Delete Invoice (AR) with form validation
+- [x] Financial Module - Implement Create, Update, Delete Bill (AP) with form validation
+- [x] Inventory Module - Implement Stock Adjustment and Movement tracking
+- [x] Purchases Module - Implement Create, Update, Delete Purchase Order with form validation
+
+### Phase 2: CRUD Operations - Remaining Modules
+- [ ] HR Module - Implement Create, Update, Delete Employee with form validation
+- [ ] HR Module - Implement Department management CRUD
+- [ ] HR Module - Implement Job Description management CRUD
+- [ ] Projects Module - Implement Create, Update, Delete Project with form validation
+- [ ] Action Tracker Module - Implement Create, Update, Delete Action Item
+- [ ] Ideas Module - Implement Create, Update, Delete Idea
+- [ ] Tender/Quotation Module - Implement Create, Update, Delete Tender
+- [ ] Income & Expenditure Module - Implement Create, Update, Delete Income/Expenditure entries
+
+### Phase 3: Form Validation & Error Handling
+- [ ] Add client-side validation for all forms (Zod schemas)
+- [ ] Add server-side validation for all inputs
+- [ ] Implement error message display in UI
+- [ ] Add success notifications for all operations
+- [ ] Implement loading states for all operations
+- [ ] Add confirmation dialogs for delete operations
+
+### Phase 4: HR Quick Actions - Mark Attendance
+- [x] Create Attendance table in database schema
+- [x] Implement Mark Attendance dialog with date and employee selection
+- [x] Add attendance status options (Present, Absent, Leave, Late)
+- [ ] Implement database persistence for attendance records
+- [ ] Add attendance history view and filtering
+- [ ] Create attendance summary reports
+
+### Phase 5: HR Quick Actions - Reports & Performance Reviews
+- [x] Implement Generate Reports dialog with report type selection
+- [x] Add date range selection for reports
+- [ ] Implement PDF export for reports
+- [x] Create Performance Review form with rating scales
+- [ ] Add review categories (Technical, Communication, Leadership, etc.)
+- [ ] Implement review status tracking (Draft, Submitted, Approved)
+- [ ] Add review history and tracking
+
+### Phase 6: Testing & Verification
+- [ ] Test all Create operations across all modules
+- [ ] Test all Update operations across all modules
+- [ ] Test all Delete operations across all modules
+- [ ] Test form validation and error handling
+- [ ] Test database persistence
+- [ ] Test HR Quick Actions functionality
+- [ ] Test attendance marking and reporting
+- [ ] Test performance review workflow
+
+### Phase 7: Deployment Preparation
+- [ ] Final code review and optimization
+- [ ] Security audit for all operations
+- [ ] Performance testing
+- [ ] Create final checkpoint
+- [ ] Production deployment

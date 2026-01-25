@@ -50,6 +50,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
+import { HRQuickActionsDialogs } from "@/components/HRQuickActionsDialogs";
 
 const MODULES = [
   { name: 'dashboard', label: 'Dashboard' },
@@ -93,6 +94,10 @@ export default function HumanResource() {
   const [selectedEmployeeForOnboarding, setSelectedEmployeeForOnboarding] = useState<any>(null);
   const [addOnboardingTaskDialogOpen, setAddOnboardingTaskDialogOpen] = useState(false);
   const [addTemplateDialogOpen, setAddTemplateDialogOpen] = useState(false);
+  // HR Quick Actions state
+  const [markAttendanceDialogOpen, setMarkAttendanceDialogOpen] = useState(false);
+  const [generateReportDialogOpen, setGenerateReportDialogOpen] = useState(false);
+  const [performanceReviewDialogOpen, setPerformanceReviewDialogOpen] = useState(false);
 
   const utils = trpc.useUtils();
   
@@ -111,6 +116,7 @@ export default function HumanResource() {
     { employeeId: selectedEmployeeForOnboarding?.employee?.id || 0 },
     { enabled: !!selectedEmployeeForOnboarding }
   );
+  const { data: teamMembers } = trpc.hr.getAllMembers.useQuery();
 
   // Mutations
   const createUserMutation = trpc.users.create.useMutation({
@@ -650,15 +656,15 @@ export default function HumanResource() {
                   <UserPlus className="h-6 w-6 mb-2" />
                   <span>Add User</span>
                 </Button>
-                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => alert("Attendance marking feature coming soon!")}>
+                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setMarkAttendanceDialogOpen(true)}>
                   <Clock className="h-6 w-6 mb-2" />
                   <span>Mark Attendance</span>
                 </Button>
-                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => alert("Report generation feature coming soon!")}>
+                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setGenerateReportDialogOpen(true)}>
                   <FileText className="h-6 w-6 mb-2" />
                   <span>Generate Report</span>
                 </Button>
-                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => alert("Performance review feature coming soon!")}>
+                <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setPerformanceReviewDialogOpen(true)}>
                   <Award className="h-6 w-6 mb-2" />
                   <span>Performance Review</span>
                 </Button>
@@ -2461,6 +2467,18 @@ export default function HumanResource() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* HR Quick Actions Dialogs */}
+      <HRQuickActionsDialogs
+        markAttendanceOpen={markAttendanceDialogOpen}
+        setMarkAttendanceOpen={setMarkAttendanceDialogOpen}
+        generateReportOpen={generateReportDialogOpen}
+        setGenerateReportOpen={setGenerateReportDialogOpen}
+        performanceReviewOpen={performanceReviewDialogOpen}
+        setPerformanceReviewOpen={setPerformanceReviewDialogOpen}
+        teamMembers={teamMembers}
+        employees={employees}
+      />
     </div>
   );
 }
