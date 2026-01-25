@@ -515,3 +515,6 @@
 ## Bug Fixes & UI Improvements
 
 - [x] Fix Financials popup in Projects module to display in true landscape mode covering most of the screen
+
+- [x] Fix ProjectFinancials popup to be truly full screen (custom full-screen modal)
+- [x] Add hyperlinks to open projects in Projects module list and kanban views
