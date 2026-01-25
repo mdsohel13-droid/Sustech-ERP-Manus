@@ -510,3 +510,8 @@
 - [x] Add report templates (Executive, Detailed, Summary)
 - [x] Create report history and archive
 - [x] Test export and reporting functionality
+
+
+## Bug Fixes & UI Improvements
+
+- [x] Fix Financials popup in Projects module to display in landscape mode with 80-90% screen coverage
