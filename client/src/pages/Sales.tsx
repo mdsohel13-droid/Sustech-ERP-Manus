@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText } from "lucide-react";
+import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2 } from "lucide-react";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek } from "date-fns";
@@ -22,6 +23,7 @@ export default function Sales() {
   const [viewProductDialogOpen, setViewProductDialogOpen] = useState(false);
   const [selectedTracking, setSelectedTracking] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'product' | 'tracking'}>({show: false, item: null, type: 'product'});
 
   const utils = trpc.useUtils();
   const { data: products } = trpc.sales.getAllProducts.useQuery();
@@ -42,6 +44,32 @@ export default function Sales() {
       utils.sales.getPerformanceSummary.invalidate();
       toast.success("Sales data recorded");
       setTrackingDialogOpen(false);
+    },
+  });
+
+  const deleteProductMutation = trpc.sales.deleteProduct.useMutation({
+    onSuccess: () => {
+      utils.sales.getAllProducts.invalidate();
+      utils.sales.getPerformanceSummary.invalidate();
+      toast.success("Product deleted");
+      setDeleteConfirm({show: false, item: null, type: 'product'});
+      setViewProductDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete product: ${error.message}`);
+    },
+  });
+
+  const deleteTrackingMutation = trpc.sales.deleteTracking.useMutation({
+    onSuccess: () => {
+      utils.sales.getAllTracking.invalidate();
+      utils.sales.getPerformanceSummary.invalidate();
+      toast.success("Sales record deleted");
+      setDeleteConfirm({show: false, item: null, type: 'tracking'});
+      setViewTrackingDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete record: ${error.message}`);
     },
   });
 
@@ -483,6 +511,18 @@ export default function Sales() {
                   entityId={selectedTracking.id}
                 />
               </div>
+
+              {/* Delete Button */}
+              <div className="border-t pt-4 flex justify-end">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteConfirm({show: true, item: selectedTracking, type: 'tracking'})}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Record
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
@@ -527,10 +567,41 @@ export default function Sales() {
                   entityId={selectedProduct.id}
                 />
               </div>
+
+              {/* Delete Button */}
+              <div className="border-t pt-4 flex justify-end">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteConfirm({show: true, item: selectedProduct, type: 'product'})}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Product
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={deleteConfirm.show}
+        title={deleteConfirm.type === 'product' ? 'Delete Product?' : 'Delete Sales Record?'}
+        description={deleteConfirm.type === 'product' 
+          ? `Are you sure you want to delete "${deleteConfirm.item?.name}"? This action cannot be undone.`
+          : `Are you sure you want to delete this sales record for ${format(new Date(deleteConfirm.item?.weekStartDate), 'MMM dd, yyyy')}? This action cannot be undone.`
+        }
+        onConfirm={async () => {
+          if (deleteConfirm.type === 'product') {
+            deleteProductMutation.mutate({ id: deleteConfirm.item.id });
+          } else {
+            deleteTrackingMutation.mutate({ id: deleteConfirm.item.id });
+          }
+        }}
+        onCancel={() => setDeleteConfirm({show: false, item: null, type: 'product'})}
+        isLoading={deleteProductMutation.isPending || deleteTrackingMutation.isPending}
+      />
     </div>
   );
 }

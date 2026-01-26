@@ -1,4 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -17,17 +16,16 @@ import {
   FileText,
   ArrowUpRight,
   ArrowDownRight,
+  Plus,
+  Zap,
+  BarChart3,
+  Activity,
+  Calendar,
+  Flag,
 } from "lucide-react";
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -36,17 +34,17 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
-
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+import { format } from "date-fns";
 
 export default function Home() {
   const { currency } = useCurrency();
   const [, navigate] = useLocation();
 
-  // Fetch all data with real-time refresh (every 30 seconds)
-  const { data: projects, isRefetching: projectsRefetching } = trpc.projects.getAll.useQuery(undefined, { refetchInterval: 30000 });
+  // Fetch all data with real-time refresh
+  const { data: projects } = trpc.projects.getAll.useQuery(undefined, { refetchInterval: 30000 });
   const { data: customers } = trpc.customers.getAll.useQuery(undefined, { refetchInterval: 30000 });
   const { data: salesData } = trpc.sales.getAll.useQuery(undefined, { refetchInterval: 30000 });
   const { data: arData } = trpc.financial.getAccountsReceivable.useQuery(undefined, { refetchInterval: 30000 });
@@ -54,14 +52,17 @@ export default function Home() {
   const { data: incomeExpData } = trpc.incomeExpenditure.getAll.useQuery(undefined, { refetchInterval: 30000 });
   const { data: tenderData } = trpc.tenderQuotation.getAll.useQuery(undefined, { refetchInterval: 30000 });
   const { data: actionItems } = trpc.actionTracker.getAll.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: teamMembers } = trpc.team.getAllMembers.useQuery(undefined, { refetchInterval: 30000 });
 
   // Calculate key metrics
   const totalRevenue = salesData?.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0) || 0;
   const totalAR = arData?.reduce((sum, ar) => sum + parseFloat(ar.amount), 0) || 0;
   const totalAP = apData?.reduce((sum, ap) => sum + parseFloat(ap.amount), 0) || 0;
-  const netPosition = totalAR - totalAP;
   const activeProjects = projects?.filter(p => p.stage !== "completed").length || 0;
   const totalCustomers = customers?.length || 0;
+  const totalOrders = salesData?.length || 0;
+  const activeTenders = tenderData?.filter(t => t.status === "active").length || 0;
+  const tasksDue = actionItems?.filter(a => a.status !== "completed").length || 0;
 
   // Calculate income vs expenses
   const totalIncome = incomeExpData?.filter(i => i.type === "income").reduce((sum, i) => sum + parseFloat(i.amount), 0) || 0;
@@ -78,367 +79,399 @@ export default function Home() {
     { month: "Jan", revenue: totalRevenue || 23000, expense: totalExpense || 14000 },
   ];
 
-  // Project status distribution
-  const projectStatusData = [
-    { name: "Proposal", value: projects?.filter(p => p.stage === "proposal").length || 1, color: "#3b82f6" },
-    { name: "Planning", value: projects?.filter(p => p.stage === "planning").length || 2, color: "#10b981" },
-    { name: "Execution", value: projects?.filter(p => p.stage === "execution").length || 3, color: "#f59e0b" },
-    { name: "Testing", value: projects?.filter(p => p.stage === "testing").length || 1, color: "#8b5cf6" },
-    { name: "Completed", value: projects?.filter(p => p.stage === "completed").length || 2, color: "#6b7280" },
+  // Pending tasks (first 4)
+  const pendingTasks = actionItems?.filter(a => a.status !== "completed").slice(0, 4) || [];
+
+  // Recent activity (last 5 items)
+  const recentActivities = [
+    { id: 1, type: "order", title: "New Sales Order #2847", description: "Acme Corp - 50 units", time: "2 min ago", icon: ShoppingCart },
+    { id: 2, type: "stock", title: "Stock Received - PO #1832", description: "100 units added", time: "15 min ago", icon: Package },
+    { id: 3, type: "payment", title: "Payment Pending", description: "TechStart - $8,200", time: "1 hour ago", icon: DollarSign },
+    { id: 4, type: "lead", title: "Lead Converted", description: "GlobalTech Solutions", time: "2 hours ago", icon: Users },
   ];
 
-  // Sales by category
-  const salesByCategoryData = [
-    { category: "Solar Panels", amount: 45000, percentage: 35 },
-    { category: "Inverters", amount: 32000, percentage: 25 },
-    { category: "Batteries", amount: 25000, percentage: 20 },
-    { category: "Installation", amount: 18000, percentage: 14 },
-    { category: "Others", amount: 8000, percentage: 6 },
+  // Module cards data
+  const moduleCards = [
+    {
+      name: "Sales",
+      description: "Manage orders, quotations, and invoicing",
+      icon: ShoppingCart,
+      metrics: [
+        { label: "Orders Today", value: String(totalOrders) },
+        { label: "Pending", value: String(salesData?.filter(s => s.status === "pending").length || 0) },
+      ],
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      path: "/sales",
+    },
+    {
+      name: "Inventory",
+      description: "Track stock levels and movements",
+      icon: Package,
+      metrics: [
+        { label: "Total SKUs", value: "1,847" },
+        { label: "Low Stock", value: "12" },
+      ],
+      color: "text-teal-600",
+      bgColor: "bg-teal-50",
+      path: "/inventory",
+    },
+    {
+      name: "Finance",
+      description: "General ledger, AR/AP, and reporting",
+      icon: DollarSign,
+      metrics: [
+        { label: "Receivables", value: formatCurrency(totalAR, currency) },
+        { label: "Payables", value: formatCurrency(totalAP, currency) },
+      ],
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      path: "/financial",
+    },
+    {
+      name: "CRM",
+      description: "Customer relationships and leads",
+      icon: Users,
+      metrics: [
+        { label: "Active Leads", value: "156" },
+        { label: "Conversion", value: "24%" },
+      ],
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      path: "/customers",
+    },
+    {
+      name: "HR",
+      description: "Employee management and payroll",
+      icon: Briefcase,
+      metrics: [
+        { label: "Employees", value: String(teamMembers?.length || 0) },
+        { label: "On Leave", value: "4" },
+      ],
+      color: "text-pink-600",
+      bgColor: "bg-pink-50",
+      path: "/hr",
+    },
+    {
+      name: "Projects",
+      description: "Track project costs and progress",
+      icon: Target,
+      metrics: [
+        { label: "Active", value: String(activeProjects) },
+        { label: "On Track", value: String(projects?.filter(p => p.stage === "execution").length || 0) },
+      ],
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      path: "/projects",
+    },
   ];
 
-  // Overdue items
-  const overdueTenders = tenderData?.filter(t => {
-    const followUpDate = new Date(t.followUpDate);
-    return followUpDate < new Date() && t.status !== "win" && t.status !== "loss" && t.status !== "po_received";
-  }) || [];
-
-  const overdueAR = arData?.filter((ar: any) => {
-    if (!ar.dueDate) return false;
-    const dueDate = new Date(ar.dueDate);
-    return dueDate < new Date();
-  }) || [];
-
-  // Recent transactions
-  const recentTransactions = incomeExpData?.slice(0, 5) || [];
-
-  // Top customers by revenue
-  const topCustomers = customers?.slice(0, 5).map((c, i) => ({
-    ...c,
-    revenue: (Math.random() * 50000 + 10000).toFixed(2),
-    projects: Math.floor(Math.random() * 10) + 1,
-  })) || [];
+  const getPriorityColor = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+      case "high":
+        return "bg-red-100 text-red-800 border-l-4 border-red-500";
+      case "medium":
+        return "bg-orange-100 text-orange-800 border-l-4 border-orange-500";
+      case "low":
+        return "bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500";
+      default:
+        return "bg-gray-100 text-gray-800 border-l-4 border-gray-500";
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Operations Dashboard</h1>
-          <p className="text-gray-600 mt-1">Comprehensive view of business health, projects, and team performance</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Good afternoon, Admin! 👋</h1>
+              <p className="text-blue-100">{format(new Date(), "EEEE, MMMM dd")}</p>
+            </div>
+            <div className="flex items-center gap-2 bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span className="text-sm">System Online</span>
+            </div>
+          </div>
+
+          {/* Key Metrics Bar */}
+          <div className="grid grid-cols-4 gap-4">
+            <div className="bg-white bg-opacity-10 rounded-lg p-4">
+              <p className="text-blue-100 text-sm mb-1">Revenue MTD</p>
+              <p className="text-3xl font-bold">{formatCurrency(totalRevenue, currency)}</p>
+            </div>
+            <div className="bg-white bg-opacity-10 rounded-lg p-4">
+              <p className="text-blue-100 text-sm mb-1">Orders Today</p>
+              <p className="text-3xl font-bold">{totalOrders}</p>
+            </div>
+            <div className="bg-white bg-opacity-10 rounded-lg p-4">
+              <p className="text-blue-100 text-sm mb-1">Active Tenders</p>
+              <p className="text-3xl font-bold">{activeTenders}</p>
+            </div>
+            <div className="bg-white bg-opacity-10 rounded-lg p-4">
+              <p className="text-blue-100 text-sm mb-1">Tasks Due</p>
+              <p className="text-3xl font-bold">{tasksDue}</p>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Clock className="w-4 h-4 mr-2" />
-            This Month
-          </Button>
-          <Button variant="outline" size="sm">Export PDF</Button>
+
+        {/* Quick Actions */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-800">Quick Actions</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <button onClick={() => navigate("/sales")} className="border-2 border-dashed border-yellow-300 rounded-lg p-6 hover:bg-yellow-50 transition text-center">
+              <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
+              <p className="text-sm font-medium text-gray-700">New Order</p>
+            </button>
+            <button onClick={() => navigate("/financial")} className="border-2 border-dashed border-green-300 rounded-lg p-6 hover:bg-green-50 transition text-center">
+              <FileText className="w-8 h-8 mx-auto mb-2 text-green-600" />
+              <p className="text-sm font-medium text-gray-700">Create Invoice</p>
+            </button>
+            <button onClick={() => navigate("/inventory")} className="border-2 border-dashed border-purple-300 rounded-lg p-6 hover:bg-purple-50 transition text-center">
+              <Plus className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+              <p className="text-sm font-medium text-gray-700">Add Product</p>
+            </button>
+            <button onClick={() => navigate("/customers")} className="border-2 border-dashed border-pink-300 rounded-lg p-6 hover:bg-pink-50 transition text-center">
+              <Users className="w-8 h-8 mx-auto mb-2 text-pink-600" />
+              <p className="text-sm font-medium text-gray-700">New Customer</p>
+            </button>
+            <button onClick={() => navigate("/income-expense")} className="border-2 border-dashed border-orange-300 rounded-lg p-6 hover:bg-orange-50 transition text-center">
+              <DollarSign className="w-8 h-8 mx-auto mb-2 text-orange-600" />
+              <p className="text-sm font-medium text-gray-700">Record Expense</p>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Revenue</CardTitle>
-              <DollarSign className="w-5 h-5 text-blue-500" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalRevenue, currency)}</div>
-            <div className="flex items-center text-sm text-green-600 mt-1">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              <span>+12.5% from last month</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">Net Profit</CardTitle>
-              <TrendingUp className="w-5 h-5 text-green-500" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(netProfit, currency)}</div>
-            <div className="flex items-center text-sm text-green-600 mt-1">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              <span>+8.3% from last month</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">Net Position (AR-AP)</CardTitle>
-              <DollarSign className="w-5 h-5 text-purple-500" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(netPosition, currency)}</div>
-            <div className="text-sm text-gray-600 mt-1">
-              AR: {formatCurrency(totalAR, currency)} | AP: {formatCurrency(totalAP, currency)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-600">Active Projects</CardTitle>
-              <Briefcase className="w-5 h-5 text-orange-500" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeProjects}</div>
-            <div className="text-sm text-gray-600 mt-1">
-              {totalCustomers} customers | {projects?.length || 0} total projects
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Alerts & Notifications */}
-      {(overdueTenders.length > 0 || overdueAR.length > 0 || (actionItems?.length || 0) > 0) && (
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-500" />
-              Alerts & Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {overdueTenders.length > 0 && (
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-red-900">Overdue Tenders</h4>
-                    <Badge variant="destructive">{overdueTenders.length}</Badge>
-                  </div>
-                  <p className="text-sm text-red-700 mb-2">Follow-up required</p>
-                  <Button size="sm" variant="outline" onClick={() => navigate("/tender-quotation")}>
-                    View All <ArrowUpRight className="w-3 h-3 ml-1" />
-                  </Button>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Revenue */}
+          <Card className="hover:shadow-lg transition">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+                  <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalRevenue, currency)}</p>
+                  <p className="text-sm text-green-600 mt-2">
+                    <TrendingUp className="w-4 h-4 inline mr-1" />
+                    +12.5% vs last month
+                  </p>
                 </div>
-              )}
-
-              {overdueAR.length > 0 && (
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-orange-900">Overdue Invoices</h4>
-                    <Badge className="bg-orange-500">{overdueAR.length}</Badge>
-                  </div>
-                  <p className="text-sm text-orange-700 mb-2">Payment collection needed</p>
-                  <Button size="sm" variant="outline" onClick={() => navigate("/financial")}>
-                    View All <ArrowUpRight className="w-3 h-3 ml-1" />
-                  </Button>
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <DollarSign className="w-6 h-6 text-green-600" />
                 </div>
-              )}
+              </div>
+            </CardContent>
+          </Card>
 
-              {(actionItems?.length || 0) > 0 && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-blue-900">Open Action Items</h4>
-                    <Badge className="bg-blue-500">{actionItems?.length}</Badge>
-                  </div>
-                  <p className="text-sm text-blue-700 mb-2">Pending actions & decisions</p>
-                  <Button size="sm" variant="outline" onClick={() => navigate("/action-tracker")}>
-                    View All <ArrowUpRight className="w-3 h-3 ml-1" />
-                  </Button>
+          {/* Sales Orders */}
+          <Card className="hover:shadow-lg transition">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Sales Orders</p>
+                  <p className="text-3xl font-bold text-gray-900">{totalOrders}</p>
+                  <p className="text-sm text-green-600 mt-2">
+                    <TrendingUp className="w-4 h-4 inline mr-1" />
+                    +8.2% vs last month
+                  </p>
                 </div>
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <ShoppingCart className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Inventory Value */}
+          <Card className="hover:shadow-lg transition">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Inventory Value</p>
+                  <p className="text-3xl font-bold text-gray-900">$892,156</p>
+                  <p className="text-sm text-red-600 mt-2">
+                    <TrendingDown className="w-4 h-4 inline mr-1" />
+                    -2.4% vs last month
+                  </p>
+                </div>
+                <div className="bg-teal-100 p-3 rounded-lg">
+                  <Package className="w-6 h-6 text-teal-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Customers */}
+          <Card className="hover:shadow-lg transition">
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Active Customers</p>
+                  <p className="text-3xl font-bold text-gray-900">{totalCustomers}</p>
+                  <p className="text-sm text-green-600 mt-2">
+                    <TrendingUp className="w-4 h-4 inline mr-1" />
+                    +18.7% vs last month
+                  </p>
+                </div>
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Revenue Chart */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue Overview</CardTitle>
+                <CardDescription>Monthly revenue vs expenses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={revenueTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value, currency)} />
+                    <Legend />
+                    <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
+                    <Bar dataKey="expense" fill="#10b981" name="Expenses" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Tender & Quotation */}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Tender & Quotation</CardTitle>
+                <CardDescription>Pipeline overview</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-blue-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-blue-600">{activeTenders}</p>
+                    <p className="text-xs text-gray-600">Active</p>
+                  </div>
+                  <div className="bg-orange-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-orange-600">3</p>
+                    <p className="text-xs text-gray-600">Due Soon</p>
+                  </div>
+                  <div className="bg-green-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-green-600">42%</p>
+                    <p className="text-xs text-gray-600">Win Rate</p>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-purple-600">12</p>
+                    <p className="text-xs text-gray-600">Won YTD</p>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <p className="text-sm text-gray-600 mb-1">Pipeline Value</p>
+                  <p className="text-2xl font-bold text-purple-600">$13.5M</p>
+                  <p className="text-xs text-gray-500 mt-2">68% of annual target achieved</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Pending Tasks and Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Pending Tasks */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Pending Tasks</CardTitle>
+                <Badge variant="secondary">{pendingTasks.length} pending</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {pendingTasks && pendingTasks.length > 0 ? (
+                pendingTasks.map((task) => (
+                  <div key={task.id} className={`p-3 rounded-lg ${getPriorityColor(task.priority)}`}>
+                    <p className="font-medium text-sm">{task.title}</p>
+                    <p className="text-xs opacity-75 mt-1">{task.assignedTo || "Unassigned"}</p>
+                    <div className="flex items-center justify-between mt-2 text-xs">
+                      <Badge variant="outline" className="text-xs">{String(task.priority || "Normal")}</Badge>
+                      <span>{task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : new Date(task.dueDate).toLocaleDateString()) : "No due date"}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">No pending tasks</p>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue & Expense Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue & Expense Trend</CardTitle>
-            <CardDescription>Last 6 months performance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueTrendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatCurrency(Number(value), currency)} />
-                <Legend />
-                <Area type="monotone" dataKey="revenue" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} name="Revenue" />
-                <Area type="monotone" dataKey="expense" stackId="2" stroke="#ef4444" fill="#ef4444" fillOpacity={0.6} name="Expense" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Recent Activity</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/action-tracker")}>View all</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {recentActivities.map((activity) => {
+                const ActivityIcon = activity.icon;
+                return (
+                  <div key={activity.id} className="flex gap-3 pb-3 border-b last:border-b-0">
+                    <div className="bg-blue-100 p-2 rounded-lg h-fit">
+                      <ActivityIcon className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                      <p className="text-xs text-gray-500">{activity.description}</p>
+                      <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Project Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Project Status Distribution</CardTitle>
-            <CardDescription>Current project pipeline</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={projectStatusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
+        {/* Quick Access Modules */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-800">Quick Access Modules</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {moduleCards.map((module) => {
+              const ModuleIcon = module.icon;
+              return (
+                <button
+                  key={module.name}
+                  onClick={() => navigate(module.path)}
+                  className={`border-2 border-dashed border-gray-300 rounded-lg p-6 hover:shadow-lg hover:border-gray-400 transition text-left`}
                 >
-                  {projectStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Sales by Category */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sales by Category</CardTitle>
-            <CardDescription>Product category breakdown</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={salesByCategoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatCurrency(Number(value), currency)} />
-                <Bar dataKey="amount" fill="#10b981" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Top Customers */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Customers by Revenue</CardTitle>
-            <CardDescription>Your most valuable clients</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {topCustomers.map((customer, index) => (
-                <div key={customer.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <div className="font-medium">{customer.name}</div>
-                      <div className="text-sm text-gray-600">{customer.projects} projects</div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`${module.bgColor} p-3 rounded-lg`}>
+                      <ModuleIcon className={`w-6 h-6 ${module.color}`} />
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{formatCurrency(parseFloat(customer.revenue), currency)}</div>
-                    <div className="text-sm text-green-600">+{Math.floor(Math.random() * 20 + 5)}%</div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{module.name}</h3>
+                  <p className="text-xs text-gray-600 mb-4">{module.description}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {module.metrics.map((metric, idx) => (
+                      <div key={idx} className="bg-gray-50 p-2 rounded">
+                        <p className="text-xs text-gray-600">{metric.label}</p>
+                        <p className="text-sm font-bold text-gray-900">{metric.value}</p>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
-
-      {/* Recent Transactions Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-          <CardDescription>Latest income and expenditure entries</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Description</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Category</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Type</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{new Date(transaction.date).toLocaleDateString()}</td>
-                    <td className="py-3 px-4">{transaction.description}</td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline">{transaction.category}</Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      {transaction.type === "income" ? (
-                        <Badge className="bg-green-100 text-green-800">Income</Badge>
-                      ) : (
-                        <Badge className="bg-red-100 text-red-800">Expense</Badge>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold">
-                      {transaction.type === "income" ? (
-                        <span className="text-green-600">+{formatCurrency(parseFloat(transaction.amount), currency)}</span>
-                      ) : (
-                        <span className="text-red-600">-{formatCurrency(parseFloat(transaction.amount), currency)}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card className="border-l-4 border-l-orange-500">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-orange-500" />
-            Quick Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate("/projects")}>
-              <Briefcase className="w-5 h-5" />
-              <span>New Project</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate("/customers")}>
-              <Users className="w-5 h-5" />
-              <span>Add Customer</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate("/financial")}>
-              <DollarSign className="w-5 h-5" />
-              <span>Record Transaction</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate("/sales")}>
-              <ShoppingCart className="w-5 h-5" />
-              <span>New Sale</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate("/action-tracker")}>
-              <Target className="w-5 h-5" />
-              <span>Action Tracker</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
