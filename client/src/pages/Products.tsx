@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
+import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +65,8 @@ export default function Products() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formStep, setFormStep] = useState(1);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   // Form state
   const [newProduct, setNewProduct] = useState({
@@ -523,7 +527,7 @@ export default function Products() {
                           <button className="p-1.5 hover:bg-muted rounded-md transition-colors">
                             <Copy className="w-4 h-4 text-muted-foreground" />
                           </button>
-                          <button className="p-1.5 hover:bg-red-50 rounded-md transition-colors">
+                          <button className="p-1.5 hover:bg-red-50 rounded-md transition-colors" onClick={() => { setProductToDelete(product); setDeleteConfirmOpen(true); }}>
                             <Trash2 className="w-4 h-4 text-red-500" />
                           </button>
                         </div>
@@ -536,6 +540,20 @@ export default function Products() {
           </Card>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        itemName={productToDelete?.name || "Product"}
+        onConfirm={() => {
+          toast.success("Product deleted successfully");
+          setDeleteConfirmOpen(false);
+          setProductToDelete(null);
+        }}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone."
+      />
     </DashboardLayout>
   );
 }
