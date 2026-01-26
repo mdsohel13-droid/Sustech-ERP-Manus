@@ -116,7 +116,7 @@ export default function HumanResource() {
     { employeeId: selectedEmployeeForOnboarding?.employee?.id || 0 },
     { enabled: !!selectedEmployeeForOnboarding }
   );
-  const { data: teamMembers } = trpc.hr.getAllMembers.useQuery();
+  const { data: teamMembers } = trpc.team.getAllMembers.useQuery();
 
   // Mutations
   const createUserMutation = trpc.users.create.useMutation({
@@ -2476,8 +2476,8 @@ export default function HumanResource() {
         setGenerateReportOpen={setGenerateReportDialogOpen}
         performanceReviewOpen={performanceReviewDialogOpen}
         setPerformanceReviewOpen={setPerformanceReviewDialogOpen}
-        teamMembers={teamMembers}
-        employees={employees}
+        teamMembers={teamMembers || []}
+        employees={employees || []}
       />
     </div>
   );

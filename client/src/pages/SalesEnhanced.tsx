@@ -129,7 +129,7 @@ export default function SalesEnhanced() {
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="editorial-card border-l-4 border-l-violet-500">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3" style={{display: 'flex'}}>
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
               Total Sales

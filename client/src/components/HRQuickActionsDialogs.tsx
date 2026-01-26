@@ -81,11 +81,15 @@ export function HRQuickActionsDialogs({
                 <Select name="teamMemberId">
                   <SelectTrigger><SelectValue placeholder="Select team member" /></SelectTrigger>
                   <SelectContent>
-                    {teamMembers.map((member: any) => (
-                      <SelectItem key={member.id} value={String(member.id)}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
+                    {teamMembers?.length > 0 ? (
+                      teamMembers.map((member: any) => (
+                        <SelectItem key={`member-${member.id}`} value={String(member.id)}>
+                          {member.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>No team members available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -170,11 +174,15 @@ export function HRQuickActionsDialogs({
                 <Select name="employeeId">
                   <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
                   <SelectContent>
-                    {employees.map((emp: any) => (
-                      <SelectItem key={emp.id} value={String(emp.id)}>
-                        {emp.name}
-                      </SelectItem>
-                    ))}
+                    {employees?.length > 0 ? (
+                      employees.map((emp: any) => (
+                        <SelectItem key={`emp-${emp.id}`} value={String(emp.id)}>
+                          {emp.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>No employees available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
