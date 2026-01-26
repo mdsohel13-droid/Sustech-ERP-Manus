@@ -377,7 +377,12 @@ export async function createTeamMember(data: InsertTeamMember) {
 export async function getAllTeamMembers() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.select().from(teamMembers).where(eq(teamMembers.status, "active"));
+  try {
+    return await db.select().from(teamMembers).where(eq(teamMembers.status, "active"));
+  } catch (error) {
+    // If status filter fails, return all team members
+    return await db.select().from(teamMembers);
+  }
 }
 
 export async function updateTeamMember(id: number, data: Partial<InsertTeamMember>) {
