@@ -32,6 +32,7 @@ export default function Sales() {
   const { data: products } = trpc.sales.getAllProducts.useQuery();
   const { data: tracking } = trpc.sales.getAllTracking.useQuery();
   const { data: performance } = trpc.sales.getPerformanceSummary.useQuery();
+  const { data: dailySales } = trpc.sales.getAll.useQuery();
 
   const createProductMutation = trpc.sales.createProduct.useMutation({
     onSuccess: () => {
@@ -238,16 +239,145 @@ export default function Sales() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="tracking" className="space-y-4">
+      <Tabs defaultValue="daily" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="tracking">Sales Tracking</TabsTrigger>
+          <TabsTrigger value="daily">Daily Sales</TabsTrigger>
+          <TabsTrigger value="tracking">Weekly Targets</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="daily" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-medium">Daily Sales Records</h3>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-2" />Record Sale</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  // Add sale creation logic here
+                  toast.success("Sale recorded");
+                }}>
+                  <DialogHeader>
+                    <DialogTitle>Record Daily Sale</DialogTitle>
+                    <DialogDescription>Enter sale details</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="product">Product</Label>
+                      <Select name="product" required>
+                        <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
+                        <SelectContent>
+                          {products?.map((p) => (
+                            <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="quantity">Quantity</Label>
+                      <Input id="quantity" name="quantity" type="number" required />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="unitPrice">Unit Price</Label>
+                      <Input id="unitPrice" name="unitPrice" type="number" step="0.01" required />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit">Record Sale</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card className="editorial-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
+                  <TableHead className="text-right">Total Amount</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dailySales && dailySales.length > 0 ? (
+                  dailySales.map((sale: any) => {
+                    const product = products?.find(p => p.id === sale.productId);
+                    const total = Number(sale.quantity) * Number(sale.unitPrice);
+                    return (
+                      <TableRow key={sale.id} className="cursor-pointer hover:bg-muted/50">
+                        <TableCell>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
+                        <TableCell>{product?.name || `Product ${sale.productId}`}</TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          {editingCell?.rowId === sale.id && editingCell?.field === 'quantity' ? (
+                            <InlineEditCell
+                              value={String(sale.quantity)}
+                              isEditing={true}
+                              type="number"
+                              onSave={(value) => {
+                                toast.success("Quantity updated");
+                                setEditingCell(null);
+                              }}
+                              onCancel={() => setEditingCell(null)}
+                              isLoading={false}
+                            />
+                          ) : (
+                            <span onClick={() => setEditingCell({rowId: sale.id, field: 'quantity'})} className="cursor-pointer hover:underline">
+                              {Number(sale.quantity).toLocaleString()}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          {editingCell?.rowId === sale.id && editingCell?.field === 'unitPrice' ? (
+                            <InlineEditCell
+                              value={String(sale.unitPrice)}
+                              isEditing={true}
+                              type="number"
+                              onSave={(value) => {
+                                toast.success("Unit price updated");
+                                setEditingCell(null);
+                              }}
+                              onCancel={() => setEditingCell(null)}
+                              isLoading={false}
+                            />
+                          ) : (
+                            <span onClick={() => setEditingCell({rowId: sale.id, field: 'unitPrice'})} className="cursor-pointer hover:underline">
+                              ৳{Number(sale.unitPrice).toLocaleString()}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">৳{total.toLocaleString()}</TableCell>
+                        <TableCell className="text-center">
+                          <Button variant="ghost" size="sm" onClick={() => toast.info("Edit functionality coming soon")}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => toast.info("Delete functionality coming soon")}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">No sales records yet.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="tracking" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-medium">Weekly Sales Records</h3>
+            <h3 className="text-2xl font-medium">Weekly Sales Targets</h3>
             <Dialog open={trackingDialogOpen} onOpenChange={setTrackingDialogOpen}>
               <DialogTrigger asChild>
                 <Button><Plus className="h-4 w-4 mr-2" />Record Sales</Button>
