@@ -1816,3 +1816,229 @@ export async function getRecentActivity(limit: number = 10) {
   .limit(limit);
 }
 
+
+
+// ============ Security Settings ============
+export async function getAllSecuritySettings() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(securitySettings);
+}
+
+export async function getSecuritySetting(key: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(securitySettings).where(eq(securitySettings.settingKey, key)).limit(1);
+  return result[0] || null;
+}
+
+export async function upsertSecuritySetting(data: { settingKey: string; settingValue: string; description?: string; updatedBy: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db.select().from(securitySettings).where(eq(securitySettings.settingKey, data.settingKey)).limit(1);
+  
+  if (existing.length > 0) {
+    await db.update(securitySettings)
+      .set({ settingValue: data.settingValue, description: data.description, updatedBy: data.updatedBy })
+      .where(eq(securitySettings.settingKey, data.settingKey));
+  } else {
+    await db.insert(securitySettings).values(data as InsertSecuritySetting);
+  }
+}
+
+// ============ Login Attempts ============
+export async function getLoginAttempts(limit: number = 100, startDate?: string, endDate?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select().from(loginAttempts);
+  const conditions = [];
+  
+  if (startDate) conditions.push(gte(loginAttempts.createdAt, new Date(startDate)));
+  if (endDate) conditions.push(lte(loginAttempts.createdAt, new Date(endDate)));
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return await query.orderBy(desc(loginAttempts.createdAt)).limit(limit);
+}
+
+export async function recordLoginAttempt(data: InsertLoginAttempt) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(loginAttempts).values(data);
+}
+
+// ============ Blocked IPs ============
+export async function getBlockedIPs() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(blockedIPs).orderBy(desc(blockedIPs.createdAt));
+}
+
+export async function isIPBlocked(ipAddress: string) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const result = await db.select().from(blockedIPs)
+    .where(and(
+      eq(blockedIPs.ipAddress, ipAddress),
+      sql`(${blockedIPs.expiresAt} IS NULL OR ${blockedIPs.expiresAt} > NOW())`
+    ))
+    .limit(1);
+  
+  return result.length > 0;
+}
+
+export async function blockIP(data: { ipAddress: string; reason?: string; blockedBy: number; expiresAt?: Date | null }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(blockedIPs).values({
+    ipAddress: data.ipAddress,
+    reason: data.reason,
+    blockedBy: data.blockedBy,
+    expiresAt: data.expiresAt,
+  } as InsertBlockedIP);
+}
+
+export async function unblockIP(ipAddress: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(blockedIPs).where(eq(blockedIPs.ipAddress, ipAddress));
+}
+
+// ============ User Sessions ============
+export async function getActiveSessions(userId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select({
+    id: userSessions.id,
+    odule: userSessions.userId,
+    ipAddress: userSessions.ipAddress,
+    userAgent: userSessions.userAgent,
+    deviceInfo: userSessions.deviceInfo,
+    lastActivity: userSessions.lastActivity,
+    createdAt: userSessions.createdAt,
+    userName: users.name,
+    userEmail: users.email,
+  })
+  .from(userSessions)
+  .leftJoin(users, eq(userSessions.userId, users.id))
+  .where(and(
+    eq(userSessions.isActive, true),
+    gte(userSessions.expiresAt, new Date())
+  ));
+  
+  if (userId) {
+    query = query.where(and(
+      eq(userSessions.isActive, true),
+      gte(userSessions.expiresAt, new Date()),
+      eq(userSessions.userId, userId)
+    )) as any;
+  }
+  
+  return await query.orderBy(desc(userSessions.lastActivity));
+}
+
+export async function terminateSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(userSessions).set({ isActive: false }).where(eq(userSessions.id, sessionId));
+}
+
+export async function terminateAllUserSessions(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(userSessions).set({ isActive: false }).where(eq(userSessions.userId, userId));
+}
+
+// ============ Display Preferences ============
+export async function getDisplayPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(displayPreferences)
+    .where(sql`${displayPreferences.userId} = ${userId} OR ${displayPreferences.isGlobal} = TRUE`)
+    .orderBy(asc(displayPreferences.settingKey));
+}
+
+export async function getGlobalDisplayPreferences() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(displayPreferences).where(eq(displayPreferences.isGlobal, true));
+}
+
+export async function upsertDisplayPreference(data: { userId: number | null; settingKey: string; settingValue: string; isGlobal: boolean }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const conditions = data.isGlobal 
+    ? and(eq(displayPreferences.settingKey, data.settingKey), eq(displayPreferences.isGlobal, true))
+    : and(eq(displayPreferences.settingKey, data.settingKey), eq(displayPreferences.userId, data.userId!));
+  
+  const existing = await db.select().from(displayPreferences).where(conditions).limit(1);
+  
+  if (existing.length > 0) {
+    await db.update(displayPreferences)
+      .set({ settingValue: data.settingValue })
+      .where(conditions);
+  } else {
+    await db.insert(displayPreferences).values(data as InsertDisplayPreference);
+  }
+}
+
+// ============ User Management (Enhanced) ============
+export async function getAllUsersWithDetails() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    role: users.role,
+    loginMethod: users.loginMethod,
+    createdAt: users.createdAt,
+    lastSignedIn: users.lastSignedIn,
+  }).from(users).orderBy(asc(users.name));
+}
+
+export async function createUserWithPassword(data: InsertUser & { passwordHash: string; mustChangePassword: boolean }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.execute(sql`INSERT INTO users (openId, name, email, role, loginMethod, passwordHash, mustChangePassword) VALUES (${data.openId}, ${data.name}, ${data.email}, ${data.role}, ${data.loginMethod}, ${data.passwordHash}, ${data.mustChangePassword})`);
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string, mustChangePassword: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.execute(sql`UPDATE users SET passwordHash = ${passwordHash}, mustChangePassword = ${mustChangePassword}, passwordChangedAt = NOW(), failedLoginAttempts = 0, lockedUntil = NULL WHERE id = ${userId}`);
+}
+
+export async function lockUserAccount(userId: number, lockedUntil: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.execute(sql`UPDATE users SET lockedUntil = ${lockedUntil.toISOString()} WHERE id = ${userId}`);
+}
+
+export async function unlockUserAccount(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.execute(sql`UPDATE users SET lockedUntil = NULL, failedLoginAttempts = 0 WHERE id = ${userId}`);
+}
+
+export async function forcePasswordChange(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.execute(sql`UPDATE users SET mustChangePassword = TRUE WHERE id = ${userId}`);
+}
+
