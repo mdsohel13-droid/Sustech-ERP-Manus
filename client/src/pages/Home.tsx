@@ -166,8 +166,8 @@ export default function Home() {
     },
   ];
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
+  const getPriorityColor = (priority: string | undefined) => {
+    switch (priority) {
       case "high":
         return "bg-red-100 text-red-800 border-l-4 border-red-500";
       case "medium":
@@ -180,65 +180,65 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
+        <div className="bg-primary rounded-lg p-6 text-primary-foreground">
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold mb-2">Good afternoon, Admin! 👋</h1>
-              <p className="text-blue-100">{format(new Date(), "EEEE, MMMM dd")}</p>
+              <p className="text-primary-foreground/80">{format(new Date(), "EEEE, MMMM dd")}</p>
             </div>
-            <div className="flex items-center gap-2 bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-2 bg-primary-foreground/10 px-4 py-2 rounded-lg">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm">System Online</span>
+              <span className="text-sm text-primary-foreground">System Online</span>
             </div>
           </div>
 
           {/* Key Metrics Bar */}
           <div className="grid grid-cols-4 gap-4">
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <p className="text-blue-100 text-sm mb-1">Revenue MTD</p>
-              <p className="text-3xl font-bold">{formatCurrency(totalRevenue, currency)}</p>
+            <div className="bg-primary-foreground/10 rounded-lg p-4">
+              <p className="text-primary-foreground/70 text-sm mb-1">Revenue MTD</p>
+              <p className="text-3xl font-bold text-primary-foreground">{formatCurrency(totalRevenue, currency)}</p>
             </div>
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <p className="text-blue-100 text-sm mb-1">Orders Today</p>
-              <p className="text-3xl font-bold">{totalOrders}</p>
+            <div className="bg-primary-foreground/10 rounded-lg p-4">
+              <p className="text-primary-foreground/70 text-sm mb-1">Orders Today</p>
+              <p className="text-3xl font-bold text-primary-foreground">{totalOrders}</p>
             </div>
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <p className="text-blue-100 text-sm mb-1">Active Tenders</p>
-              <p className="text-3xl font-bold">{activeTenders}</p>
+            <div className="bg-primary-foreground/10 rounded-lg p-4">
+              <p className="text-primary-foreground/70 text-sm mb-1">Active Tenders</p>
+              <p className="text-3xl font-bold text-primary-foreground">{activeTenders}</p>
             </div>
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <p className="text-blue-100 text-sm mb-1">Tasks Due</p>
-              <p className="text-3xl font-bold">{tasksDue}</p>
+            <div className="bg-primary-foreground/10 rounded-lg p-4">
+              <p className="text-primary-foreground/70 text-sm mb-1">Tasks Due</p>
+              <p className="text-3xl font-bold text-primary-foreground">{tasksDue}</p>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800">Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <button onClick={() => navigate("/sales")} className="border-2 border-dashed border-yellow-300 rounded-lg p-6 hover:bg-yellow-50 transition text-center">
-              <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
-              <p className="text-sm font-medium text-gray-700">New Order</p>
+            <button onClick={() => navigate("/sales")} className="border-2 border-dashed border-primary/30 rounded-lg p-6 hover:bg-primary/5 transition text-center bg-card">
+              <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium text-foreground">New Order</p>
             </button>
-            <button onClick={() => navigate("/financial")} className="border-2 border-dashed border-green-300 rounded-lg p-6 hover:bg-green-50 transition text-center">
-              <FileText className="w-8 h-8 mx-auto mb-2 text-green-600" />
-              <p className="text-sm font-medium text-gray-700">Create Invoice</p>
+            <button onClick={() => navigate("/financial")} className="border-2 border-dashed border-primary/30 rounded-lg p-6 hover:bg-primary/5 transition text-center bg-card">
+              <FileText className="w-8 h-8 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium text-foreground">Create Invoice</p>
             </button>
-            <button onClick={() => navigate("/inventory")} className="border-2 border-dashed border-purple-300 rounded-lg p-6 hover:bg-purple-50 transition text-center">
-              <Plus className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-              <p className="text-sm font-medium text-gray-700">Add Product</p>
+            <button onClick={() => navigate("/inventory")} className="border-2 border-dashed border-primary/30 rounded-lg p-6 hover:bg-primary/5 transition text-center bg-card">
+              <Plus className="w-8 h-8 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium text-foreground">Add Product</p>
             </button>
-            <button onClick={() => navigate("/customers")} className="border-2 border-dashed border-pink-300 rounded-lg p-6 hover:bg-pink-50 transition text-center">
-              <Users className="w-8 h-8 mx-auto mb-2 text-pink-600" />
-              <p className="text-sm font-medium text-gray-700">New Customer</p>
+            <button onClick={() => navigate("/customers")} className="border-2 border-dashed border-primary/30 rounded-lg p-6 hover:bg-primary/5 transition text-center bg-card">
+              <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium text-foreground">New Customer</p>
             </button>
-            <button onClick={() => navigate("/income-expense")} className="border-2 border-dashed border-orange-300 rounded-lg p-6 hover:bg-orange-50 transition text-center">
-              <DollarSign className="w-8 h-8 mx-auto mb-2 text-orange-600" />
-              <p className="text-sm font-medium text-gray-700">Record Expense</p>
+            <button onClick={() => navigate("/income-expense")} className="border-2 border-dashed border-primary/30 rounded-lg p-6 hover:bg-primary/5 transition text-center bg-card">
+              <DollarSign className="w-8 h-8 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium text-foreground">Record Expense</p>
             </button>
           </div>
         </div>
@@ -250,9 +250,9 @@ export default function Home() {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-                  <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalRevenue, currency)}</p>
-                  <p className="text-sm text-green-600 mt-2">
+                  <p className="text-muted-foreground text-sm">Total Revenue</p>
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(totalRevenue, currency)}</p>
+                  <p className="text-xs text-green-600 mt-2">
                     <TrendingUp className="w-4 h-4 inline mr-1" />
                     +12.5% vs last month
                   </p>
@@ -269,9 +269,9 @@ export default function Home() {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Sales Orders</p>
-                  <p className="text-3xl font-bold text-gray-900">{totalOrders}</p>
-                  <p className="text-sm text-green-600 mt-2">
+                  <p className="text-muted-foreground text-sm">Sales Orders</p>
+                  <p className="text-2xl font-bold text-foreground">{totalOrders}</p>
+                  <p className="text-xs text-green-600 mt-2">
                     <TrendingUp className="w-4 h-4 inline mr-1" />
                     +8.2% vs last month
                   </p>
@@ -288,9 +288,9 @@ export default function Home() {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Inventory Value</p>
-                  <p className="text-3xl font-bold text-gray-900">$892,156</p>
-                  <p className="text-sm text-red-600 mt-2">
+                  <p className="text-muted-foreground text-sm">Inventory Value</p>
+                  <p className="text-2xl font-bold text-foreground">$892,156</p>
+                  <p className="text-xs text-red-600 mt-2">
                     <TrendingDown className="w-4 h-4 inline mr-1" />
                     -2.4% vs last month
                   </p>
@@ -307,9 +307,9 @@ export default function Home() {
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Active Customers</p>
-                  <p className="text-3xl font-bold text-gray-900">{totalCustomers}</p>
-                  <p className="text-sm text-green-600 mt-2">
+                  <p className="text-muted-foreground text-sm">Active Customers</p>
+                  <p className="text-2xl font-bold text-foreground">{totalCustomers}</p>
+                  <p className="text-xs text-green-600 mt-2">
                     <TrendingUp className="w-4 h-4 inline mr-1" />
                     +18.7% vs last month
                   </p>
@@ -322,132 +322,141 @@ export default function Home() {
           </Card>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Revenue Chart */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue Overview</CardTitle>
-                <CardDescription>Monthly revenue vs expenses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={revenueTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(value, currency)} />
-                    <Legend />
-                    <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
-                    <Bar dataKey="expense" fill="#10b981" name="Expenses" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Revenue Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-foreground">Revenue Overview</CardTitle>
+              <CardDescription>Monthly revenue vs expenses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={revenueTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="month" stroke="var(--muted-foreground)" />
+                  <YAxis stroke="var(--muted-foreground)" />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="revenue" fill="var(--chart-1)" />
+                  <Bar dataKey="expense" fill="var(--chart-2)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-          {/* Right Column - Tender & Quotation */}
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Tender & Quotation</CardTitle>
-                <CardDescription>Pipeline overview</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-blue-50 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-blue-600">{activeTenders}</p>
-                    <p className="text-xs text-gray-600">Active</p>
+          {/* Tender & Quotation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-foreground">Tender & Quotation</CardTitle>
+              <CardDescription>Pipeline overview</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-primary">{activeTenders}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Active</p>
                   </div>
-                  <div className="bg-orange-50 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-orange-600">3</p>
-                    <p className="text-xs text-gray-600">Due Soon</p>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-orange-600">3</p>
+                    <p className="text-xs text-muted-foreground mt-1">Due Soon</p>
                   </div>
-                  <div className="bg-green-50 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-green-600">42%</p>
-                    <p className="text-xs text-gray-600">Win Rate</p>
-                  </div>
-                  <div className="bg-purple-50 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-purple-600">12</p>
-                    <p className="text-xs text-gray-600">Won YTD</p>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-green-600">42%</p>
+                    <p className="text-xs text-muted-foreground mt-1">Win Rate</p>
                   </div>
                 </div>
-                <div className="border-t pt-4">
-                  <p className="text-sm text-gray-600 mb-1">Pipeline Value</p>
-                  <p className="text-2xl font-bold text-purple-600">$13.5M</p>
-                  <p className="text-xs text-gray-500 mt-2">68% of annual target achieved</p>
+                <div className="border-t border-border pt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm text-muted-foreground">Pipeline Value</p>
+                    <p className="text-lg font-bold text-foreground">$13.5M</p>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div className="bg-primary h-2 rounded-full" style={{ width: "68%" }}></div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">68% of annual target achieved</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Pending Tasks and Recent Activity */}
+        {/* Pending Tasks & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pending Tasks */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Pending Tasks</CardTitle>
-                <Badge variant="secondary">{pendingTasks.length} pending</Badge>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-foreground">Pending Tasks</CardTitle>
+                <CardDescription>{pendingTasks.length} pending</CardDescription>
               </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/action-tracker")}>
+                View all
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {pendingTasks && pendingTasks.length > 0 ? (
-                pendingTasks.map((task) => (
-                  <div key={task.id} className={`p-3 rounded-lg ${getPriorityColor(task.priority)}`}>
-                    <p className="font-medium text-sm">{task.title}</p>
-                    <p className="text-xs opacity-75 mt-1">{task.assignedTo || "Unassigned"}</p>
-                    <div className="flex items-center justify-between mt-2 text-xs">
-                      <Badge variant="outline" className="text-xs">{String(task.priority || "Normal")}</Badge>
-                      <span>{task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : new Date(task.dueDate).toLocaleDateString()) : "No due date"}</span>
+            <CardContent>
+              <div className="space-y-3">
+                {pendingTasks.length > 0 ? (
+                  pendingTasks.map((task) => (
+                    <div key={task.id} className={`p-3 rounded-lg ${getPriorityColor(task.priority)}`}>
+                      <p className="font-medium text-sm">{task.title}</p>
+                      <p className="text-xs opacity-75 mt-1">{task.assignedTo || "Unassigned"}</p>
+                      <div className="flex items-center justify-between mt-2 text-xs">
+                        <Badge variant="outline" className="text-xs">{String(task.priority || "Normal")}</Badge>
+                        <span>{task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : new Date(task.dueDate).toLocaleDateString()) : "No due date"}</span>
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">No pending tasks</p>
-              )}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No pending tasks</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
           {/* Recent Activity */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Activity</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/action-tracker")}>View all</Button>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-foreground">Recent Activity</CardTitle>
+                <CardDescription>Latest updates</CardDescription>
               </div>
+              <Button variant="ghost" size="sm">
+                View all
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {recentActivities.map((activity) => {
-                const ActivityIcon = activity.icon;
-                return (
-                  <div key={activity.id} className="flex gap-3 pb-3 border-b last:border-b-0">
-                    <div className="bg-blue-100 p-2 rounded-lg h-fit">
-                      <ActivityIcon className="w-4 h-4 text-blue-600" />
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivities.map((activity) => {
+                  const ActivityIcon = activity.icon;
+                  return (
+                    <div key={activity.id} className="flex gap-3">
+                      <div className="bg-muted p-2 rounded-lg h-fit">
+                        <ActivityIcon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{activity.title}</p>
+                        <p className="text-xs text-muted-foreground">{activity.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                      <p className="text-xs text-gray-500">{activity.description}</p>
-                      <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Quick Access Modules */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-800">Quick Access Modules</h2>
+          <h2 className="text-lg font-semibold text-foreground">Quick Access Modules</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {moduleCards.map((module) => {
+            {moduleCards.map((module, idx) => {
               const ModuleIcon = module.icon;
               return (
                 <button
-                  key={module.name}
+                  key={idx}
                   onClick={() => navigate(module.path)}
                   className={`border-2 border-dashed border-gray-300 rounded-lg p-6 hover:shadow-lg hover:border-gray-400 transition text-left`}
                 >
@@ -456,13 +465,13 @@ export default function Home() {
                       <ModuleIcon className={`w-6 h-6 ${module.color}`} />
                     </div>
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{module.name}</h3>
-                  <p className="text-xs text-gray-600 mb-4">{module.description}</p>
+                  <h3 className="font-semibold text-foreground mb-1">{module.name}</h3>
+                  <p className="text-xs text-muted-foreground mb-4">{module.description}</p>
                   <div className="grid grid-cols-2 gap-3">
                     {module.metrics.map((metric, idx) => (
-                      <div key={idx} className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs text-gray-600">{metric.label}</p>
-                        <p className="text-sm font-bold text-gray-900">{metric.value}</p>
+                      <div key={idx} className="bg-muted p-2 rounded">
+                        <p className="text-xs text-muted-foreground">{metric.label}</p>
+                        <p className="text-sm font-bold text-foreground">{metric.value}</p>
                       </div>
                     ))}
                   </div>
