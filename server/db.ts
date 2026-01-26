@@ -38,7 +38,12 @@ import {
   jobDescriptions,
   employeeRoles,
   employeeConfidential,
-  auditLogs, InsertAuditLog
+  auditLogs, InsertAuditLog,
+  securitySettings, InsertSecuritySetting,
+  loginAttempts, InsertLoginAttempt,
+  blockedIPs, InsertBlockedIP,
+  userSessions, InsertUserSession,
+  displayPreferences, InsertDisplayPreference,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
