@@ -89,6 +89,11 @@ function Router() {
           </ProtectedRoute>
         </DashboardLayout>
       </Route>
+      <Route path={"/admin-settings"}>
+        <DashboardLayout>
+          <AdminSettings />
+        </DashboardLayout>
+      </Route>
       <Route path={"/income-expenditure"}>
         <DashboardLayout>
           <IncomeExpenditure />
