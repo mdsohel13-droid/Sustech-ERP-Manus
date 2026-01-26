@@ -15,8 +15,18 @@ export async function createContext(
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
-  // Check for demo mode cookie first (for development/testing)
   const cookies = parseCookie(opts.req.headers.cookie || "");
+  
+  // Check for password-based login cookie
+  const userId = cookies["erp-user-id"];
+  if (userId) {
+    user = await db.getUserById(parseInt(userId)) ?? null;
+    if (user) {
+      return { req: opts.req, res: opts.res, user };
+    }
+  }
+
+  // Check for demo mode cookie (for development/testing)
   if (cookies["erp-demo-mode"] === "true") {
     user = await db.getUserByOpenId("demo-admin-user") ?? null;
     if (user) {
@@ -38,7 +48,6 @@ export async function createContext(
   if (referer.includes("demo=true") || referer.includes("demo_mode=true")) {
     user = await db.getUserByOpenId("demo-admin-user") ?? null;
     if (user) {
-      // Set cookie for future requests
       opts.res.setHeader('Set-Cookie', 'erp-demo-mode=true; Path=/; Max-Age=86400; SameSite=Lax');
       return { req: opts.req, res: opts.res, user };
     }
