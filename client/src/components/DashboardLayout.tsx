@@ -142,10 +142,23 @@ export default function DashboardLayout({
 
   if (!user) {
     const handleDemoLogin = () => {
-      // Set demo mode cookie and reload
-      document.cookie = "erp-demo-mode=true; path=/; max-age=86400";
-      window.location.reload();
+      // Set demo mode cookie with proper attributes for cross-origin
+      document.cookie = "erp-demo-mode=true; path=/; max-age=86400; SameSite=Lax";
+      // Also store in localStorage as backup
+      localStorage.setItem("erp-demo-mode", "true");
+      // Force full page reload to ensure cookie is sent with next request
+      window.location.href = window.location.origin + "/";
     };
+
+    // Auto-login if localStorage has demo mode (handles cookie issues)
+    if (typeof window !== 'undefined' && localStorage.getItem("erp-demo-mode") === "true") {
+      // Ensure cookie is set
+      if (!document.cookie.includes("erp-demo-mode=true")) {
+        document.cookie = "erp-demo-mode=true; path=/; max-age=86400; SameSite=Lax";
+        window.location.reload();
+        return null;
+      }
+    }
 
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -164,6 +177,7 @@ export default function DashboardLayout({
               onClick={() => { window.location.href = getLoginUrl(); }}
               size="lg"
               className="w-full"
+              data-testid="sign-in-btn"
             >
               Sign in to Continue
             </Button>
@@ -172,6 +186,7 @@ export default function DashboardLayout({
               variant="outline"
               size="lg"
               className="w-full"
+              data-testid="demo-mode-btn"
             >
               Demo Mode (Admin Access)
             </Button>
