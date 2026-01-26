@@ -9,7 +9,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2 } from "lucide-react";
+import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2, Edit } from "lucide-react";
+import { InlineEditCell } from "@/components/InlineEditCell";
+import { useState } from "react";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
@@ -24,6 +26,7 @@ export default function Sales() {
   const [selectedTracking, setSelectedTracking] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'product' | 'tracking'}>({show: false, item: null, type: 'product'});
+  const [editingCell, setEditingCell] = useState<{rowId: number; field: string} | null>(null);
 
   const utils = trpc.useUtils();
   const { data: products } = trpc.sales.getAllProducts.useQuery();
@@ -70,6 +73,29 @@ export default function Sales() {
     },
     onError: (error) => {
       toast.error(`Failed to delete record: ${error.message}`);
+    },
+  });
+
+  const updateTrackingMutation = trpc.sales.updateTracking.useMutation({
+    onSuccess: () => {
+      utils.sales.getAllTracking.invalidate();
+      utils.sales.getPerformanceSummary.invalidate();
+      toast.success("Sales record updated");
+      setEditingCell(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to update record: ${error.message}`);
+    },
+  });
+
+  const updateProductMutation = trpc.sales.updateProduct.useMutation({
+    onSuccess: () => {
+      utils.sales.getAllProducts.invalidate();
+      toast.success("Product updated");
+      setEditingCell(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to update product: ${error.message}`);
     },
   });
 
@@ -307,8 +333,48 @@ export default function Sales() {
                       >
                         <TableCell>{format(new Date(item.weekStartDate), "MMM dd, yyyy")}</TableCell>
                         <TableCell>{product?.name || `Product ${item.productId}`}</TableCell>
-                        <TableCell className="text-right">${Number(item.target).toLocaleString()}</TableCell>
-                        <TableCell className="text-right">${Number(item.actual).toLocaleString()}</TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          {editingCell?.rowId === item.id && editingCell?.field === 'target' ? (
+                            <InlineEditCell
+                              value={String(item.target)}
+                              isEditing={true}
+                              type="number"
+                              onSave={(value) => {
+                                updateTrackingMutation.mutate({
+                                  id: item.id,
+                                  target: value,
+                                });
+                              }}
+                              onCancel={() => setEditingCell(null)}
+                              isLoading={updateTrackingMutation.isPending}
+                            />
+                          ) : (
+                            <span onClick={() => setEditingCell({rowId: item.id, field: 'target'})} className="cursor-pointer hover:underline">
+                              ${Number(item.target).toLocaleString()}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          {editingCell?.rowId === item.id && editingCell?.field === 'actual' ? (
+                            <InlineEditCell
+                              value={String(item.actual)}
+                              isEditing={true}
+                              type="number"
+                              onSave={(value) => {
+                                updateTrackingMutation.mutate({
+                                  id: item.id,
+                                  actual: value,
+                                });
+                              }}
+                              onCancel={() => setEditingCell(null)}
+                              isLoading={updateTrackingMutation.isPending}
+                            />
+                          ) : (
+                            <span onClick={() => setEditingCell({rowId: item.id, field: 'actual'})} className="cursor-pointer hover:underline">
+                              ${Number(item.actual).toLocaleString()}
+                            </span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Badge className={achievement >= 100 ? "bg-green-100 text-green-800" : achievement >= 80 ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}>
                             {achievement.toFixed(0)}%
