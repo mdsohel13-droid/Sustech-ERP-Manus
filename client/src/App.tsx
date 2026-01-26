@@ -15,6 +15,7 @@ import Ideas from "./pages/Ideas";
 import SalesEnhanced from "./pages/SalesEnhanced";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
+import AdminSettings from "./pages/AdminSettings";
 import IncomeExpenditure from "./pages/IncomeExpenditure";
 import ActionTracker from "@/pages/ActionTracker";
 import HumanResource from "@/pages/HumanResource";
