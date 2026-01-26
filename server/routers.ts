@@ -918,6 +918,249 @@ Provide 2-3 actionable business insights.`;
       }),
   }),
 
+  // ============ Security & Admin Settings ============
+  security: router({
+    // Get all security settings
+    getAll: adminProcedure.query(async () => {
+      return await db.getAllSecuritySettings();
+    }),
+
+    // Update security setting
+    update: adminProcedure
+      .input(z.object({
+        settingKey: z.string(),
+        settingValue: z.string(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.upsertSecuritySetting({
+          settingKey: input.settingKey,
+          settingValue: input.settingValue,
+          description: input.description,
+          updatedBy: ctx.user.id,
+        });
+        return { success: true };
+      }),
+
+    // Get login attempts
+    getLoginAttempts: adminProcedure
+      .input(z.object({
+        limit: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getLoginAttempts(input.limit || 100, input.startDate, input.endDate);
+      }),
+
+    // Get blocked IPs
+    getBlockedIPs: adminProcedure.query(async () => {
+      return await db.getBlockedIPs();
+    }),
+
+    // Block IP
+    blockIP: adminProcedure
+      .input(z.object({
+        ipAddress: z.string(),
+        reason: z.string().optional(),
+        expiresAt: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.blockIP({
+          ipAddress: input.ipAddress,
+          reason: input.reason,
+          blockedBy: ctx.user.id,
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+        });
+        return { success: true };
+      }),
+
+    // Unblock IP
+    unblockIP: adminProcedure
+      .input(z.object({ ipAddress: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.unblockIP(input.ipAddress);
+        return { success: true };
+      }),
+
+    // Get active sessions
+    getActiveSessions: adminProcedure
+      .input(z.object({ userId: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await db.getActiveSessions(input.userId);
+      }),
+
+    // Terminate session
+    terminateSession: adminProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.terminateSession(input.sessionId);
+        return { success: true };
+      }),
+
+    // Terminate all sessions for user
+    terminateAllUserSessions: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.terminateAllUserSessions(input.userId);
+        return { success: true };
+      }),
+
+    // Get audit logs
+    getAuditLogs: adminProcedure
+      .input(z.object({
+        limit: z.number().optional(),
+        userId: z.number().optional(),
+        action: z.string().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getAuditLogs({
+          limit: input.limit,
+          userId: input.userId,
+          action: input.action,
+          startDate: input.startDate ? new Date(input.startDate) : undefined,
+          endDate: input.endDate ? new Date(input.endDate) : undefined,
+        });
+      }),
+  }),
+
+  // ============ Display Preferences ============
+  displayPreferences: router({
+    // Get all display preferences
+    getAll: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getDisplayPreferences(ctx.user.id);
+    }),
+
+    // Get global preferences (admin only)
+    getGlobal: adminProcedure.query(async () => {
+      return await db.getGlobalDisplayPreferences();
+    }),
+
+    // Update preference
+    update: protectedProcedure
+      .input(z.object({
+        settingKey: z.string(),
+        settingValue: z.string(),
+        isGlobal: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Only admin can set global preferences
+        if (input.isGlobal && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required for global settings' });
+        }
+        await db.upsertDisplayPreference({
+          userId: input.isGlobal ? null : ctx.user.id,
+          settingKey: input.settingKey,
+          settingValue: input.settingValue,
+          isGlobal: input.isGlobal || false,
+        });
+        return { success: true };
+      }),
+  }),
+
+  // ============ User Management (Enhanced) ============
+  userManagement: router({
+    // Get all users with details
+    getAllWithDetails: adminProcedure.query(async () => {
+      return await db.getAllUsersWithDetails();
+    }),
+
+    // Create user with password
+    createWithPassword: adminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        role: z.enum(["admin", "manager", "viewer", "user"]),
+        password: z.string().min(8),
+        mustChangePassword: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Validate password strength
+        const passwordValidation = validatePasswordStrength(input.password);
+        if (!passwordValidation.isValid) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: `Password does not meet requirements: ${passwordValidation.errors.join(', ')}` 
+          });
+        }
+
+        // Check if email exists
+        const existingUser = await db.getUserByEmail(input.email);
+        if (existingUser) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'User with this email already exists' });
+        }
+
+        // Hash password
+        const bcrypt = await import('bcryptjs');
+        const passwordHash = await bcrypt.hash(input.password, 12);
+
+        // Create user
+        const openId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        await db.createUserWithPassword({
+          openId,
+          name: input.name,
+          email: input.email,
+          role: input.role,
+          loginMethod: 'password',
+          passwordHash,
+          mustChangePassword: input.mustChangePassword || false,
+        });
+
+        return { success: true };
+      }),
+
+    // Reset user password
+    resetPassword: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        newPassword: z.string().min(8),
+        mustChangePassword: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const passwordValidation = validatePasswordStrength(input.newPassword);
+        if (!passwordValidation.isValid) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: `Password does not meet requirements: ${passwordValidation.errors.join(', ')}` 
+          });
+        }
+
+        const bcrypt = await import('bcryptjs');
+        const passwordHash = await bcrypt.hash(input.newPassword, 12);
+
+        await db.updateUserPassword(input.userId, passwordHash, input.mustChangePassword || true);
+        return { success: true };
+      }),
+
+    // Lock/Unlock user account
+    toggleLock: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        lock: z.boolean(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        if (input.lock) {
+          // Lock for 24 hours by default
+          const lockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          await db.lockUserAccount(input.userId, lockedUntil);
+        } else {
+          await db.unlockUserAccount(input.userId);
+        }
+        return { success: true };
+      }),
+
+    // Force password change
+    forcePasswordChange: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.forcePasswordChange(input.userId);
+        return { success: true };
+      }),
+  }),
+
   // ============ Enhanced Sales Module ============
   salesEnhanced: router({
     // Daily Sales
