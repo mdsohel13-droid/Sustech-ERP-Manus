@@ -158,16 +158,22 @@ export default function DashboardLayout({
       // Also store in localStorage as backup
       localStorage.setItem("erp-demo-mode", "true");
       // Force full page reload to ensure cookie is sent with next request
-      window.location.href = window.location.origin + "/";
+      window.location.href = window.location.origin + "/?demo=true";
     };
 
     // Auto-login if localStorage has demo mode (handles cookie issues)
-    if (typeof window !== 'undefined' && localStorage.getItem("erp-demo-mode") === "true") {
-      // Ensure cookie is set
-      if (!document.cookie.includes("erp-demo-mode=true")) {
-        document.cookie = "erp-demo-mode=true; path=/; max-age=86400; SameSite=Lax";
-        window.location.reload();
-        return null;
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const demoParam = urlParams.get('demo') || urlParams.get('demo_mode');
+      
+      if (demoParam === 'true' || localStorage.getItem("erp-demo-mode") === "true") {
+        // Ensure cookie is set
+        if (!document.cookie.includes("erp-demo-mode=true")) {
+          document.cookie = "erp-demo-mode=true; path=/; max-age=86400; SameSite=Lax";
+          localStorage.setItem("erp-demo-mode", "true");
+          window.location.reload();
+          return null;
+        }
       }
     }
 
