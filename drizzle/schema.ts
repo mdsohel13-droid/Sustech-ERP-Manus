@@ -933,3 +933,103 @@ export const auditLogs = mysqlTable("audit_logs", {
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+
+// Security Settings for Hacker Protection
+export const securitySettings = mysqlTable("security_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  settingKey: varchar("settingKey", { length: 100 }).notNull().unique(),
+  settingValue: text("settingValue"),
+  description: text("description"),
+  updatedBy: int("updatedBy"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SecuritySetting = typeof securitySettings.$inferSelect;
+export type InsertSecuritySetting = typeof securitySettings.$inferInsert;
+
+// Login Attempts Tracking (for brute force protection)
+export const loginAttempts = mysqlTable("login_attempts", {
+  id: int("id").autoincrement().primaryKey(),
+  ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  userId: int("userId"),
+  attemptType: mysqlEnum("attemptType", ["success", "failed", "blocked"]).notNull(),
+  userAgent: text("userAgent"),
+  country: varchar("country", { length: 100 }),
+  city: varchar("city", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LoginAttempt = typeof loginAttempts.$inferSelect;
+export type InsertLoginAttempt = typeof loginAttempts.$inferInsert;
+
+// Blocked IPs for security
+export const blockedIPs = mysqlTable("blocked_ips", {
+  id: int("id").autoincrement().primaryKey(),
+  ipAddress: varchar("ipAddress", { length: 45 }).notNull().unique(),
+  reason: text("reason"),
+  blockedBy: int("blockedBy"),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BlockedIP = typeof blockedIPs.$inferSelect;
+export type InsertBlockedIP = typeof blockedIPs.$inferInsert;
+
+// User Sessions for session management
+export const userSessions = mysqlTable("user_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sessionToken: varchar("sessionToken", { length: 255 }).notNull().unique(),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  deviceInfo: text("deviceInfo"),
+  lastActivity: timestamp("lastActivity").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = typeof userSessions.$inferInsert;
+
+// Password History (prevent reuse)
+export const passwordHistory = mysqlTable("password_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PasswordHistory = typeof passwordHistory.$inferSelect;
+export type InsertPasswordHistory = typeof passwordHistory.$inferInsert;
+
+// Two-Factor Authentication
+export const twoFactorAuth = mysqlTable("two_factor_auth", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  secret: varchar("secret", { length: 255 }).notNull(),
+  isEnabled: boolean("isEnabled").default(false).notNull(),
+  backupCodes: text("backupCodes"), // JSON array of backup codes
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TwoFactorAuth = typeof twoFactorAuth.$inferSelect;
+export type InsertTwoFactorAuth = typeof twoFactorAuth.$inferInsert;
+
+// Display/Chart Preferences
+export const displayPreferences = mysqlTable("display_preferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  settingKey: varchar("settingKey", { length: 100 }).notNull(),
+  settingValue: text("settingValue"),
+  isGlobal: boolean("isGlobal").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DisplayPreference = typeof displayPreferences.$inferSelect;
+export type InsertDisplayPreference = typeof displayPreferences.$inferInsert;
+
