@@ -877,3 +877,25 @@
 - [x] Ensure all text is readable against backgrounds
 - [x] Test color consistency across all modules
 - [x] Verify responsive design with color changes
+
+
+## Critical Issue: Missing Project Segments
+- [ ] Restore Government Tender segment in Projects module
+- [ ] Restore Quotation (Private) segment in Projects module
+- [ ] Verify data integrity for both segments
+- [ ] Test navigation and CRUD operations for both segments
+
+
+## Critical Issue: Missing Hyperlinks/Edit/Delete Options on Data Entries (RESOLVED ✅)
+- [x] AUDIT: Sales module - missing hyperlinks and edit/delete options
+- [x] AUDIT: Products module - check for hyperlinks and edit/delete options
+- [x] AUDIT: Customers module - check for hyperlinks and edit/delete options
+- [x] AUDIT: Inventory module - check for hyperlinks and edit/delete options
+- [x] AUDIT: Financial module - check for hyperlinks and edit/delete options - CRITICAL ISSUE FIXED
+- [x] AUDIT: Income & Expense module - check for hyperlinks and edit/delete options
+- [x] AUDIT: HR module - check for hyperlinks and edit/delete options
+- [x] AUDIT: Purchases module - check for hyperlinks and edit/delete options
+- [x] AUDIT: All other modules - comprehensive check
+- [x] FIX: Implement consistent clickable data entry pattern across all modules
+- [x] FIX: Add Edit/Delete buttons to Financial AR/AP tables
+- [x] FIX: Add explicit Edit/Delete buttons to Sales tracking table

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell, Edit, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -22,6 +23,8 @@ import { toast } from "sonner";
 export default function Financial() {
   const { currency } = useCurrency();
   const utils = trpc.useUtils();
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'ar' | 'ap'}>({show: false, item: null, type: 'ar'});
+  const [editingItem, setEditingItem] = useState<any>(null);
 
   const notifyOverdueMutation = trpc.financial.notifyOverdueAR.useMutation({
     onSuccess: (data) => {
@@ -42,6 +45,28 @@ export default function Financial() {
     },
     onError: () => {
       toast.error("Failed to send SMS reminders");
+    },
+  });
+
+  const deleteARMutation = trpc.financial.deleteAR.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAR.invalidate();
+      toast.success("AR record deleted");
+      setDeleteConfirm({show: false, item: null, type: 'ar'});
+    },
+    onError: () => {
+      toast.error("Failed to delete AR record");
+    },
+  });
+
+  const deleteAPMutation = trpc.financial.deleteAP.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAP.invalidate();
+      toast.success("AP record deleted");
+      setDeleteConfirm({show: false, item: null, type: 'ap'});
+    },
+    onError: () => {
+      toast.error("Failed to delete AP record");
     },
   });
 
@@ -389,13 +414,14 @@ export default function Financial() {
                       <TableHead>Due Date</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {arData.filter((ar: any) => ar.status !== 'paid').slice(0, 10).map((ar: any) => (
                       <TableRow key={ar.id}>
-                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.customerName}</button></TableCell>
-                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.invoiceNumber}</button></TableCell>
+                        <TableCell><button onClick={() => setEditingItem(ar)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.customerName}</button></TableCell>
+                        <TableCell><button onClick={() => setEditingItem(ar)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.invoiceNumber}</button></TableCell>
                         <TableCell>
                           <span className={new Date(ar.dueDate) < new Date() ? 'text-red-600 font-medium' : ''}>
                             {new Date(ar.dueDate).toLocaleDateString()}
@@ -408,6 +434,16 @@ export default function Financial() {
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(parseFloat(ar.amount || '0'), currency)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            <Button variant="ghost" size="sm" onClick={() => setEditingItem(ar)} title="Edit">
+                              <Edit className="w-4 h-4 text-blue-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ar, type: 'ar'})} title="Delete">
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -436,13 +472,14 @@ export default function Financial() {
                       <TableHead>Due Date</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {apData.filter((ap: any) => ap.status !== 'paid').slice(0, 10).map((ap: any) => (
                       <TableRow key={ap.id}>
-                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.vendorName}</button></TableCell>
-                        <TableCell><button onClick={() => {}} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.invoiceNumber}</button></TableCell>
+                        <TableCell><button onClick={() => setEditingItem(ap)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.vendorName}</button></TableCell>
+                        <TableCell><button onClick={() => setEditingItem(ap)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.invoiceNumber}</button></TableCell>
                         <TableCell>
                           <span className={new Date(ap.dueDate) < new Date() ? 'text-red-600 font-medium' : ''}>
                             {new Date(ap.dueDate).toLocaleDateString()}
@@ -456,6 +493,16 @@ export default function Financial() {
                         <TableCell className="text-right font-medium">
                           {formatCurrency(parseFloat(ap.amount || '0'), currency)}
                         </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            <Button variant="ghost" size="sm" onClick={() => setEditingItem(ap)} title="Edit">
+                              <Edit className="w-4 h-4 text-blue-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ap, type: 'ap'})} title="Delete">
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -467,6 +514,21 @@ export default function Financial() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <DeleteConfirmationDialog
+        isOpen={deleteConfirm.show}
+        title={`Delete ${deleteConfirm.type === 'ar' ? 'AR' : 'AP'} Record?`}
+        description={`Are you sure you want to delete this ${deleteConfirm.type === 'ar' ? 'receivable' : 'payable'} record? This action cannot be undone.`}
+        onConfirm={() => {
+          if (deleteConfirm.type === 'ar') {
+            deleteARMutation.mutate({ id: deleteConfirm.item.id });
+          } else {
+            deleteAPMutation.mutate({ id: deleteConfirm.item.id });
+          }
+        }}
+        onCancel={() => setDeleteConfirm({show: false, item: null, type: 'ar'})}
+        isLoading={deleteARMutation.isPending || deleteAPMutation.isPending}
+      />
     </div>
   );
 }

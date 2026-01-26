@@ -288,6 +288,7 @@ export default function Sales() {
                   <TableHead className="text-center">
                     <FileText className="h-4 w-4 inline" />
                   </TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -316,6 +317,16 @@ export default function Sales() {
                         <TableCell>{item.notes || "-"}</TableCell>
                         <TableCell className="text-center">
                           <Paperclip className="h-4 w-4 inline text-muted-foreground" />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            <Button variant="ghost" size="sm" onClick={() => {setSelectedTracking(item); setViewTrackingDialogOpen(true);}} title="Edit">
+                              <Edit className="w-4 h-4 text-blue-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item, type: 'tracking'})} title="Delete">
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
