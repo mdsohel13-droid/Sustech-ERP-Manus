@@ -139,6 +139,12 @@ export default function DashboardLayout({
   }
 
   if (!user) {
+    const handleDemoLogin = () => {
+      // Set demo mode cookie and reload
+      document.cookie = "erp-demo-mode=true; path=/; max-age=86400";
+      window.location.reload();
+    };
+
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
@@ -151,13 +157,23 @@ export default function DashboardLayout({
               Sign in to access your business dashboard, manage operations, and track performance.
             </p>
           </div>
-          <Button
-            onClick={() => { window.location.href = getLoginUrl(); }}
-            size="lg"
-            className="w-full"
-          >
-            Sign in to Continue
-          </Button>
+          <div className="w-full space-y-3">
+            <Button
+              onClick={() => { window.location.href = getLoginUrl(); }}
+              size="lg"
+              className="w-full"
+            >
+              Sign in to Continue
+            </Button>
+            <Button
+              onClick={handleDemoLogin}
+              variant="outline"
+              size="lg"
+              className="w-full"
+            >
+              Demo Mode (Admin Access)
+            </Button>
+          </div>
         </div>
       </div>
     );
