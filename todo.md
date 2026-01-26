@@ -899,3 +899,57 @@
 - [x] FIX: Implement consistent clickable data entry pattern across all modules
 - [x] FIX: Add Edit/Delete buttons to Financial AR/AP tables
 - [x] FIX: Add explicit Edit/Delete buttons to Sales tracking table
+
+
+## Inline Editing Implementation (IN PROGRESS)
+- [ ] Create reusable InlineEditCell component
+- [ ] Implement inline editing in Financial AR/AP tables
+- [ ] Implement inline editing in Sales tracking table
+- [ ] Implement inline editing in Customers table
+- [ ] Implement inline editing in Products table
+- [ ] Implement inline editing in Inventory table
+- [ ] Add keyboard shortcuts (Enter to save, Esc to cancel)
+- [ ] Add visual feedback for edit mode
+- [ ] Test all inline editing functionality
+- [ ] Save checkpoint with inline editing complete
+
+
+## Suggested Follow-ups Implementation (IN PROGRESS)
+
+### 1. Bulk Actions for Tables
+- [ ] Create BulkActionBar component with checkboxes
+- [ ] Implement bulk delete functionality
+- [ ] Implement bulk export to CSV
+- [ ] Add select all/deselect all functionality
+- [ ] Test bulk actions across modules
+
+### 2. Complete Inline Editing
+- [ ] Add updateAR/updateAP mutations to tRPC
+- [ ] Implement inline editing in Financial AR table
+- [ ] Implement inline editing in Financial AP table
+- [ ] Add updateTracking mutation to tRPC
+- [ ] Implement inline editing in Sales tracking table
+- [ ] Test inline editing functionality
+
+### 3. Audit Logs for Operations
+- [ ] Create AuditLog database table
+- [ ] Add audit log mutations to tRPC
+- [ ] Log all edit operations with timestamp and user
+- [ ] Log all delete operations with timestamp and user
+- [ ] Create audit log viewer page
+- [ ] Display audit history in dashboard
+
+### 4. Dashboard Drill-Down Functionality
+- [ ] Make KPI card metrics clickable
+- [ ] Add drill-down navigation to module detail views
+- [ ] Filter module data based on dashboard metric clicked
+- [ ] Add breadcrumb navigation for drill-down
+- [ ] Test drill-down across all KPI cards
+
+### 5. Dark Mode Support
+- [ ] Create theme toggle component
+- [ ] Add dark mode CSS variables to index.css
+- [ ] Implement theme persistence in localStorage
+- [ ] Add theme toggle to Settings page
+- [ ] Test dark mode across all pages
+- [ ] Verify contrast ratios in dark mode

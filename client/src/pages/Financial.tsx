@@ -14,6 +14,7 @@ import {
 import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
+import { InlineEditCell } from "@/components/InlineEditCell";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -25,6 +26,7 @@ export default function Financial() {
   const utils = trpc.useUtils();
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'ar' | 'ap'}>({show: false, item: null, type: 'ar'});
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingCell, setEditingCell] = useState<{id: string; field: string} | null>(null);
 
   const notifyOverdueMutation = trpc.financial.notifyOverdueAR.useMutation({
     onSuccess: (data) => {
@@ -64,6 +66,28 @@ export default function Financial() {
       utils.financial.getAllAP.invalidate();
       toast.success("AP record deleted");
       setDeleteConfirm({show: false, item: null, type: 'ap'});
+
+  const updateARMutation = trpc.financial.updateAR.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAR.invalidate();
+      toast.success("AR record updated");
+      setEditingCell(null);
+    },
+    onError: () => {
+      toast.error("Failed to update AR record");
+    },
+  });
+
+  const updateAPMutation = trpc.financial.updateAP.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAP.invalidate();
+      toast.success("AP record updated");
+      setEditingCell(null);
+    },
+    onError: () => {
+      toast.error("Failed to update AP record");
+    },
+  });
     },
     onError: () => {
       toast.error("Failed to delete AP record");

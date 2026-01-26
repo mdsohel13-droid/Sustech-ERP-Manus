@@ -908,3 +908,28 @@ export const employeeConfidential = mysqlTable("employee_confidential", {
 
 export type EmployeeConfidential = typeof employeeConfidential.$inferSelect;
 export type InsertEmployeeConfidential = typeof employeeConfidential.$inferInsert;
+
+
+/**
+ * Audit Log - Track all edit and delete operations for compliance
+ */
+export const auditLogs = mysqlTable("audit_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  action: mysqlEnum("action", ["create", "update", "delete", "view", "export"]).notNull(),
+  module: varchar("module", { length: 100 }).notNull(), // e.g., "financial", "sales", "customers"
+  entityType: varchar("entityType", { length: 100 }).notNull(), // e.g., "AR", "AP", "Order"
+  entityId: varchar("entityId", { length: 100 }).notNull(),
+  entityName: varchar("entityName", { length: 255 }), // e.g., customer name, invoice number
+  oldValues: text("oldValues"), // JSON: previous values for updates
+  newValues: text("newValues"), // JSON: new values for updates/creates
+  changes: text("changes"), // JSON: specific fields that changed
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  status: mysqlEnum("status", ["success", "failed"]).default("success").notNull(),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
