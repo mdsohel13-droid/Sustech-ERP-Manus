@@ -11,6 +11,7 @@ class ERPAPITester:
         self.session = requests.Session()
         self.tests_run = 0
         self.tests_passed = 0
+        self.auth_cookie = None
         
         # Set demo mode cookie for admin access
         self.session.cookies.set('erp-demo-mode', 'true', domain='localhost')
