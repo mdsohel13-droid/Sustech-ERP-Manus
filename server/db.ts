@@ -37,7 +37,8 @@ import {
   budgets, InsertBudget,
   jobDescriptions,
   employeeRoles,
-  employeeConfidential
+  employeeConfidential,
+  auditLogs, InsertAuditLog
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
