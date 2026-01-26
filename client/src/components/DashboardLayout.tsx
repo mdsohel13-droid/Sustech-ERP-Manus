@@ -23,6 +23,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useIsMobile } from "@/hooks/useMobile";
+import { LoginPage } from "@/components/LoginPage";
 import { 
   LayoutDashboard, 
   LogOut, 
