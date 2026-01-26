@@ -45,7 +45,8 @@ import {
   BarChart3,
   UserCircle,
   HelpCircle,
-  Activity
+  Activity,
+  Shield
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
