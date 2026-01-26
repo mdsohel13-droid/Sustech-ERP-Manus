@@ -45,6 +45,17 @@ export function HRQuickActionsDialogs({
     },
   });
 
+  const performanceReviewMutation = trpc.hr.createPerformanceReview.useMutation({
+    onSuccess: () => {
+      toast.success("Performance review submitted successfully!");
+      setPerformanceReviewOpen(false);
+      utils.hr.getPerformanceReviews.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to submit review: ${error.message}`);
+    },
+  });
+
   const handleMarkAttendance = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -103,6 +114,8 @@ export function HRQuickActionsDialogs({
         return;
       }
 
+      // TODO: Integrate with actual report generation API
+      // For now, show success message
       toast.success(`${reportType} report generated successfully!`);
       setGenerateReportOpen(false);
       e.currentTarget.reset();
@@ -137,12 +150,17 @@ export function HRQuickActionsDialogs({
         return;
       }
 
-      toast.success("Performance review submitted successfully!");
-      setPerformanceReviewOpen(false);
+      await performanceReviewMutation.mutateAsync({
+        employeeId,
+        reviewerName,
+        rating,
+        comments,
+      });
+
+      // Reset form
       e.currentTarget.reset();
     } catch (error) {
       console.error("Error submitting performance review:", error);
-      toast.error("Failed to submit performance review");
     } finally {
       setIsSubmitting(false);
     }
