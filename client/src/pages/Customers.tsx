@@ -13,10 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Phone, Mail, Building, Calendar, MessageSquare, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 
 export default function Customers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [interactionDialogOpen, setInteractionDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<any>(null);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<number | null>(null);
 
@@ -54,8 +57,24 @@ export default function Customers() {
       utils.customers.getAll.invalidate();
       utils.customers.getStats.invalidate();
       toast.success("Customer deleted");
+      setDeleteDialogOpen(false);
+      setCustomerToDelete(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete customer: ${error.message}`);
     },
   });
+
+  const handleDeleteClick = (customer: any) => {
+    setCustomerToDelete(customer);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (customerToDelete) {
+      deleteMutation.mutate({ id: customerToDelete.id });
+    }
+  };
 
   const createInteractionMutation = trpc.customers.createInteraction.useMutation({
     onSuccess: () => {
@@ -213,7 +232,7 @@ export default function Customers() {
                       <Button variant="ghost" size="sm" onClick={() => { setSelectedCustomer(customer.id); setInteractionDialogOpen(true); }}>
                         <MessageSquare className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => { if (confirm("Delete this customer?")) { deleteMutation.mutate({ id: customer.id }); } }}>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(customer)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -270,6 +289,17 @@ export default function Customers() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Customer"
+        description="Are you sure you want to delete this customer? This action cannot be undone."
+        itemName={customerToDelete?.name || "Customer"}
+        isDeleting={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        isDangerous={true}
+      />
     </div>
   );
 }

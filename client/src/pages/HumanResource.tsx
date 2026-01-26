@@ -51,6 +51,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { HRQuickActionsDialogs } from "@/components/HRQuickActionsDialogs";
+import { AttendanceHistory } from "@/components/AttendanceHistory";
 
 const MODULES = [
   { name: 'dashboard', label: 'Dashboard' },
@@ -1416,50 +1417,8 @@ export default function HumanResource() {
             </Card>
           </div>
 
-          {/* Attendance History */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Attendance History</CardTitle>
-              <CardDescription>Your recent attendance records</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Clock In</TableHead>
-                    <TableHead>Clock Out</TableHead>
-                    <TableHead>Working Hours</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...Array(5)].map((_, idx) => {
-                    const date = new Date();
-                    date.setDate(date.getDate() - idx);
-                    const statuses = ['Present', 'Present', 'Late', 'Present', 'Absent'];
-                    const status = statuses[idx];
-                    return (
-                      <TableRow key={idx}>
-                        <TableCell>{date.toLocaleDateString()}</TableCell>
-                        <TableCell>{status === 'Absent' ? '-' : idx === 2 ? '09:45 AM' : '09:00 AM'}</TableCell>
-                        <TableCell>{status === 'Absent' ? '-' : '06:00 PM'}</TableCell>
-                        <TableCell>{status === 'Absent' ? '-' : idx === 2 ? '8h 15m' : '9h 00m'}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={status === 'Present' ? 'default' : status === 'Late' ? 'secondary' : 'destructive'}
-                            className={status === 'Present' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : ''}
-                          >
-                            {status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          {/* Attendance History with Filtering */}
+          {teamMembers && <AttendanceHistory teamMembers={teamMembers} />}
         </TabsContent>
 
         {/* Leaves Tab */}
