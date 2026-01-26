@@ -29,7 +29,12 @@ class ERPAPITester:
             if method == 'GET':
                 response = self.session.get(url, headers=headers)
             elif method == 'POST':
-                response = self.session.post(url, json=data, headers=headers)
+                # Format data for TRPC
+                if data:
+                    trpc_data = {"input": data}
+                else:
+                    trpc_data = {}
+                response = self.session.post(url, json=trpc_data, headers=headers)
 
             print(f"   Status: {response.status_code}")
             
