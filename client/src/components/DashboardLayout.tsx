@@ -152,68 +152,11 @@ export default function DashboardLayout({
   }
 
   if (!user) {
-    const handleDemoLogin = () => {
-      // Set demo mode cookie with proper attributes for cross-origin
+    return <LoginPage onDemoLogin={() => {
       document.cookie = "erp-demo-mode=true; path=/; max-age=86400; SameSite=Lax";
-      // Also store in localStorage as backup
       localStorage.setItem("erp-demo-mode", "true");
-      // Force full page reload to ensure cookie is sent with next request
       window.location.href = window.location.origin + "/?demo=true";
-    };
-
-    // Auto-login if localStorage has demo mode (handles cookie issues)
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const demoParam = urlParams.get('demo') || urlParams.get('demo_mode');
-      
-      if (demoParam === 'true' || localStorage.getItem("erp-demo-mode") === "true") {
-        // Ensure cookie is set
-        if (!document.cookie.includes("erp-demo-mode=true")) {
-          document.cookie = "erp-demo-mode=true; path=/; max-age=86400; SameSite=Lax";
-          localStorage.setItem("erp-demo-mode", "true");
-          window.location.reload();
-          return null;
-        }
-      }
-    }
-
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <LayoutDashboard className="w-8 h-8 text-primary" />
-          </div>
-          <div className="flex flex-col items-center gap-3 text-center">
-            <h1 className="text-2xl font-semibold">Welcome to Sustech ERP</h1>
-            <p className="text-muted-foreground">
-              Sign in to access your business dashboard, manage operations, and track performance.
-            </p>
-          </div>
-          <div className="w-full space-y-3">
-            <Button
-              onClick={() => { window.location.href = getLoginUrl(); }}
-              size="lg"
-              className="w-full"
-              data-testid="sign-in-btn"
-            >
-              Sign in to Continue
-            </Button>
-            <Button
-              onClick={handleDemoLogin}
-              variant="outline"
-              size="lg"
-              className="w-full"
-              data-testid="demo-mode-btn"
-            >
-              Demo Mode (Admin Access)
-            </Button>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Having trouble? Try visiting <a href="/?demo=true" className="underline text-primary">/?demo=true</a>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    }} />;
   }
 
   return (
