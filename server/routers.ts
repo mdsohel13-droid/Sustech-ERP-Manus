@@ -51,10 +51,61 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      // Clear demo mode cookie too
+      ctx.res.clearCookie("erp-demo-mode", { path: "/", maxAge: -1 });
       return {
         success: true,
       } as const;
     }),
+    
+    // Password-based login
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const bcrypt = await import('bcryptjs');
+        
+        // Find user by email
+        const user = await db.getUserByEmail(input.email);
+        if (!user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
+        }
+        
+        // Check if user has password
+        const userWithPassword = await db.getUserWithPassword(input.email);
+        if (!userWithPassword?.passwordHash) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'This account uses OAuth login. Please use the Sign In button.' });
+        }
+        
+        // Verify password
+        const isValid = await bcrypt.compare(input.password, userWithPassword.passwordHash);
+        if (!isValid) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
+        }
+        
+        // Set auth cookie for the user
+        ctx.res.cookie("erp-user-id", String(user.id), { 
+          path: "/", 
+          maxAge: 86400000, // 24 hours
+          httpOnly: true,
+          sameSite: "lax"
+        });
+        
+        // Update last signed in
+        await db.updateUserLastSignIn(user.id);
+        
+        return { 
+          success: true, 
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }
+        };
+      }),
   }),
 
   // ============ Financial Module ============
