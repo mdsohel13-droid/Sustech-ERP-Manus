@@ -33,6 +33,17 @@ export async function createContext(
     }
   }
 
+  // Check for demo query parameter as fallback (for browsers blocking cookies)
+  const referer = opts.req.headers.referer || opts.req.url || "";
+  if (referer.includes("demo=true") || referer.includes("demo_mode=true")) {
+    user = await db.getUserByOpenId("demo-admin-user") ?? null;
+    if (user) {
+      // Set cookie for future requests
+      opts.res.setHeader('Set-Cookie', 'erp-demo-mode=true; Path=/; Max-Age=86400; SameSite=Lax');
+      return { req: opts.req, res: opts.res, user };
+    }
+  }
+
   try {
     user = await sdk.authenticateRequest(opts.req);
   } catch (error) {
