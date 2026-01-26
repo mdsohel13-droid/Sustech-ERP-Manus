@@ -58,6 +58,48 @@ class ERPAPITester:
             print(f"❌ {name} - ERROR: {str(e)}")
             return False, None
 
+    def test_login_functionality(self):
+        """Test login functionality with admin credentials"""
+        print("\n" + "="*50)
+        print("🔐 TESTING LOGIN FUNCTIONALITY")
+        print("="*50)
+        
+        # Test email/password login
+        login_data = {
+            "email": "sohelemid@gmail.com",
+            "password": "123abc456"
+        }
+        
+        success, response = self.run_test(
+            "Admin Login", 
+            "POST", 
+            "auth.login", 
+            200, 
+            login_data
+        )
+        
+        if success and response:
+            try:
+                response_data = response.json()
+                if 'result' in response_data and 'data' in response_data['result']:
+                    user_data = response_data['result']['data']
+                    print(f"   ✅ Login successful for user: {user_data.get('user', {}).get('name', 'Unknown')}")
+                    
+                    # Store auth cookie if present
+                    if 'erp-user-id' in response.cookies:
+                        self.auth_cookie = response.cookies['erp-user-id']
+                        self.session.cookies.set('erp-user-id', self.auth_cookie, domain='localhost')
+                        print(f"   ✅ Auth cookie stored: {self.auth_cookie}")
+                else:
+                    print(f"   ⚠️ Unexpected response format: {response_data}")
+            except Exception as e:
+                print(f"   ⚠️ Error parsing login response: {e}")
+        
+        # Test auth.me endpoint to verify authentication
+        self.run_test("Get Current User", "GET", "auth.me", 200)
+        
+        return success
+
     def test_dashboard_endpoints(self):
         """Test dashboard and overview endpoints"""
         print("\n" + "="*50)
