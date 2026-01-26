@@ -114,8 +114,19 @@ export default function DashboardLayout({
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
-  const { loading, user } = useAuth();
+  const { loading, user, logout: authLogout } = useAuth();
   const [commandOpen, setCommandOpen] = useState(false);
+
+  // Enhanced logout that clears demo mode
+  const logout = async () => {
+    // Clear demo mode
+    document.cookie = "erp-demo-mode=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    localStorage.removeItem("erp-demo-mode");
+    // Call auth logout
+    await authLogout();
+    // Redirect to login
+    window.location.href = "/";
+  };
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
