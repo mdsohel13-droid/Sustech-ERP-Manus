@@ -24,6 +24,15 @@ export async function createContext(
     }
   }
 
+  // Also check for X-Demo-Mode header for API testing
+  const demoHeader = opts.req.headers["x-demo-mode"];
+  if (demoHeader === "true") {
+    user = await db.getUserByOpenId("demo-admin-user");
+    if (user) {
+      return { req: opts.req, res: opts.res, user };
+    }
+  }
+
   try {
     user = await sdk.authenticateRequest(opts.req);
   } catch (error) {
