@@ -1756,7 +1756,6 @@ export async function getOnboardingProgress(employeeId: number) {
 
 
 // ============ Audit Logging ============
-import { auditLogs, InsertAuditLog } from "../drizzle/schema";
 
 export async function createAuditLog(data: Omit<InsertAuditLog, 'id' | 'createdAt'>) {
   const db = await getDb();
