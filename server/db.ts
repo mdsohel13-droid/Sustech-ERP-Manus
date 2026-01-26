@@ -592,6 +592,20 @@ export async function getUserByEmail(email: string) {
   return result[0] || null;
 }
 
+export async function getUserWithPassword(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.execute(sql`SELECT id, openId, name, email, role, passwordHash, mustChangePassword FROM users WHERE email = ${email} LIMIT 1`);
+  const rows = result[0] as any[];
+  return rows[0] || null;
+}
+
+export async function updateUserLastSignIn(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.execute(sql`UPDATE users SET lastSignedIn = NOW() WHERE id = ${userId}`);
+}
+
 export async function createUser(user: InsertUser) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
