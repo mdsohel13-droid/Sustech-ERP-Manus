@@ -75,6 +75,7 @@ const ALL_MENU_ITEMS = [
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant", module: "ai_assistant", group: "tools" },
   { icon: Activity, label: "Hyperlink Analytics", path: "/hyperlink-analytics", module: "admin", group: "system" },
   { icon: Settings, label: "Settings", path: "/settings", module: "settings", group: "system" },
+  { icon: Shield, label: "Admin Panel", path: "/admin-settings", module: "admin", group: "system" },
 ];
 
 const MODULE_GROUPS = [
