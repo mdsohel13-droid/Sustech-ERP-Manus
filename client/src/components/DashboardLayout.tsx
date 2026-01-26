@@ -207,6 +207,9 @@ export default function DashboardLayout({
             >
               Demo Mode (Admin Access)
             </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Having trouble? Try visiting <a href="/?demo=true" className="underline text-primary">/?demo=true</a>
+            </p>
           </div>
         </div>
       </div>
