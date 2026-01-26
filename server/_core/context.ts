@@ -18,7 +18,7 @@ export async function createContext(
   // Check for demo mode cookie first (for development/testing)
   const cookies = parseCookie(opts.req.headers.cookie || "");
   if (cookies["erp-demo-mode"] === "true") {
-    user = await db.getUserByOpenId("demo-admin-user");
+    user = await db.getUserByOpenId("demo-admin-user") ?? null;
     if (user) {
       return { req: opts.req, res: opts.res, user };
     }
@@ -27,7 +27,7 @@ export async function createContext(
   // Also check for X-Demo-Mode header for API testing
   const demoHeader = opts.req.headers["x-demo-mode"];
   if (demoHeader === "true") {
-    user = await db.getUserByOpenId("demo-admin-user");
+    user = await db.getUserByOpenId("demo-admin-user") ?? null;
     if (user) {
       return { req: opts.req, res: opts.res, user };
     }
