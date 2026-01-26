@@ -226,6 +226,12 @@ class ERPAPITester:
         print("🚀 Starting ERP API Testing...")
         print(f"📅 Test started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
+        # Test login first
+        login_success = self.test_login_functionality()
+        if not login_success:
+            print("❌ Login failed - skipping authenticated endpoints")
+            return False
+        
         # Test all modules
         self.test_dashboard_endpoints()
         self.test_financial_endpoints()
