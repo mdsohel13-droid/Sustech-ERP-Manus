@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
+import { Loader2 } from "lucide-react";
 
 interface HRQuickActionsDialogsProps {
   markAttendanceOpen: boolean;
@@ -27,42 +30,122 @@ export function HRQuickActionsDialogs({
   teamMembers = [],
   employees = [],
 }: HRQuickActionsDialogsProps) {
-  const handleMarkAttendance = (e: React.FormEvent<HTMLFormElement>) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const utils = trpc.useUtils();
+
+  // Mutations
+  const markAttendanceMutation = trpc.hr.markAttendance.useMutation({
+    onSuccess: () => {
+      toast.success("Attendance marked successfully!");
+      setMarkAttendanceOpen(false);
+      utils.hr.getAttendance.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to mark attendance: ${error.message}`);
+    },
+  });
+
+  const handleMarkAttendance = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const teamMemberId = Number(formData.get("teamMemberId"));
-    const date = formData.get("date") as string;
-    const status = formData.get("status") as string;
-    const notes = formData.get("notes") as string;
+    setIsSubmitting(true);
     
-    console.log({ teamMemberId, date, status, notes });
-    toast.success("Attendance marked successfully");
-    setMarkAttendanceOpen(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const teamMemberId = Number(formData.get("teamMemberId"));
+      const date = formData.get("date") as string;
+      const status = formData.get("status") as string;
+      const notes = formData.get("notes") as string;
+
+      if (!teamMemberId || !date || !status) {
+        toast.error("Please fill in all required fields");
+        setIsSubmitting(false);
+        return;
+      }
+
+      await markAttendanceMutation.mutateAsync({
+        teamMemberId,
+        date: new Date(date),
+        status: status as "present" | "absent" | "leave" | "holiday",
+        notes: notes || undefined,
+      });
+
+      // Reset form
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleGenerateReport = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleGenerateReport = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const reportType = formData.get("reportType") as string;
-    const startDate = formData.get("startDate") as string;
-    const endDate = formData.get("endDate") as string;
-    
-    console.log({ reportType, startDate, endDate });
-    toast.success("Report generated successfully");
-    setGenerateReportOpen(false);
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const reportType = formData.get("reportType") as string;
+      const startDate = formData.get("startDate") as string;
+      const endDate = formData.get("endDate") as string;
+
+      if (!reportType || !startDate || !endDate) {
+        toast.error("Please fill in all required fields");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate date range
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (start > end) {
+        toast.error("Start date must be before end date");
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success(`${reportType} report generated successfully!`);
+      setGenerateReportOpen(false);
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error("Failed to generate report");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handlePerformanceReview = (e: React.FormEvent<HTMLFormElement>) => {
+  const handlePerformanceReview = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const employeeId = Number(formData.get("employeeId"));
-    const reviewerName = formData.get("reviewerName") as string;
-    const rating = Number(formData.get("rating"));
-    const comments = formData.get("comments") as string;
-    
-    console.log({ employeeId, reviewerName, rating, comments });
-    toast.success("Performance review submitted successfully");
-    setPerformanceReviewOpen(false);
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const employeeId = Number(formData.get("employeeId"));
+      const reviewerName = formData.get("reviewerName") as string;
+      const rating = Number(formData.get("rating"));
+      const comments = formData.get("comments") as string;
+
+      if (!employeeId || !reviewerName || !rating || !comments) {
+        toast.error("Please fill in all required fields");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (rating < 1 || rating > 5) {
+        toast.error("Rating must be between 1 and 5");
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success("Performance review submitted successfully!");
+      setPerformanceReviewOpen(false);
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error("Error submitting performance review:", error);
+      toast.error("Failed to submit performance review");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,30 +160,34 @@ export function HRQuickActionsDialogs({
           <form onSubmit={handleMarkAttendance}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="teamMemberId">Team Member</Label>
-                <Select name="teamMemberId">
-                  <SelectTrigger><SelectValue placeholder="Select team member" /></SelectTrigger>
+                <Label htmlFor="teamMemberId">Team Member *</Label>
+                <Select name="teamMemberId" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select team member" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {teamMembers?.length > 0 ? (
+                    {teamMembers && teamMembers.length > 0 ? (
                       teamMembers.map((member: any) => (
                         <SelectItem key={`member-${member.id}`} value={String(member.id)}>
-                          {member.name}
+                          {member.name || member.employeeId || `Employee ${member.id}`}
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>No team members available</SelectItem>
+                      <div className="p-2 text-sm text-muted-foreground">No team members available</div>
                     )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">Date *</Label>
                 <Input id="date" name="date" type="date" required />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
-                <Select name="status" defaultValue="present">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label htmlFor="status">Status *</Label>
+                <Select name="status" defaultValue="present" required>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="present">Present</SelectItem>
                     <SelectItem value="absent">Absent</SelectItem>
@@ -115,8 +202,18 @@ export function HRQuickActionsDialogs({
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setMarkAttendanceOpen(false)}>Cancel</Button>
-              <Button type="submit">Mark Attendance</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setMarkAttendanceOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Mark Attendance
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -132,9 +229,11 @@ export function HRQuickActionsDialogs({
           <form onSubmit={handleGenerateReport}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="reportType">Report Type</Label>
-                <Select name="reportType" defaultValue="attendance">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label htmlFor="reportType">Report Type *</Label>
+                <Select name="reportType" defaultValue="attendance" required>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="attendance">Attendance Report</SelectItem>
                     <SelectItem value="payroll">Payroll Report</SelectItem>
@@ -144,17 +243,27 @@ export function HRQuickActionsDialogs({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="startDate">Start Date</Label>
+                <Label htmlFor="startDate">Start Date *</Label>
                 <Input id="startDate" name="startDate" type="date" required />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="endDate">End Date</Label>
+                <Label htmlFor="endDate">End Date *</Label>
                 <Input id="endDate" name="endDate" type="date" required />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setGenerateReportOpen(false)}>Cancel</Button>
-              <Button type="submit">Generate & Download</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setGenerateReportOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Generate & Download
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -170,30 +279,34 @@ export function HRQuickActionsDialogs({
           <form onSubmit={handlePerformanceReview}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="employeeId">Employee</Label>
-                <Select name="employeeId">
-                  <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
+                <Label htmlFor="employeeId">Employee *</Label>
+                <Select name="employeeId" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select employee" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {employees?.length > 0 ? (
+                    {employees && employees.length > 0 ? (
                       employees.map((emp: any) => (
                         <SelectItem key={`emp-${emp.id}`} value={String(emp.id)}>
-                          {emp.name}
+                          {emp.name || emp.employeeId || `Employee ${emp.id}`}
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>No employees available</SelectItem>
+                      <div className="p-2 text-sm text-muted-foreground">No employees available</div>
                     )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="reviewerName">Reviewer Name</Label>
+                <Label htmlFor="reviewerName">Reviewer Name *</Label>
                 <Input id="reviewerName" name="reviewerName" placeholder="Your name" required />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="rating">Overall Rating (1-5)</Label>
-                <Select name="rating" defaultValue="3">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label htmlFor="rating">Overall Rating (1-5) *</Label>
+                <Select name="rating" defaultValue="3" required>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">1 - Poor</SelectItem>
                     <SelectItem value="2">2 - Below Average</SelectItem>
@@ -204,13 +317,23 @@ export function HRQuickActionsDialogs({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="comments">Comments & Feedback</Label>
+                <Label htmlFor="comments">Comments & Feedback *</Label>
                 <Textarea id="comments" name="comments" rows={4} placeholder="Provide detailed feedback..." required />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setPerformanceReviewOpen(false)}>Cancel</Button>
-              <Button type="submit">Submit Review</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setPerformanceReviewOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit Review
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
