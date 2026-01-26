@@ -1752,3 +1752,61 @@ export async function getOnboardingProgress(employeeId: number) {
     percentage: total > 0 ? Math.round((completed / total) * 100) : 0
   };
 }
+
+
+// ============ Audit Logging ============
+import { auditLogs, InsertAuditLog } from "../drizzle/schema";
+
+export async function createAuditLog(data: Omit<InsertAuditLog, 'id' | 'createdAt'>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(auditLogs).values(data as InsertAuditLog);
+}
+
+export async function getAuditLogs(filters?: {
+  userId?: number;
+  action?: string;
+  entityType?: string;
+  entityId?: number;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select().from(auditLogs);
+  const conditions = [];
+  
+  if (filters?.userId) conditions.push(eq(auditLogs.userId, filters.userId));
+  if (filters?.action) conditions.push(eq(auditLogs.action, filters.action as any));
+  if (filters?.entityType) conditions.push(eq(auditLogs.entityType, filters.entityType));
+  if (filters?.entityId) conditions.push(eq(auditLogs.entityId, filters.entityId));
+  if (filters?.startDate) conditions.push(gte(auditLogs.createdAt, filters.startDate));
+  if (filters?.endDate) conditions.push(lte(auditLogs.createdAt, filters.endDate));
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return await query.orderBy(desc(auditLogs.createdAt)).limit(filters?.limit || 100);
+}
+
+export async function getRecentActivity(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select({
+    id: auditLogs.id,
+    action: auditLogs.action,
+    entityType: auditLogs.entityType,
+    entityId: auditLogs.entityId,
+    description: auditLogs.description,
+    createdAt: auditLogs.createdAt,
+    userId: auditLogs.userId,
+  })
+  .from(auditLogs)
+  .orderBy(desc(auditLogs.createdAt))
+  .limit(limit);
+}
+
