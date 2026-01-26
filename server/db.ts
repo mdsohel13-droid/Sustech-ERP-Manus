@@ -1767,7 +1767,7 @@ export async function getAuditLogs(filters?: {
   userId?: number;
   action?: string;
   entityType?: string;
-  entityId?: number;
+  entityId?: string;
   startDate?: Date;
   endDate?: Date;
   limit?: number;
@@ -1801,7 +1801,8 @@ export async function getRecentActivity(limit: number = 10) {
     action: auditLogs.action,
     entityType: auditLogs.entityType,
     entityId: auditLogs.entityId,
-    description: auditLogs.description,
+    entityName: auditLogs.entityName,
+    module: auditLogs.module,
     createdAt: auditLogs.createdAt,
     userId: auditLogs.userId,
   })
