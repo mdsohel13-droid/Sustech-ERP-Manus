@@ -446,18 +446,80 @@ export default function Financial() {
                       <TableRow key={ar.id}>
                         <TableCell><button onClick={() => setEditingItem(ar)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.customerName}</button></TableCell>
                         <TableCell><button onClick={() => setEditingItem(ar)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.invoiceNumber}</button></TableCell>
-                        <TableCell>
-                          <span className={new Date(ar.dueDate) < new Date() ? 'text-red-600 font-medium' : ''}>
-                            {new Date(ar.dueDate).toLocaleDateString()}
-                          </span>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {editingCell?.id === ar.id && editingCell?.field === 'dueDate' ? (
+                            <InlineEditCell
+                              value={new Date(ar.dueDate).toISOString().split('T')[0]}
+                              isEditing={true}
+                              type="date"
+                              onSave={(value) => {
+                                updateARMutation.mutate({
+                                  id: ar.id,
+                                  dueDate: String(value),
+                                });
+                              }}
+                              onCancel={() => setEditingCell(null)}
+                              isLoading={updateARMutation.isPending}
+                            />
+                          ) : (
+                            <span 
+                              onClick={() => setEditingCell({id: ar.id, field: 'dueDate'})} 
+                              className={`cursor-pointer hover:underline ${new Date(ar.dueDate) < new Date() ? 'text-red-600 font-medium' : ''}`}
+                            >
+                              {new Date(ar.dueDate).toLocaleDateString()}
+                            </span>
+                          )}
                         </TableCell>
-                        <TableCell>
-                          <Badge variant={ar.status === 'overdue' ? 'destructive' : 'outline'}>
-                            {ar.status}
-                          </Badge>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {editingCell?.id === ar.id && editingCell?.field === 'status' ? (
+                            <InlineEditCell
+                              value={ar.status}
+                              isEditing={true}
+                              type="select"
+                              options={[
+                                { value: 'pending', label: 'Pending' },
+                                { value: 'overdue', label: 'Overdue' },
+                                { value: 'paid', label: 'Paid' },
+                              ]}
+                              onSave={(value) => {
+                                updateARMutation.mutate({
+                                  id: ar.id,
+                                  status: String(value),
+                                });
+                              }}
+                              onCancel={() => setEditingCell(null)}
+                              isLoading={updateARMutation.isPending}
+                            />
+                          ) : (
+                            <Badge 
+                              variant={ar.status === 'overdue' ? 'destructive' : 'outline'}
+                              onClick={() => setEditingCell({id: ar.id, field: 'status'})}
+                              className="cursor-pointer"
+                            >
+                              {ar.status}
+                            </Badge>
+                          )}
                         </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {formatCurrency(parseFloat(ar.amount || '0'), currency)}
+                        <TableCell className="text-right font-medium" onClick={(e) => e.stopPropagation()}>
+                          {editingCell?.id === ar.id && editingCell?.field === 'amount' ? (
+                            <InlineEditCell
+                              value={ar.amount}
+                              isEditing={true}
+                              type="number"
+                              onSave={(value) => {
+                                updateARMutation.mutate({
+                                  id: ar.id,
+                                  amount: String(value),
+                                });
+                              }}
+                              onCancel={() => setEditingCell(null)}
+                              isLoading={updateARMutation.isPending}
+                            />
+                          ) : (
+                            <span onClick={() => setEditingCell({id: ar.id, field: 'amount'})} className="cursor-pointer hover:underline">
+                              {formatCurrency(parseFloat(ar.amount || '0'), currency)}
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex gap-2 justify-center">

@@ -3,16 +3,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { TableCell } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface InlineEditCellProps {
   value: string | number;
   onSave: (newValue: string | number) => void;
   onCancel?: () => void;
   isEditing?: boolean;
-  type?: "text" | "number" | "email" | "date";
+  type?: "text" | "number" | "email" | "date" | "select";
   className?: string;
   placeholder?: string;
   isLoading?: boolean;
+  options?: { value: string; label: string }[];
 }
 
 export function InlineEditCell({
@@ -24,6 +26,7 @@ export function InlineEditCell({
   className = "",
   placeholder = "",
   isLoading = false,
+  options = [],
 }: InlineEditCellProps) {
   const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [editValue, setEditValue] = useState(String(value));
@@ -58,6 +61,41 @@ export function InlineEditCell({
   };
 
   if (isEditing) {
+    if (type === 'select' && options.length > 0) {
+      return (
+        <TableCell className={`p-1 ${className}`}>
+          <div className="flex gap-1 items-center">
+            <Select value={editValue} onValueChange={(val) => {
+              setEditValue(val);
+              onSave(val);
+              setIsEditing(false);
+            }}>
+              <SelectTrigger className="h-8 w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="h-8 w-8 p-0"
+              title="Cancel (Esc)"
+            >
+              <X className="w-4 h-4 text-red-600" />
+            </Button>
+          </div>
+        </TableCell>
+      );
+    }
+
     return (
       <TableCell className={`p-1 ${className}`}>
         <div className="flex gap-1 items-center">

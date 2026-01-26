@@ -963,3 +963,26 @@
 - [x] Implement click-to-edit pattern with visual feedback
 - [x] Add save/cancel functionality with mutations
 - [x] Test inline editing for Target and Actual columns
+
+
+## Extended Inline Editing & Bulk Operations (IN PROGRESS)
+- [ ] Create BulkEditMode component for managing multi-row editing state
+- [ ] Implement bulk edit toggle button in Financial module
+- [ ] Add inline editing to Financial AR table (amount, due date, status)
+- [ ] Add inline editing to Financial AP table (amount, due date, status)
+- [ ] Implement bulk save functionality with transaction support
+- [ ] Add bulk cancel functionality to discard all pending edits
+- [ ] Test multi-row editing workflow
+- [ ] Test bulk save with error handling
+- [ ] Verify database consistency after bulk operations
+
+
+## Phase 1: Financial AR Inline Editing (COMPLETED ✅)
+- [x] Add editingCell state management to Financial.tsx
+- [x] Add updateARMutation for inline editing (already existed)
+- [x] Update InlineEditCell component to support select fields
+- [x] Replace Amount cell with InlineEditCell (number type)
+- [x] Replace DueDate cell with InlineEditCell (date type)
+- [x] Replace Status cell with InlineEditCell (select type)
+- [x] Test inline editing for all three fields
+- [x] Verify database updates after inline edits
