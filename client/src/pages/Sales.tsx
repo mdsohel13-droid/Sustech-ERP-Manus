@@ -38,6 +38,7 @@ export default function Sales() {
   const { data: tracking } = trpc.sales.getAllTracking.useQuery();
   const { data: performance } = trpc.sales.getPerformanceSummary.useQuery();
   const { data: dailySales } = trpc.sales.getAll.useQuery();
+  const { data: employees } = trpc.hr.getAll.useQuery();
 
   const createProductMutation = trpc.sales.createProduct.useMutation({
     onSuccess: () => {
@@ -310,6 +311,17 @@ export default function Sales() {
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
+                      <Label htmlFor="salesperson">Salesperson</Label>
+                      <Select name="salesperson" required>
+                        <SelectTrigger><SelectValue placeholder="Select salesperson" /></SelectTrigger>
+                        <SelectContent>
+                          {employees?.map((emp) => (
+                            <SelectItem key={emp.id} value={String(emp.id)}>{emp.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
                       <Label htmlFor="product">Product</Label>
                       <Select name="product" required>
                         <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
@@ -319,6 +331,10 @@ export default function Sales() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="customer">Customer (Optional)</Label>
+                      <Input id="customer" name="customer" type="text" placeholder="Customer name" />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="quantity">Quantity</Label>
@@ -350,6 +366,8 @@ export default function Sales() {
                   </TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Product</TableHead>
+                  <TableHead>Salesperson</TableHead>
+                  <TableHead>Customer</TableHead>
                   <TableHead className="text-right">Quantity</TableHead>
                   <TableHead className="text-right">Unit Price</TableHead>
                   <TableHead className="text-right">Total Amount</TableHead>
@@ -371,6 +389,8 @@ export default function Sales() {
                         </TableCell>
                         <TableCell>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
                         <TableCell>{product?.name || `Product ${sale.productId}`}</TableCell>
+                        <TableCell>{sale.salespersonName || "N/A"}</TableCell>
+                        <TableCell>{sale.customerName || "-"}</TableCell>
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           {editingCell?.rowId === sale.id && editingCell?.field === 'quantity' ? (
                             <InlineEditCell
@@ -411,7 +431,10 @@ export default function Sales() {
                         </TableCell>
                         <TableCell className="text-right">৳{total.toLocaleString()}</TableCell>
                         <TableCell className="text-center">
-                          <Button variant="ghost" size="sm" onClick={() => setViewTrackingDialogOpen(true)} title="View details">
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            setSelectedTracking(sale);
+                            setViewTrackingDialogOpen(true);
+                          }} title="View details">
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: sale, type: 'tracking'})} title="Delete">

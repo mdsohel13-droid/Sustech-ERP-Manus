@@ -11,10 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell, Edit, Trash2 } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell, Edit, Trash2, Download } from "lucide-react";
 import { useState } from "react";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { InlineEditCell } from "@/components/InlineEditCell";
+import { TableBatchActions, useTableBatchSelection } from "@/components/TableBatchActions";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -27,6 +28,8 @@ export default function Financial() {
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'ar' | 'ap'}>({show: false, item: null, type: 'ar'});
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editingCell, setEditingCell] = useState<{id: string; field: string} | null>(null);
+  const [bulkDeletingAR, setBulkDeletingAR] = useState(false);
+  const [bulkDeletingAP, setBulkDeletingAP] = useState(false);
 
   const notifyOverdueMutation = trpc.financial.notifyOverdueAR.useMutation({
     onSuccess: (data) => {
@@ -66,6 +69,37 @@ export default function Financial() {
       utils.financial.getAllAP.invalidate();
       toast.success("AP record deleted");
       setDeleteConfirm({show: false, item: null, type: 'ap'});
+    },
+    onError: () => {
+      toast.error("Failed to delete AP record");
+    },
+  });
+
+  const bulkDeleteARMutation = trpc.financial.bulkDeleteAR.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAR.invalidate();
+      toast.success("AR records deleted");
+      arBatchSelection.clearSelection();
+      setBulkDeletingAR(false);
+    },
+    onError: () => {
+      toast.error("Failed to delete AR records");
+      setBulkDeletingAR(false);
+    },
+  });
+
+  const bulkDeleteAPMutation = trpc.financial.bulkDeleteAP.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAP.invalidate();
+      toast.success("AP records deleted");
+      apBatchSelection.clearSelection();
+      setBulkDeletingAP(false);
+    },
+    onError: () => {
+      toast.error("Failed to delete AP records");
+      setBulkDeletingAP(false);
+    },
+  });
 
   const updateARMutation = trpc.financial.updateAR.useMutation({
     onSuccess: () => {
@@ -88,16 +122,14 @@ export default function Financial() {
       toast.error("Failed to update AP record");
     },
   });
-    },
-    onError: () => {
-      toast.error("Failed to delete AP record");
-    },
-  });
 
   // Queries
   const { data: arData } = trpc.financial.getAllAR.useQuery();
   const { data: apData } = trpc.financial.getAllAP.useQuery();
   const { data: incomeData } = trpc.incomeExpenditure.getAll.useQuery();
+  
+  const arBatchSelection = useTableBatchSelection(arData || []);
+  const apBatchSelection = useTableBatchSelection(apData || []);
 
   // Filter income and expenditure
   const incomeRecords = incomeData?.filter(item => item.type === 'income') || [];
@@ -413,6 +445,35 @@ export default function Financial() {
         </TabsContent>
 
         <TabsContent value="receivables" className="space-y-4">
+          {arBatchSelection.selectedIds.size > 0 && (
+            <TableBatchActions
+              selectedCount={arBatchSelection.selectedIds.size}
+              isLoading={bulkDeletingAR}
+              onBulkDelete={() => {
+                setBulkDeletingAR(true);
+                bulkDeleteARMutation.mutate({ ids: Array.from(arBatchSelection.selectedIds) });
+              }}
+              onBulkExport={() => {
+                const selectedItems = arData?.filter((ar: any) => arBatchSelection.selectedIds.has(ar.id)) || [];
+                const csv = [
+                  ['Customer', 'Invoice', 'Due Date', 'Status', 'Amount'],
+                  ...selectedItems.map((ar: any) => [
+                    ar.customerName,
+                    ar.invoiceNumber,
+                    new Date(ar.dueDate).toLocaleDateString(),
+                    ar.status,
+                    ar.amount,
+                  ]),
+                ].map(row => row.join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ar-export.csv';
+                a.click();
+              }}
+            />
+          )}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -433,6 +494,20 @@ export default function Financial() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8">
+                        <input
+                          type="checkbox"
+                          checked={arBatchSelection.allSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              arBatchSelection.selectAll();
+                            } else {
+                              arBatchSelection.clearSelection();
+                            }
+                          }}
+                          className="rounded"
+                        />
+                      </TableHead>
                       <TableHead>Customer</TableHead>
                       <TableHead>Invoice</TableHead>
                       <TableHead>Due Date</TableHead>
@@ -444,6 +519,20 @@ export default function Financial() {
                   <TableBody>
                     {arData.filter((ar: any) => ar.status !== 'paid').slice(0, 10).map((ar: any) => (
                       <TableRow key={ar.id}>
+                        <TableCell className="w-8">
+                          <input
+                            type="checkbox"
+                            checked={arBatchSelection.selectedIds.has(ar.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                arBatchSelection.toggleId(ar.id);
+                              } else {
+                                arBatchSelection.toggleId(ar.id);
+                              }
+                            }}
+                            className="rounded"
+                          />
+                        </TableCell>
                         <TableCell><button onClick={() => setEditingItem(ar)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.customerName}</button></TableCell>
                         <TableCell><button onClick={() => setEditingItem(ar)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ar.invoiceNumber}</button></TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
@@ -543,6 +632,35 @@ export default function Financial() {
         </TabsContent>
 
         <TabsContent value="payables" className="space-y-4">
+          {apBatchSelection.selectedIds.size > 0 && (
+            <TableBatchActions
+              selectedCount={apBatchSelection.selectedIds.size}
+              isLoading={bulkDeletingAP}
+              onBulkDelete={() => {
+                setBulkDeletingAP(true);
+                bulkDeleteAPMutation.mutate({ ids: Array.from(apBatchSelection.selectedIds) });
+              }}
+              onBulkExport={() => {
+                const selectedItems = apData?.filter((ap: any) => apBatchSelection.selectedIds.has(ap.id)) || [];
+                const csv = [
+                  ['Vendor', 'Invoice', 'Due Date', 'Status', 'Amount'],
+                  ...selectedItems.map((ap: any) => [
+                    ap.vendorName,
+                    ap.invoiceNumber,
+                    new Date(ap.dueDate).toLocaleDateString(),
+                    ap.status,
+                    ap.amount,
+                  ]),
+                ].map(row => row.join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ap-export.csv';
+                a.click();
+              }}
+            />
+          )}
           <Card>
             <CardHeader>
               <CardTitle>Accounts Payable</CardTitle>
@@ -553,6 +671,20 @@ export default function Financial() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8">
+                        <input
+                          type="checkbox"
+                          checked={apBatchSelection.allSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              apBatchSelection.selectAll();
+                            } else {
+                              apBatchSelection.clearSelection();
+                            }
+                          }}
+                          className="rounded"
+                        />
+                      </TableHead>
                       <TableHead>Vendor</TableHead>
                       <TableHead>Invoice</TableHead>
                       <TableHead>Due Date</TableHead>
@@ -564,6 +696,20 @@ export default function Financial() {
                   <TableBody>
                     {apData.filter((ap: any) => ap.status !== 'paid').slice(0, 10).map((ap: any) => (
                       <TableRow key={ap.id}>
+                        <TableCell className="w-8">
+                          <input
+                            type="checkbox"
+                            checked={apBatchSelection.selectedIds.has(ap.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                apBatchSelection.toggleId(ap.id);
+                              } else {
+                                apBatchSelection.toggleId(ap.id);
+                              }
+                            }}
+                            className="rounded"
+                          />
+                        </TableCell>
                         <TableCell><button onClick={() => setEditingItem(ap)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.vendorName}</button></TableCell>
                         <TableCell><button onClick={() => setEditingItem(ap)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{ap.invoiceNumber}</button></TableCell>
                         <TableCell>

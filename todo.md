@@ -1076,3 +1076,14 @@
 - [x] Test batch operations in Sales module
 - [x] Verify TypeScript compilation with batch operations
 - [x] Dev server running successfully with batch operations
+
+
+## CRITICAL: Sales Module Issues (IN PROGRESS)
+- [ ] Add hyperlinks to daily sales records
+- [ ] Add Edit action button to daily sales records
+- [ ] Add Delete action button with confirmation to daily sales records
+- [ ] Link salesperson field to employee database
+- [ ] Create salesperson dropdown selector from employees
+- [ ] Update sales record creation to require employee selection
+- [ ] Test all daily sales record actions
+- [ ] Verify employee database integration

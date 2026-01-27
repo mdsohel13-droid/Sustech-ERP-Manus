@@ -157,6 +157,15 @@ export const appRouter = router({
         return { success: true };
       }),
     
+    bulkDeleteAR: protectedProcedure
+      .input(z.object({ ids: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        for (const id of input.ids) {
+          await db.deleteAR(id);
+        }
+        return { success: true, deleted: input.ids.length };
+      }),
+    
     getARSummary: protectedProcedure.query(async () => {
       return await db.getARSummary();
     }),
@@ -247,6 +256,15 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await db.deleteAP(input.id);
         return { success: true };
+      }),
+    
+    bulkDeleteAP: protectedProcedure
+      .input(z.object({ ids: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        for (const id of input.ids) {
+          await db.deleteAP(id);
+        }
+        return { success: true, deleted: input.ids.length };
       }),
     
     getAPSummary: protectedProcedure.query(async () => {
