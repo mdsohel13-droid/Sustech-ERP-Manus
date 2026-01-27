@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO currency_rates (fromCurrency, toCurrency, rate, effectiveDate) VALUES\n('BDT', 'USD', 0.0094, CURDATE()),\n('USD', 'BDT', 106.5, CURDATE()),\n('BDT', 'EUR', 0.0085, CURDATE()),\n('EUR', 'BDT', 117.5, CURDATE()),\n('BDT', 'CNY', 0.067, CURDATE()),\n('CNY', 'BDT', 14.9, CURDATE()),\n('BDT', 'INR', 0.78, CURDATE()),\n('INR', 'BDT', 1.28, CURDATE()),\n('USD', 'EUR', 0.91, CURDATE()),\n('EUR', 'USD', 1.10, CURDATE()),\n('USD', 'CNY', 7.14, CURDATE()),\n('CNY', 'USD', 0.14, CURDATE());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute INSERT INTO currency_rates (fromCurrency, toCurrency, rate, effectiveDate) VALUES\n('BDT', 'USD', 0.0094, CURDATE()),\n('USD', 'BDT', 106.5, CURDATE()),\n('BDT', 'EUR', 0.0085, CURDATE()),\n('EUR', 'BDT', 117.5, CURDATE()),\n('BDT', 'CNY', 0.067, CURDATE()),\n('CNY', 'BDT', 14.9, CURDATE()),\n('BDT', 'INR', 0.78, CURDATE()),\n('INR', 'BDT', 1.28, CURDATE()),\n('USD', 'EUR', 0.91, CURDATE()),\n('EUR', 'USD', 1.10, CURDATE()),\n('USD', 'CNY', 7.14, CURDATE()),\n('CNY', 'USD', 0.14, CURDATE());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 71
+}

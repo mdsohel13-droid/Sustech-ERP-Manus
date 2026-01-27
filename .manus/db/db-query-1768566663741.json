@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `income_expenditure` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `date` date NOT NULL,\n  `type` enum('income','expenditure') NOT NULL,\n  `category` varchar(100) NOT NULL,\n  `subcategory` varchar(100),\n  `amount` decimal(15,2) NOT NULL,\n  `currency` varchar(10) NOT NULL DEFAULT 'BDT',\n  `description` text,\n  `referenceNumber` varchar(100),\n  `paymentMethod` varchar(50),\n  `createdBy` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `income_expenditure_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute CREATE TABLE IF NOT EXISTS `income_expenditure` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `date` date NOT NULL,\n  `type` enum('income','expenditure') NOT NULL,\n  `category` varchar(100) NOT NULL,\n  `subcategory` varchar(100),\n  `amount` decimal(15,2) NOT NULL,\n  `currency` varchar(10) NOT NULL DEFAULT 'BDT',\n  `description` text,\n  `referenceNumber` varchar(100),\n  `paymentMethod` varchar(50),\n  `createdBy` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `income_expenditure_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 195
+}

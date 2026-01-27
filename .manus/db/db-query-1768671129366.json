@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS onboarding_templates (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  task_name VARCHAR(255) NOT NULL,\n  task_category ENUM('documents', 'equipment', 'training', 'access', 'introduction', 'other') DEFAULT 'other',\n  description TEXT,\n  days_from_start INT DEFAULT 0,\n  is_active BOOLEAN DEFAULT TRUE,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute CREATE TABLE IF NOT EXISTS onboarding_templates (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  task_name VARCHAR(255) NOT NULL,\n  task_category ENUM('documents', 'equipment', 'training', 'access', 'introduction', 'other') DEFAULT 'other',\n  description TEXT,\n  days_from_start INT DEFAULT 0,\n  is_active BOOLEAN DEFAULT TRUE,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 178
+}

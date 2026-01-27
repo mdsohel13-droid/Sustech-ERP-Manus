@@ -1,0 +1,19 @@
+{
+  "query": "SELECT * FROM team_members LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute SELECT * FROM team_members LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "userId": "1",
+      "position": "NULL",
+      "department": "NULL",
+      "isActive": "1",
+      "createdAt": "2026-01-26 11:33:42",
+      "updatedAt": "2026-01-26 11:33:42"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tposition\tdepartment\tisActive\tcreatedAt\tupdatedAt\n1\t1\tNULL\tNULL\t1\t2026-01-26 11:33:42\t2026-01-26 11:33:42\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

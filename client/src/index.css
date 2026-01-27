@@ -42,75 +42,103 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* World-Class ERP Design System - Clean, Minimal, Professional */
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
+  /* Pure white/neutral background for clean look */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
+  --foreground: oklch(0.15 0.01 260);
+  
+  /* Cards with subtle elevation */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
+  --card-foreground: oklch(0.15 0.01 260);
+  
+  /* Popovers */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --popover-foreground: oklch(0.15 0.01 260);
+  
+  /* Primary - Professional blue */
+  --primary: oklch(0.45 0.18 250);
+  --primary-foreground: oklch(1 0 0);
+  
+  /* Secondary - Subtle gray */
+  --secondary: oklch(0.96 0.005 260);
+  --secondary-foreground: oklch(0.25 0.01 260);
+  
+  /* Muted - For backgrounds */
+  --muted: oklch(0.97 0.003 260);
+  --muted-foreground: oklch(0.50 0.01 260);
+  
+  /* Accent - Soft highlight */
+  --accent: oklch(0.95 0.02 250);
+  --accent-foreground: oklch(0.25 0.01 260);
+  
+  /* Destructive - Clear red */
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  
+  /* Borders - Very subtle */
+  --border: oklch(0.92 0.005 260);
+  --input: oklch(0.92 0.005 260);
+  --ring: oklch(0.45 0.18 250);
+  
+  /* Sidebar - Clean white with subtle border */
+  --sidebar: oklch(0.99 0.002 260);
+  --sidebar-foreground: oklch(0.25 0.01 260);
+  --sidebar-primary: oklch(0.45 0.18 250);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.96 0.01 250);
+  --sidebar-accent-foreground: oklch(0.25 0.01 260);
+  --sidebar-border: oklch(0.94 0.005 260);
+  --sidebar-ring: oklch(0.45 0.18 250);
+  
+  /* Charts - Vibrant but professional */
+  --chart-1: oklch(0.55 0.20 250);
+  --chart-2: oklch(0.60 0.18 160);
+  --chart-3: oklch(0.65 0.16 80);
+  --chart-4: oklch(0.55 0.18 30);
+  --chart-5: oklch(0.50 0.20 300);
+  
+  --radius: 0.5rem;
+  
+  /* Success/Warning/Info colors */
+  --success: oklch(0.55 0.18 145);
+  --warning: oklch(0.70 0.18 75);
+  --info: oklch(0.55 0.15 230);
 }
 
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --background: oklch(0.12 0.01 260);
+  --foreground: oklch(0.95 0.005 260);
+  --card: oklch(0.16 0.01 260);
+  --card-foreground: oklch(0.95 0.005 260);
+  --popover: oklch(0.16 0.01 260);
+  --popover-foreground: oklch(0.95 0.005 260);
+  --primary: oklch(0.55 0.18 250);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.22 0.01 260);
+  --secondary-foreground: oklch(0.85 0.005 260);
+  --muted: oklch(0.20 0.01 260);
+  --muted-foreground: oklch(0.65 0.01 260);
+  --accent: oklch(0.25 0.02 250);
+  --accent-foreground: oklch(0.95 0.005 260);
+  --destructive: oklch(0.60 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.25 0.01 260);
+  --input: oklch(0.25 0.01 260);
+  --ring: oklch(0.55 0.18 250);
+  --sidebar: oklch(0.14 0.01 260);
+  --sidebar-foreground: oklch(0.90 0.005 260);
+  --sidebar-primary: oklch(0.55 0.18 250);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.22 0.01 260);
+  --sidebar-accent-foreground: oklch(0.95 0.005 260);
+  --sidebar-border: oklch(0.25 0.01 260);
+  --sidebar-ring: oklch(0.55 0.18 250);
+  --chart-1: oklch(0.60 0.20 250);
+  --chart-2: oklch(0.65 0.18 160);
+  --chart-3: oklch(0.70 0.16 80);
+  --chart-4: oklch(0.60 0.18 30);
+  --chart-5: oklch(0.55 0.20 300);
 }
 
 @layer base {
@@ -118,8 +146,35 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  
+  /* Clean typography hierarchy */
+  h1 {
+    @apply text-3xl font-semibold tracking-tight text-foreground;
+  }
+  
+  h2 {
+    @apply text-2xl font-semibold tracking-tight text-foreground;
+  }
+  
+  h3 {
+    @apply text-xl font-medium text-foreground;
+  }
+  
+  h4 {
+    @apply text-lg font-medium text-foreground;
+  }
+  
+  h5 {
+    @apply text-base font-medium text-foreground;
+  }
+  
+  /* Clickable elements */
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -134,24 +189,12 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
+  /* Container */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -162,16 +205,384 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1600px;
     }
+  }
+  
+  /* ERP Module Card */
+  .erp-card {
+    @apply bg-card rounded-lg border border-border;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.02), 0 1px 2px -1px rgb(0 0 0 / 0.02);
+  }
+  
+  .erp-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  }
+  
+  /* KPI Card with left border accent */
+  .kpi-card {
+    @apply bg-card rounded-lg border border-border p-4;
+    border-left-width: 4px;
+  }
+  
+  .kpi-card-blue { border-left-color: oklch(0.55 0.20 250); }
+  .kpi-card-green { border-left-color: oklch(0.55 0.18 145); }
+  .kpi-card-orange { border-left-color: oklch(0.70 0.18 75); }
+  .kpi-card-purple { border-left-color: oklch(0.55 0.18 300); }
+  .kpi-card-red { border-left-color: oklch(0.55 0.22 25); }
+  
+  /* Status badges */
+  .status-success {
+    @apply bg-green-50 text-green-700 border border-green-200;
+  }
+  
+  .status-warning {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+  }
+  
+  .status-error {
+    @apply bg-red-50 text-red-700 border border-red-200;
+  }
+  
+  .status-info {
+    @apply bg-blue-50 text-blue-700 border border-blue-200;
+  }
+  
+  .status-neutral {
+    @apply bg-gray-50 text-gray-700 border border-gray-200;
+  }
+  
+  /* Priority indicators */
+  .priority-critical {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  .priority-high {
+    @apply bg-orange-100 text-orange-800;
+  }
+  
+  .priority-medium {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .priority-low {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  /* Module navigation tabs */
+  .module-tabs {
+    @apply flex gap-1 border-b border-border pb-px;
+  }
+  
+  .module-tab {
+    @apply px-4 py-2 text-sm font-medium text-muted-foreground rounded-t-md transition-colors;
+  }
+  
+  .module-tab:hover {
+    @apply text-foreground bg-muted/50;
+  }
+  
+  .module-tab-active {
+    @apply text-primary bg-background border-b-2 border-primary -mb-px;
+  }
+  
+  /* Action panel (right side) */
+  .action-panel {
+    @apply bg-muted/30 border-l border-border p-4 space-y-4;
+  }
+  
+  /* Quick action button */
+  .quick-action {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-card hover:bg-accent transition-colors;
+  }
+  
+  /* Data table styling */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  
+  .data-table th {
+    @apply px-4 py-3 text-left font-medium text-muted-foreground bg-muted/50 border-b border-border;
+  }
+  
+  .data-table td {
+    @apply px-4 py-3 border-b border-border;
+  }
+  
+  .data-table tr:hover td {
+    @apply bg-muted/30;
+  }
+  
+  /* Command bar (Ctrl+K) */
+  .command-bar {
+    @apply fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/50 backdrop-blur-sm;
+  }
+  
+  .command-input {
+    @apply w-full max-w-2xl bg-card rounded-xl border border-border shadow-2xl overflow-hidden;
+  }
+  
+  /* AI Assistant panel */
+  .ai-panel {
+    @apply fixed right-0 top-0 h-full w-96 bg-card border-l border-border shadow-xl z-40;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .ai-panel-open {
+    transform: translateX(0);
+  }
+  
+  /* Inline help tooltip */
+  .help-tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm bg-foreground text-background rounded-md shadow-lg;
+    max-width: 280px;
+  }
+  
+  /* Snackbar/Toast notification */
+  .snackbar {
+    @apply fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 bg-foreground text-background rounded-lg shadow-lg flex items-center gap-3;
+  }
+  
+  .snackbar-action {
+    @apply text-primary-foreground font-medium hover:underline;
+  }
+  
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+  }
+  
+  .empty-state-icon {
+    @apply w-16 h-16 text-muted-foreground/50 mb-4;
+  }
+  
+  /* Loading skeleton */
+  .skeleton {
+    @apply bg-muted animate-pulse rounded;
+  }
+  
+  /* Form sections (progressive disclosure) */
+  .form-section {
+    @apply border border-border rounded-lg overflow-hidden;
+  }
+  
+  .form-section-header {
+    @apply px-4 py-3 bg-muted/50 font-medium flex items-center justify-between cursor-pointer;
+  }
+  
+  .form-section-content {
+    @apply p-4 space-y-4;
+  }
+  
+  /* Kanban board */
+  .kanban-column {
+    @apply bg-muted/30 rounded-lg p-4 min-h-[500px];
+  }
+  
+  .kanban-card {
+    @apply bg-card border border-border rounded-md p-4 mb-3 cursor-move transition-all;
+  }
+  
+  .kanban-card:hover {
+    @apply shadow-md -translate-y-0.5;
+  }
+  
+  /* Health indicators (RAG) */
+  .health-red { @apply bg-red-500; }
+  .health-amber { @apply bg-amber-500; }
+  .health-green { @apply bg-green-500; }
+  
+  /* Metric trend indicators */
+  .trend-up {
+    @apply text-green-600;
+  }
+  
+  .trend-down {
+    @apply text-red-600;
+  }
+  
+  .trend-neutral {
+    @apply text-muted-foreground;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.85 0.005 260);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.75 0.005 260);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.30 0.01 260);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.40 0.01 260);
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid oklch(0.45 0.18 250);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* Mobile-Responsive Utilities */
+@media (max-width: 768px) {
+  /* Mobile navigation */
+  .mobile-nav-hidden {
+    display: none;
+  }
+  
+  /* Stack cards vertically on mobile */
+  .grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Reduce padding on mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Make tables scrollable horizontally */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Adjust chart heights for mobile */
+  .recharts-wrapper {
+    min-height: 250px !important;
+  }
+  
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Hide sidebar on mobile by default */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  /* Full-width dialogs on mobile */
+  [role="dialog"] {
+    max-width: 95vw !important;
+    margin: 1rem;
+  }
+}
+
+/* Tablet responsive */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Utility classes for responsive design */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Touch-friendly spacing */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive text sizes */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  
+  .text-4xl {
+    font-size: 2rem !important;
+  }
+  
+  .text-3xl {
+    font-size: 1.75rem !important;
+  }
+  
+  .text-2xl {
+    font-size: 1.5rem !important;
   }
 }

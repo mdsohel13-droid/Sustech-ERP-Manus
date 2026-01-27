@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `daily_sales` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `date` date NOT NULL,\n  `productId` int NOT NULL,\n  `productName` varchar(255) NOT NULL,\n  `quantity` varchar(50) NOT NULL,\n  `unitPrice` varchar(50) NOT NULL,\n  `totalAmount` varchar(50) NOT NULL,\n  `salespersonId` int NOT NULL,\n  `salespersonName` varchar(255) NOT NULL,\n  `customerName` varchar(255),\n  `notes` text,\n  `createdBy` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `daily_sales_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute CREATE TABLE IF NOT EXISTS `daily_sales` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `date` date NOT NULL,\n  `productId` int NOT NULL,\n  `productName` varchar(255) NOT NULL,\n  `quantity` varchar(50) NOT NULL,\n  `unitPrice` varchar(50) NOT NULL,\n  `totalAmount` varchar(50) NOT NULL,\n  `salespersonId` int NOT NULL,\n  `salespersonName` varchar(255) NOT NULL,\n  `customerName` varchar(255),\n  `notes` text,\n  `createdBy` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `daily_sales_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 185
+}
