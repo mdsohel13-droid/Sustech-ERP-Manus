@@ -1157,3 +1157,21 @@
 - [ ] Implement commission payout reports
 - [ ] Add commission history tracking
 - [ ] Test commission calculations end-to-end
+
+
+## Commission Management UI (User Requested 💰)
+- [ ] Build Commission Management tab in HR module
+- [ ] Create commission rate form (percentage/fixed/tiered)
+- [ ] Add effective date range picker
+- [ ] Implement tiered rate configuration UI
+- [ ] Add commission rate history view
+- [ ] Create Commission Dashboard tab in Sales module
+- [ ] Build earnings summary cards (monthly, YTD, pending)
+- [ ] Add commission trends chart
+- [ ] Implement commission payout status tracker
+- [ ] Create payout approval workflow UI
+- [ ] Add batch payout processing interface
+- [ ] Implement payment method selection
+- [ ] Add transaction tracking view
+- [ ] Create commission reports with export
+- [ ] Test all commission workflows

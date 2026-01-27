@@ -2207,30 +2207,16 @@ export async function calculateCommission(
 }
 
 /**
- * Create commission transaction for a sale
+ * Get commission transactions for a salesperson
  */
-export async function createCommissionTransaction(
-  employeeId: number,
-  dailySalesId: number,
-  saleAmount: number,
-  period: string,
-  userId: number
-) {
+export async function getCommissionTransactions(employeeId: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) return [];
   
-  const commission = await calculateCommission(employeeId, saleAmount);
-  if (!commission) return null;
-  
-  return await db.insert(commissionTransactions).values({
-    employeeId,
-    dailySalesId,
-    saleAmount: saleAmount,
-    commissionRate: commission.rate,
-    commissionAmount: commission.amount,
-    period,
-    status: "earned",
-  });
+  return await db.select().from(commissionTransactions)
+    .where(eq(commissionTransactions.employeeId, employeeId))
+    .orderBy(desc(commissionTransactions.createdAt))
+    .limit(100);
 }
 
 /**
@@ -2278,64 +2264,12 @@ export async function calculateMonthlyCommission(employeeId: number, period: str
   return {
     totalSalesAmount,
     totalSalesCount: sales.length,
-    totalCommission,
+    totalCommission: totalCommission,
   };
 }
 
 /**
- * Create or update commission history record
- */
-export async function upsertCommissionHistory(
-  employeeId: number,
-  salespersonName: string,
-  period: string,
-  userId: number
-) {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const monthlyData = await calculateMonthlyCommission(employeeId, period);
-  if (!monthlyData) return null;
-  
-  const commissionRate = await getActiveCommissionRate(employeeId);
-  if (!commissionRate) return null;
-  
-  // Check if record already exists
-  const existing = await db.select().from(commissionHistory)
-    .where(and(
-      eq(commissionHistory.employeeId, employeeId),
-      eq(commissionHistory.period, period)
-    ))
-    .limit(1)
-    .then(rows => rows[0] || null);
-  
-  if (existing) {
-    // Update existing record
-    return await db.update(commissionHistory)
-      .set({
-    totalSalesAmount: monthlyData.totalSalesAmount,
-    totalSalesCount: monthlyData.totalSalesCount,
-    commissionAmount: monthlyData.totalCommission,
-        updatedAt: new Date(),
-      })
-      .where(eq(commissionHistory.id, existing.id));
-  } else {
-    // Create new record
-    return await db.insert(commissionHistory).values({
-      employeeId,
-      salespersonName,
-      period,
-      totalSalesAmount: monthlyData.totalSalesAmount,
-      totalSalesCount: monthlyData.totalSalesCount,
-    commissionRate: Number(commissionRate.baseRate),
-    commissionAmount: monthlyData.totalCommission,
-      status: "pending",
-    });
-  }
-}
-
-/**
- * Get commission history for salesperson
+ * Get commission history for period
  */
 export async function getCommissionHistoryForPeriod(period: string) {
   const db = await getDb();

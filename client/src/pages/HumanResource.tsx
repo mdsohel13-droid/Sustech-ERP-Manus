@@ -570,7 +570,7 @@ export default function HumanResource() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users & Access</TabsTrigger>
           <TabsTrigger value="employees">Employees</TabsTrigger>
@@ -580,6 +580,7 @@ export default function HumanResource() {
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="job-descriptions">Job Descriptions</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
+          {user?.role === 'admin' && <TabsTrigger value="commission">Commission</TabsTrigger>}
           {user?.role === 'admin' && <TabsTrigger value="confidential">Confidential</TabsTrigger>}
           <TabsTrigger value="roles">Role Guide</TabsTrigger>
         </TabsList>
@@ -1771,6 +1772,117 @@ export default function HumanResource() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Commission Management Tab */}
+        {user?.role === 'admin' && (
+          <TabsContent value="commission" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Commission Management</CardTitle>
+                <CardDescription>
+                  Set commission rates and track salesperson earnings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Commission Rates Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Commission Rates</h3>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          Add Commission Rate
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Set Commission Rate</DialogTitle>
+                          <DialogDescription>
+                            Configure commission structure for a salesperson
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form className="space-y-4">
+                          <div>
+                            <Label htmlFor="comm_employee">Salesperson</Label>
+                            <Select>
+                              <SelectTrigger id="comm_employee">
+                                <SelectValue placeholder="Select salesperson" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(employees || []).map((emp: any) => (
+                                  <SelectItem key={emp.id} value={emp.id.toString()}>
+                                    {emp.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="comm_type">Commission Type</Label>
+                            <Select>
+                              <SelectTrigger id="comm_type">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="percentage">Percentage (%)</SelectItem>
+                                <SelectItem value="fixed">Fixed Amount (৳)</SelectItem>
+                                <SelectItem value="tiered">Tiered Rates</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="comm_rate">Commission Rate</Label>
+                            <Input id="comm_rate" type="number" placeholder="e.g., 5 for 5%" step="0.1" />
+                          </div>
+                          <div>
+                            <Label htmlFor="comm_effective">Effective Date</Label>
+                            <Input id="comm_effective" type="date" />
+                          </div>
+                          <DialogFooter>
+                            <Button type="submit">Save Commission Rate</Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  {/* Commission Rates Table */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Salesperson</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Rate</TableHead>
+                        <TableHead>Effective Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Jane Smith</TableCell>
+                        <TableCell>Percentage</TableCell>
+                        <TableCell>5%</TableCell>
+                        <TableCell>2026-01-01</TableCell>
+                        <TableCell><Badge>Active</Badge></TableCell>
+                        <TableCell className="text-sm">Edit | Delete</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>John Doe</TableCell>
+                        <TableCell>Tiered</TableCell>
+                        <TableCell>3-7%</TableCell>
+                        <TableCell>2026-01-15</TableCell>
+                        <TableCell><Badge>Active</Badge></TableCell>
+                        <TableCell className="text-sm">Edit | Delete</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Role Guide Tab */}
         <TabsContent value="roles" className="space-y-6">
