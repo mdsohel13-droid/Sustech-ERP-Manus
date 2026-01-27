@@ -896,6 +896,15 @@ Provide 2-3 actionable business insights.`;
     getPerformanceSummary: protectedProcedure.query(async () => {
       return await db.getSalesPerformanceSummary();
     }),
+
+    bulkDelete: protectedProcedure
+      .input(z.object({ ids: z.array(z.string()) }))
+      .mutation(async ({ input }) => {
+        for (const id of input.ids) {
+          await db.deleteSale(Number(id));
+        }
+        return { success: true, deleted: input.ids.length };
+      }),
   }),
 
   // ============ User Management Module (Admin Only) ============

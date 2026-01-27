@@ -14,6 +14,8 @@ import { InlineEditCell } from "@/components/InlineEditCell";
 import { useState } from "react";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
+import { TableBatchActions, useTableBatchSelection } from "@/components/TableBatchActions";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -27,6 +29,9 @@ export default function Sales() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'product' | 'tracking'}>({show: false, item: null, type: 'product'});
   const [editingCell, setEditingCell] = useState<{rowId: number; field: string} | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  
+  const batchSelection = useTableBatchSelection(dailySales || []);
 
   const utils = trpc.useUtils();
   const { data: products } = trpc.sales.getAllProducts.useQuery();
@@ -99,6 +104,36 @@ export default function Sales() {
       toast.error(`Failed to update product: ${error.message}`);
     },
   });
+
+  const bulkDeleteMutation = trpc.sales.bulkDelete.useMutation({
+    onSuccess: () => {
+      utils.sales.getAll.invalidate();
+      batchSelection.clearSelection();
+      setBulkDeleting(false);
+      toast.success(`Deleted ${batchSelection.selectedIds.length} records`);
+    },
+    onError: (error) => {
+      setBulkDeleting(false);
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
+  const handleBulkDelete = () => {
+    if (batchSelection.selectedIds.length === 0) {
+      toast.error('No items selected');
+      return;
+    }
+    if (confirm(`Delete ${batchSelection.selectedIds.length} records?`)) {
+      setBulkDeleting(true);
+      bulkDeleteMutation.mutate({ ids: batchSelection.selectedIds });
+    }
+  };
+
+  const handleExport = () => {
+    if (dailySales) {
+      batchSelection.exportToCSV(dailySales, 'sales-records');
+    }
+  };
 
   const handleProductSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -248,6 +283,14 @@ export default function Sales() {
         </TabsList>
 
         <TabsContent value="daily" className="space-y-4">
+          <TableBatchActions
+            selectedIds={batchSelection.selectedIds}
+            totalCount={dailySales?.length || 0}
+            onSelectAll={batchSelection.toggleSelectAll}
+            onBulkDelete={handleBulkDelete}
+            onExport={handleExport}
+            isDeleting={bulkDeleting}
+          />
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-medium">Daily Sales Records</h3>
             <Dialog>
@@ -298,6 +341,13 @@ export default function Sales() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={batchSelection.selectedIds.length === dailySales?.length && dailySales?.length > 0}
+                      indeterminate={batchSelection.selectedIds.length > 0 && batchSelection.selectedIds.length < dailySales?.length}
+                      onCheckedChange={batchSelection.toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead className="text-right">Quantity</TableHead>
@@ -313,6 +363,12 @@ export default function Sales() {
                     const total = Number(sale.quantity) * Number(sale.unitPrice);
                     return (
                       <TableRow key={sale.id} className="cursor-pointer hover:bg-muted/50">
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={batchSelection.selectedIds.includes(String(sale.id))}
+                            onCheckedChange={() => batchSelection.toggleSelection(String(sale.id))}
+                          />
+                        </TableCell>
                         <TableCell>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
                         <TableCell>{product?.name || `Product ${sale.productId}`}</TableCell>
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
