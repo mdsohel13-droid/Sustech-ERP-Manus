@@ -57,9 +57,8 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  // Bind to 0.0.0.0 to ensure external access works
-  server.listen(port, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${port}/`);
+  server.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}/`);
   });
 }
 

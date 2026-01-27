@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `action_tracker` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `type` enum('action','decision','issue','opportunity') NOT NULL,\n  `title` varchar(500) NOT NULL,\n  `description` text,\n  `status` enum('open','in_progress','resolved','closed') NOT NULL DEFAULT 'open',\n  `priority` enum('low','medium','high','critical') NOT NULL DEFAULT 'medium',\n  `assignedTo` int,\n  `dueDate` date,\n  `resolvedDate` date,\n  `tags` text,\n  `relatedModule` varchar(100),\n  `relatedId` int,\n  `createdBy` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `action_tracker_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute CREATE TABLE IF NOT EXISTS `action_tracker` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `type` enum('action','decision','issue','opportunity') NOT NULL,\n  `title` varchar(500) NOT NULL,\n  `description` text,\n  `status` enum('open','in_progress','resolved','closed') NOT NULL DEFAULT 'open',\n  `priority` enum('low','medium','high','critical') NOT NULL DEFAULT 'medium',\n  `assignedTo` int,\n  `dueDate` date,\n  `resolvedDate` date,\n  `tags` text,\n  `relatedModule` varchar(100),\n  `relatedId` int,\n  `createdBy` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `action_tracker_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 172
-}

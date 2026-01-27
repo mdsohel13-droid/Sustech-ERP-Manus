@@ -4,174 +4,36 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { CurrencyProvider } from "./contexts/CurrencyContext";
-import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
-import Financial from "./pages/Financial";
-import Projects from "./pages/Projects";
-import Customers from "./pages/Customers";
-import Team from "./pages/Team";
-import Ideas from "./pages/Ideas";
-import SalesEnhanced from "./pages/SalesEnhanced";
-import Users from "./pages/Users";
-import Settings from "./pages/Settings";
-import AdminSettings from "./pages/AdminSettings";
-import IncomeExpenditure from "./pages/IncomeExpenditure";
-import ActionTracker from "@/pages/ActionTracker";
-import HumanResource from "@/pages/HumanResource";
-import TenderQuotation from "./pages/TenderQuotation";
-import Reports from "./pages/Reports";
-import Products from "./pages/Products";
-import Contacts from "./pages/Contacts";
-import Inventory from "./pages/Inventory";
-import Purchases from "./pages/Purchases";
-import AccessDenied from "./pages/AccessDenied";
-import { HyperlinkAnalyticsDashboard } from "./pages/HyperlinkAnalyticsDashboard";
-import AIAssistant from "./pages/AIAssistant";
-import Analytics from "./pages/Analytics";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { ToastProvider } from "./components/Toast";
-import { BreadcrumbProvider, BreadcrumbNavigation } from "./components/BreadcrumbNavigation";
 
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
-    <>
-      <BreadcrumbNavigation />
-      <Switch>
-      <Route path={"/"}>
-        <DashboardLayout>
-          <Home />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/financial"}>
-        <DashboardLayout>
-          <ProtectedRoute module="financial">
-            <Financial />
-          </ProtectedRoute>
-        </DashboardLayout>
-      </Route>
-      <Route path={"/projects"}>
-        <DashboardLayout>
-          <Projects />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/customers"}>
-        <DashboardLayout>
-          <Customers />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/team"}>
-        <DashboardLayout>
-          <Team />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/ideas"}>
-        <DashboardLayout>
-          <Ideas />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/sales"}>
-        <DashboardLayout>
-          <ProtectedRoute module="sales">
-            <SalesEnhanced />
-          </ProtectedRoute>
-        </DashboardLayout>
-      </Route>
-      <Route path={"/users"}>
-        <DashboardLayout>
-          <Users />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/settings"}>
-        <DashboardLayout>
-          <ProtectedRoute module="settings">
-            <Settings />
-          </ProtectedRoute>
-        </DashboardLayout>
-      </Route>
-      <Route path={"/admin-settings"}>
-        <DashboardLayout>
-          <AdminSettings />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/income-expenditure"}>
-        <DashboardLayout>
-          <IncomeExpenditure />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/action-tracker"}>
-        <DashboardLayout>
-          <ActionTracker />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/tender-quotation"}>
-        <DashboardLayout>
-          <TenderQuotation />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/hr"}>
-        <DashboardLayout>
-          <ProtectedRoute module="hr">
-            <HumanResource />
-          </ProtectedRoute>
-        </DashboardLayout>
-      </Route>
-      <Route path={"/reports"}>
-        <Reports />
-      </Route>
-      <Route path={"/products"}>
-        <Products />
-      </Route>
-      <Route path={"/contacts"}>
-        <Contacts />
-      </Route>
-      <Route path={"/inventory"}>
-        <Inventory />
-      </Route>
-      <Route path={"/purchases"}>
-        <Purchases />
-      </Route>
-      <Route path={"/access-denied"}>
-        <AccessDenied />
-      </Route>
-      <Route path={"/hyperlink-analytics"}>
-        <DashboardLayout>
-          <ProtectedRoute module="admin">
-            <HyperlinkAnalyticsDashboard />
-          </ProtectedRoute>
-        </DashboardLayout>
-      </Route>
-      <Route path={"/ai-assistant"}>
-        <DashboardLayout>
-          <AIAssistant />
-        </DashboardLayout>
-      </Route>
-      <Route path={"/analytics"}>
-        <DashboardLayout>
-          <Analytics />
-        </DashboardLayout>
-      </Route>
+    <Switch>
+      <Route path={"/"} component={Home} />
       <Route path={"/404"} component={NotFound} />
+      {/* Final fallback route */}
       <Route component={NotFound} />
-      </Switch>
-    </>
+    </Switch>
   );
 }
+
+// NOTE: About Theme
+// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
+//   to keep consistent foreground/background color across components
+// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
-        <CurrencyProvider>
-          <TooltipProvider>
-            <ToastProvider>
-              <BreadcrumbProvider>
-                <Toaster />
-                <Router />
-              </BreadcrumbProvider>
-            </ToastProvider>
-          </TooltipProvider>
-        </CurrencyProvider>
+      <ThemeProvider
+        defaultTheme="light"
+        // switchable
+      >
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

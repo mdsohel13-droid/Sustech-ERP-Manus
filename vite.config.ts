@@ -26,27 +26,19 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    host: "0.0.0.0",
-    port: 3000,
+    host: true,
     allowedHosts: [
       ".manuspre.computer",
       ".manus.computer",
       ".manus-asia.computer",
       ".manuscomputer.ai",
       ".manusvm.computer",
-      ".emergentagent.com",
-      ".preview.emergentagent.com",
       "localhost",
       "127.0.0.1",
-      "all",
     ],
     fs: {
       strict: true,
       deny: ["**/.*"],
-    },
-    hmr: {
-      protocol: "wss",
-      clientPort: 443,
     },
   },
 });

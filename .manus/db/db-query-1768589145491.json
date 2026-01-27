@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `attachments` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `entity_type` enum('project','tender_quotation','sale','customer','financial_transaction','income_expenditure','employee','action_tracker') NOT NULL,\n  `entity_id` int NOT NULL,\n  `file_name` varchar(255) NOT NULL,\n  `file_url` text NOT NULL,\n  `file_type` varchar(100),\n  `file_size` int,\n  `uploaded_by` int NOT NULL,\n  `uploaded_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `attachments_id` PRIMARY KEY(`id`),\n  INDEX `idx_entity` (`entity_type`, `entity_id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute CREATE TABLE IF NOT EXISTS `attachments` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `entity_type` enum('project','tender_quotation','sale','customer','financial_transaction','income_expenditure','employee','action_tracker') NOT NULL,\n  `entity_id` int NOT NULL,\n  `file_name` varchar(255) NOT NULL,\n  `file_url` text NOT NULL,\n  `file_type` varchar(100),\n  `file_size` int,\n  `uploaded_by` int NOT NULL,\n  `uploaded_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `attachments_id` PRIMARY KEY(`id`),\n  INDEX `idx_entity` (`entity_type`, `entity_id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 171
-}

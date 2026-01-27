@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO departments (name, description, createdAt, updatedAt) VALUES \n('Engineering', 'Software development, technical architecture, and IT infrastructure', NOW(), NOW()),\n('Sales', 'Business development, client acquisition, and revenue generation', NOW(), NOW()),\n('Human Resources', 'Employee management, recruitment, and organizational development', NOW(), NOW()),\n('Operations', 'Day-to-day business operations and process management', NOW(), NOW()),\n('Finance', 'Financial planning, accounting, and budget management', NOW(), NOW()),\n('Marketing', 'Brand management, digital marketing, and communications', NOW(), NOW())\nON DUPLICATE KEY UPDATE updatedAt = NOW();",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute INSERT INTO departments (name, description, createdAt, updatedAt) VALUES \n('Engineering', 'Software development, technical architecture, and IT infrastructure', NOW(), NOW()),\n('Sales', 'Business development, client acquisition, and revenue generation', NOW(), NOW()),\n('Human Resources', 'Employee management, recruitment, and organizational development', NOW(), NOW()),\n('Operations', 'Day-to-day business operations and process management', NOW(), NOW()),\n('Finance', 'Financial planning, accounting, and budget management', NOW(), NOW()),\n('Marketing', 'Brand management, digital marketing, and communications', NOW(), NOW())\nON DUPLICATE KEY UPDATE updatedAt = NOW();",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 106
-}
