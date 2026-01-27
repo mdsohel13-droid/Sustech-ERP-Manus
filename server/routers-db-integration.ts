@@ -35,7 +35,7 @@ export const salesDbRouter = router({
     }),
 
   updateOrder: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.salesQueries.updateOrder(input.id, input.data);
     }),
@@ -89,7 +89,7 @@ export const productsDbRouter = router({
     }),
 
   updateProduct: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.productQueries.updateProduct(input.id, input.data);
     }),
@@ -135,7 +135,7 @@ export const customersDbRouter = router({
     }),
 
   updateCustomer: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.customerQueries.updateCustomer(input.id, input.data);
     }),
@@ -183,7 +183,7 @@ export const financialDbRouter = router({
     }),
 
   updateInvoice: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.financialQueries.updateInvoice(input.id, input.data);
     }),
@@ -233,7 +233,7 @@ export const projectsDbRouter = router({
     }),
 
   updateProject: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.projectQueries.updateProject(input.id, input.data);
     }),
@@ -317,7 +317,7 @@ export const budgetDbRouter = router({
     }),
 
   updateBudget: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.budgetQueries.updateBudget(input.id, input.data);
     }),
@@ -359,7 +359,7 @@ export const actionTrackerDbRouter = router({
     }),
 
   updateAction: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.actionTrackerQueries.updateAction(input.id, input.data);
     }),
@@ -399,7 +399,7 @@ export const crmDbRouter = router({
     }),
 
   updateLead: protectedProcedure
-    .input(z.object({ id: z.string(), data: z.record(z.any()) }))
+    .input(z.object({ id: z.string(), data: z.record(z.string(), z.unknown()) }))
     .mutation(async ({ input }) => {
       return await dbIntegration.crmQueries.updateLead(input.id, input.data);
     }),

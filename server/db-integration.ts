@@ -4,7 +4,7 @@
  * Replaces mock data with actual database persistence
  */
 
-import { db } from './db';
+import { getDb } from './db';
 import { eq, and, or, gt, lt, between, desc, asc } from 'drizzle-orm';
 
 // ============================================================================
