@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean, date } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean, date, foreignKey } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -298,7 +298,20 @@ export const dailySales = mysqlTable("daily_sales", {
   createdBy: int("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ({
+  salespersonFk: foreignKey({
+    columns: [table.salespersonId],
+    foreignColumns: [employees.id],
+  }).onDelete("restrict"),
+  productFk: foreignKey({
+    columns: [table.productId],
+    foreignColumns: [salesProducts.id],
+  }).onDelete("restrict"),
+  createdByFk: foreignKey({
+    columns: [table.createdBy],
+    foreignColumns: [users.id],
+  }).onDelete("restrict"),
+}));
 
 export type DailySales = typeof dailySales.$inferSelect;
 export type InsertDailySales = typeof dailySales.$inferInsert;

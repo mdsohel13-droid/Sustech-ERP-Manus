@@ -549,16 +549,17 @@ export const appRouter = router({
         userId: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        await db.createTeamMember({
-          ...input,
-          joiningDate: new Date(input.joiningDate),
-          createdBy: ctx.user.id,
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deprecated: Use hr.createEmployee instead",
         });
-        return { success: true };
       }),
     
     getAllMembers: protectedProcedure.query(async () => {
-      return await db.getAllTeamMembers();
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Deprecated: Use hr.getAllEmployees instead",
+      });
     }),
     
     updateMember: protectedProcedure
@@ -569,9 +570,10 @@ export const appRouter = router({
         isActive: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, ...data } = input;
-        await db.updateTeamMember(id, data);
-        return { success: true };
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deprecated: Use hr.updateEmployee instead",
+        });
       }),
 
     // Attendance

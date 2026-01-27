@@ -761,15 +761,23 @@ export async function getSalespeople() {
   const db = await getDb();
   if (!db) return [];
   
-  return await db.select().from(salesProducts);
+  // Get all active employees to display as salespeople
+  return await db.select({
+    id: employees.id,
+    name: users.name,
+    email: users.email,
+    status: employees.status,
+  })
+    .from(employees)
+    .leftJoin(users, eq(employees.userId, users.id))
+    .where(eq(employees.status, "active"))
+    .orderBy(asc(users.name));
 }
 
 export async function createSalesperson(person: any) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const [result] = await db.insert(salesProducts).values(person);
-  return result;
+  // Salespeople are created as employees in the HR module
+  // This function is deprecated - use createEmployee instead
+  throw new Error("Use createEmployee in HR module to add salespeople");
 }
 
 
