@@ -14,6 +14,8 @@ import { Plus, TrendingUp, TrendingDown, Target, DollarSign, Users, Calendar, Ba
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { format } from "date-fns";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { ProductDetailModal } from "@/components/ProductDetailModal";
+import { PRODUCTS_WITH_SPECS, getProductById } from "@/lib/productsData";
 
 const PRODUCTS = [
   { id: "fan", name: "Atomberg Gorilla Fan", category: "fan" },
@@ -36,6 +38,8 @@ export default function SalesEnhanced() {
   const [selectedPeriod, setSelectedPeriod] = useState("this_month");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [productModalOpen, setProductModalOpen] = useState(false);
 
   // Fetch data
   const { data: dailySales, isLoading: loadingDaily } = trpc.salesEnhanced.getDailySales.useQuery({
@@ -312,6 +316,13 @@ export default function SalesEnhanced() {
                   setEditDialogOpen(true);
                 }}
                 onArchive={(id: number) => archiveDailySale.mutate({ id })}
+                onProductClick={(productId: number | string) => {
+                  const product = getProductById(productId);
+                  if (product) {
+                    setSelectedProductId(productId);
+                    setProductModalOpen(true);
+                  }
+                }}
               />
             </CardContent>
           </Card>
@@ -557,6 +568,15 @@ export default function SalesEnhanced() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Product Detail Modal */}
+      {selectedProductId && (
+        <ProductDetailModal
+          open={productModalOpen}
+          onOpenChange={setProductModalOpen}
+          product={getProductById(selectedProductId)}
+        />
+      )}
     </div>
   );
 }
@@ -924,7 +944,7 @@ function MonthlyTargetForm({ products, salespeople, onSubmit, isLoading }: { pro
   );
 }
 
-function DailySalesTable({ sales, isLoading, onEdit, onArchive }: any) {
+function DailySalesTable({ sales, isLoading, onEdit, onArchive, onProductClick }: any) {
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading sales data...</div>;
   }
@@ -951,7 +971,7 @@ function DailySalesTable({ sales, isLoading, onEdit, onArchive }: any) {
         {sales.map((sale: any) => (
           <TableRow key={sale.id}>
             <TableCell>{format(new Date(sale.date), "dd MMM yyyy")}</TableCell>
-            <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline">{sale.productName}</TableCell>
+            <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline" onClick={() => onProductClick(sale.productId)}>{sale.productName}</TableCell>
             <TableCell>{sale.salespersonName}</TableCell>
             <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline">{sale.customerName || "-"}</TableCell>
             <TableCell className="text-right">{sale.quantity}</TableCell>

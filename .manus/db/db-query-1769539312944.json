@@ -1,0 +1,38 @@
+{
+  "query": "SELECT id, name FROM sales_products;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute SELECT id, name FROM sales_products;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Test Product"
+    },
+    {
+      "id": "30001",
+      "name": "Jane Smith"
+    },
+    {
+      "id": "30002",
+      "name": "Jane Smith"
+    },
+    {
+      "id": "60001",
+      "name": "Test Product"
+    },
+    {
+      "id": "60002",
+      "name": "Jane Smith"
+    },
+    {
+      "id": "60003",
+      "name": "Test Product"
+    },
+    {
+      "id": "60004",
+      "name": "Jane Smith"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tTest Product\n30001\tJane Smith\n30002\tJane Smith\n60001\tTest Product\n60002\tJane Smith\n60003\tTest Product\n60004\tJane Smith\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

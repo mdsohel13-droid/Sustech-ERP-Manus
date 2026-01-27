@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, productId, productName FROM daily_sales LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute SELECT id, productId, productName FROM daily_sales LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "productId": "1",
+      "productName": "Atomberg Gorilla Fan"
+    },
+    {
+      "id": "30001",
+      "productId": "1",
+      "productName": "Installation Work"
+    },
+    {
+      "id": "60001",
+      "productId": "1",
+      "productName": "Atomberg Fan"
+    },
+    {
+      "id": "60002",
+      "productId": "1",
+      "productName": "Atomberg Fan"
+    },
+    {
+      "id": "90001",
+      "productId": "1",
+      "productName": "Growatt ESS (Small)"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproductId\tproductName\n1\t1\tAtomberg Gorilla Fan\n30001\t1\tInstallation Work\n60001\t1\tAtomberg Fan\n60002\t1\tAtomberg Fan\n90001\t1\tGrowatt ESS (Small)\n",
+  "stderr": "",
+  "execution_time_ms": 112
+}
