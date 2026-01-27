@@ -44,8 +44,14 @@ import {
   blockedIPs, InsertBlockedIP,
   userSessions, InsertUserSession,
   displayPreferences, InsertDisplayPreference,
+  commissionRates, InsertCommissionRate,
+  commissionTiers, InsertCommissionTier,
+  commissionHistory, InsertCommissionHistory,
+  commissionTransactions, InsertCommissionTransaction,
+  commissionPayouts, InsertCommissionPayout,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { and, eq, gte, lte, sql, desc, asc } from 'drizzle-orm';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -2105,4 +2111,239 @@ export async function forcePasswordChange(userId: number) {
   
   await db.execute(sql`UPDATE users SET mustChangePassword = TRUE WHERE id = ${userId}`);
 }
+
+
+
+// ============ Commission Tracking Functions ============
+
+/**
+ * Get commission rates for a salesperson
+ */
+export async function getCommissionRates(employeeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(commissionRates)
+    .where(and(
+      eq(commissionRates.employeeId, employeeId),
+      eq(commissionRates.isActive, true)
+    ))
+    .orderBy(desc(commissionRates.effectiveFrom));
+}
+
+/**
+ * Get active commission rate for a salesperson
+ */
+export async function getActiveCommissionRate(employeeId: number, date?: Date) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const checkDate = date || new Date();
+  
+  return await db.select().from(commissionRates)
+    .where(and(
+      eq(commissionRates.employeeId, employeeId),
+      eq(commissionRates.isActive, true),
+      lte(commissionRates.effectiveFrom, checkDate),
+      sql`(${commissionRates.effectiveTo} IS NULL OR ${commissionRates.effectiveTo} >= ${checkDate})`
+    ))
+    .orderBy(desc(commissionRates.effectiveFrom))
+    .limit(1)
+    .then(rows => rows[0] || null);
+}
+
+/**
+ * Get commission tiers for a commission rate
+ */
+export async function getCommissionTiers(commissionRateId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(commissionTiers)
+    .where(eq(commissionTiers.commissionRateId, commissionRateId))
+    .orderBy(asc(commissionTiers.minAmount));
+}
+
+/**
+ * Calculate commission for a sale amount based on commission rate
+ */
+export async function calculateCommission(
+  employeeId: number,
+  saleAmount: number,
+  date?: Date
+): Promise<{ rate: number; amount: number } | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const commissionRate = await getActiveCommissionRate(employeeId, date);
+  if (!commissionRate) return null;
+  
+  let rate = commissionRate.baseRate;
+  
+  // If tiered commission, find the appropriate tier
+  if (commissionRate.commissionType === "tiered") {
+    const tiers = await getCommissionTiers(commissionRate.id);
+    for (const tier of tiers) {
+      const maxAmount = tier.maxAmount ? Number(tier.maxAmount) : Infinity;
+      if (saleAmount >= Number(tier.minAmount) && saleAmount <= maxAmount) {
+        rate = tier.commissionPercentage;
+        break;
+      }
+    }
+  }
+  
+  // Calculate commission amount
+  let commissionAmount = 0;
+  if (commissionRate.commissionType === "percentage" || commissionRate.commissionType === "tiered") {
+    commissionAmount = (saleAmount * Number(rate)) / 100;
+  } else if (commissionRate.commissionType === "fixed") {
+    commissionAmount = Number(rate);
+  }
+  
+  return {
+    rate: Number(rate),
+    amount: commissionAmount,
+  };
+}
+
+/**
+ * Create commission transaction for a sale
+ */
+export async function createCommissionTransaction(
+  employeeId: number,
+  dailySalesId: number,
+  saleAmount: number,
+  period: string,
+  userId: number
+) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const commission = await calculateCommission(employeeId, saleAmount);
+  if (!commission) return null;
+  
+  return await db.insert(commissionTransactions).values({
+    employeeId,
+    dailySalesId,
+    saleAmount: saleAmount,
+    commissionRate: commission.rate,
+    commissionAmount: commission.amount,
+    period,
+    status: "earned",
+  });
+}
+
+/**
+ * Get commission history for a salesperson
+ */
+export async function getCommissionHistory(employeeId: number, limit: number = 12) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(commissionHistory)
+    .where(eq(commissionHistory.employeeId, employeeId))
+    .orderBy(desc(commissionHistory.period))
+    .limit(limit);
+}
+
+/**
+ * Calculate monthly commission for a salesperson
+ */
+export async function calculateMonthlyCommission(employeeId: number, period: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get all sales for the employee in this period
+  const sales = await db.select({
+    id: dailySales.id,
+    totalAmount: dailySales.totalAmount,
+  }).from(dailySales)
+    .where(and(
+      eq(dailySales.salespersonId, employeeId),
+      sql`DATE_FORMAT(${dailySales.date}, '%Y-%m') = ${period}`,
+      eq(dailySales.isArchived, false)
+    ));
+  
+  let totalSalesAmount = 0;
+  let totalCommission = 0;
+  
+  for (const sale of sales) {
+    totalSalesAmount += Number(sale.totalAmount);
+    const commission = await calculateCommission(employeeId, Number(sale.totalAmount));
+    if (commission) {
+      totalCommission += commission.amount;
+    }
+  }
+  
+  return {
+    totalSalesAmount,
+    totalSalesCount: sales.length,
+    totalCommission,
+  };
+}
+
+/**
+ * Create or update commission history record
+ */
+export async function upsertCommissionHistory(
+  employeeId: number,
+  salespersonName: string,
+  period: string,
+  userId: number
+) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const monthlyData = await calculateMonthlyCommission(employeeId, period);
+  if (!monthlyData) return null;
+  
+  const commissionRate = await getActiveCommissionRate(employeeId);
+  if (!commissionRate) return null;
+  
+  // Check if record already exists
+  const existing = await db.select().from(commissionHistory)
+    .where(and(
+      eq(commissionHistory.employeeId, employeeId),
+      eq(commissionHistory.period, period)
+    ))
+    .limit(1)
+    .then(rows => rows[0] || null);
+  
+  if (existing) {
+    // Update existing record
+    return await db.update(commissionHistory)
+      .set({
+    totalSalesAmount: monthlyData.totalSalesAmount,
+    totalSalesCount: monthlyData.totalSalesCount,
+    commissionAmount: monthlyData.totalCommission,
+        updatedAt: new Date(),
+      })
+      .where(eq(commissionHistory.id, existing.id));
+  } else {
+    // Create new record
+    return await db.insert(commissionHistory).values({
+      employeeId,
+      salespersonName,
+      period,
+      totalSalesAmount: monthlyData.totalSalesAmount,
+      totalSalesCount: monthlyData.totalSalesCount,
+    commissionRate: Number(commissionRate.baseRate),
+    commissionAmount: monthlyData.totalCommission,
+      status: "pending",
+    });
+  }
+}
+
+/**
+ * Get commission history for salesperson
+ */
+export async function getCommissionHistoryForPeriod(period: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(commissionHistory)
+    .where(eq(commissionHistory.period, period))
+    .orderBy(desc(commissionHistory.commissionAmount));
+}
+
 

@@ -1049,3 +1049,160 @@ export const displayPreferences = mysqlTable("display_preferences", {
 export type DisplayPreference = typeof displayPreferences.$inferSelect;
 export type InsertDisplayPreference = typeof displayPreferences.$inferInsert;
 
+
+
+// ============ Commission Tracking System ============
+
+/**
+ * Commission Rates - Define commission structure for each salesperson
+ */
+export const commissionRates = mysqlTable("commission_rates", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  commissionType: mysqlEnum("commissionType", ["percentage", "fixed", "tiered"]).default("percentage").notNull(),
+  baseRate: decimal("baseRate", { precision: 5, scale: 2 }).notNull(), // e.g., 5.00 for 5% or 1000 for fixed amount
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  effectiveFrom: date("effectiveFrom").notNull(),
+  effectiveTo: date("effectiveTo"),
+  isActive: boolean("isActive").default(true).notNull(),
+  notes: text("notes"),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  employeeFk: foreignKey({
+    columns: [table.employeeId],
+    foreignColumns: [employees.id],
+  }).onDelete("restrict"),
+  createdByFk: foreignKey({
+    columns: [table.createdBy],
+    foreignColumns: [users.id],
+  }).onDelete("restrict"),
+}));
+
+export type CommissionRate = typeof commissionRates.$inferSelect;
+export type InsertCommissionRate = typeof commissionRates.$inferInsert;
+
+/**
+ * Commission Tiers - Define tiered commission rates based on sales amount
+ */
+export const commissionTiers = mysqlTable("commission_tiers", {
+  id: int("id").autoincrement().primaryKey(),
+  commissionRateId: int("commissionRateId").notNull(),
+  tierName: varchar("tierName", { length: 100 }).notNull(), // e.g., "Tier 1", "Bronze", "Silver"
+  minAmount: decimal("minAmount", { precision: 15, scale: 2 }).notNull(),
+  maxAmount: decimal("maxAmount", { precision: 15, scale: 2 }),
+  commissionPercentage: decimal("commissionPercentage", { precision: 5, scale: 2 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  commissionRateFk: foreignKey({
+    columns: [table.commissionRateId],
+    foreignColumns: [commissionRates.id],
+  }).onDelete("cascade"),
+}));
+
+export type CommissionTier = typeof commissionTiers.$inferSelect;
+export type InsertCommissionTier = typeof commissionTiers.$inferInsert;
+
+/**
+ * Commission History - Track all commission calculations and payouts
+ */
+export const commissionHistory = mysqlTable("commission_history", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  salespersonName: varchar("salespersonName", { length: 255 }).notNull(),
+  period: varchar("period", { length: 10 }).notNull(), // Format: YYYY-MM
+  totalSalesAmount: decimal("totalSalesAmount", { precision: 15, scale: 2 }).notNull(),
+  totalSalesCount: int("totalSalesCount").notNull().default(0),
+  commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).notNull(),
+  commissionAmount: decimal("commissionAmount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "paid", "cancelled"]).default("pending").notNull(),
+  payoutDate: date("payoutDate"),
+  paymentMethod: varchar("paymentMethod", { length: 50 }), // e.g., "bank_transfer", "check", "cash"
+  transactionId: varchar("transactionId", { length: 100 }),
+  notes: text("notes"),
+  approvedBy: int("approvedBy"),
+  approvedAt: timestamp("approvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  employeeFk: foreignKey({
+    columns: [table.employeeId],
+    foreignColumns: [employees.id],
+  }).onDelete("restrict"),
+  approvedByFk: foreignKey({
+    columns: [table.approvedBy],
+    foreignColumns: [users.id],
+  }).onDelete("restrict"),
+}));
+
+export type CommissionHistory = typeof commissionHistory.$inferSelect;
+export type InsertCommissionHistory = typeof commissionHistory.$inferInsert;
+
+/**
+ * Commission Transactions - Detailed transaction-level commission tracking
+ */
+export const commissionTransactions = mysqlTable("commission_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  dailySalesId: int("dailySalesId").notNull(),
+  saleAmount: decimal("saleAmount", { precision: 15, scale: 2 }).notNull(),
+  commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).notNull(),
+  commissionAmount: decimal("commissionAmount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  period: varchar("period", { length: 10 }).notNull(), // Format: YYYY-MM
+  status: mysqlEnum("status", ["earned", "pending", "paid"]).default("earned").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  employeeFk: foreignKey({
+    columns: [table.employeeId],
+    foreignColumns: [employees.id],
+  }).onDelete("restrict"),
+  dailySalesFk: foreignKey({
+    columns: [table.dailySalesId],
+    foreignColumns: [dailySales.id],
+  }).onDelete("restrict"),
+}));
+
+export type CommissionTransaction = typeof commissionTransactions.$inferSelect;
+export type InsertCommissionTransaction = typeof commissionTransactions.$inferInsert;
+
+/**
+ * Commission Payouts - Track commission payout records
+ */
+export const commissionPayouts = mysqlTable("commission_payouts", {
+  id: int("id").autoincrement().primaryKey(),
+  payoutPeriod: varchar("payoutPeriod", { length: 10 }).notNull(), // Format: YYYY-MM
+  totalPayoutAmount: decimal("totalPayoutAmount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  status: mysqlEnum("status", ["draft", "approved", "processed", "completed", "cancelled"]).default("draft").notNull(),
+  payoutDate: date("payoutDate"),
+  approvedBy: int("approvedBy"),
+  approvedAt: timestamp("approvedAt"),
+  processedBy: int("processedBy"),
+  processedAt: timestamp("processedAt"),
+  notes: text("notes"),
+  attachmentUrl: varchar("attachmentUrl", { length: 500 }), // For payout report/receipt
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  approvedByFk: foreignKey({
+    columns: [table.approvedBy],
+    foreignColumns: [users.id],
+  }).onDelete("restrict"),
+  processedByFk: foreignKey({
+    columns: [table.processedBy],
+    foreignColumns: [users.id],
+  }).onDelete("restrict"),
+  createdByFk: foreignKey({
+    columns: [table.createdBy],
+    foreignColumns: [users.id],
+  }).onDelete("restrict"),
+}));
+
+export type CommissionPayout = typeof commissionPayouts.$inferSelect;
+export type InsertCommissionPayout = typeof commissionPayouts.$inferInsert;

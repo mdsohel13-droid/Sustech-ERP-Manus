@@ -1147,3 +1147,13 @@
 - [x] Removed isArchived filter from getDailySales function
 - [x] Made getArchivedDailySales return empty array temporarily
 - [x] Server restarted with fixes applied
+
+
+## Commission Tracking Feature (New Implementation 💰)
+- [ ] Add commission schema tables (commission_rates, commission_tiers, commission_history)
+- [ ] Create commission calculation engine with tiered rates
+- [ ] Build Commission Management UI in HR module
+- [ ] Build Commission Tracking dashboard
+- [ ] Implement commission payout reports
+- [ ] Add commission history tracking
+- [ ] Test commission calculations end-to-end
