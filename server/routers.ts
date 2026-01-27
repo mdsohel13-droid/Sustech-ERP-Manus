@@ -1295,6 +1295,44 @@ Provide 2-3 actionable business insights.`;
         return await db.getDailySales(input.startDate, input.endDate);
       }),
 
+    updateDailySale: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        date: z.string(),
+        productId: z.number(),
+        productName: z.string(),
+        quantity: z.string(),
+        unitPrice: z.string(),
+        totalAmount: z.string(),
+        salespersonId: z.number(),
+        salespersonName: z.string(),
+        customerName: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await db.updateDailySale(id, data);
+        return { success: true };
+      }),
+
+    archiveDailySale: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveDailySale(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    getArchivedDailySales: protectedProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getArchivedDailySales(input.startDate, input.endDate);
+      }),
+
     // Weekly Targets
     createWeeklyTarget: protectedProcedure
       .input(z.object({

@@ -210,7 +210,7 @@ export default function SalesEnhanced() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="daily" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="daily">
             <Calendar className="h-4 w-4 mr-2" />
             Daily Sales
@@ -219,6 +219,7 @@ export default function SalesEnhanced() {
           <TabsTrigger value="monthly">Monthly Targets</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="salespeople">Salespeople</TabsTrigger>
+          <TabsTrigger value="archive">Archive</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -479,6 +480,22 @@ export default function SalesEnhanced() {
                   <Button onClick={() => window.location.href = '/human-resource'}>Go to HR Module</Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Archive Tab */}
+        <TabsContent value="archive" className="space-y-6">
+          <Card className="editorial-card">
+            <CardHeader>
+              <CardTitle>Archived Sales Records</CardTitle>
+              <CardDescription>Deleted sales records are stored here for reference</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">Archived sales records will appear here</p>
+                <p className="text-sm text-muted-foreground">When you archive a sale, it will be moved to this section</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -870,18 +887,25 @@ function DailySalesTable({ sales, isLoading }: any) {
           <TableHead className="text-right">Quantity</TableHead>
           <TableHead className="text-right">Unit Price</TableHead>
           <TableHead className="text-right">Total Amount</TableHead>
+          <TableHead className="text-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sales.map((sale: any) => (
           <TableRow key={sale.id}>
             <TableCell>{format(new Date(sale.date), "dd MMM yyyy")}</TableCell>
-            <TableCell className="font-medium">{sale.productName}</TableCell>
+            <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline">{sale.productName}</TableCell>
             <TableCell>{sale.salespersonName}</TableCell>
-            <TableCell>{sale.customerName || "-"}</TableCell>
+            <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline">{sale.customerName || "-"}</TableCell>
             <TableCell className="text-right">{sale.quantity}</TableCell>
             <TableCell className="text-right">৳{parseFloat(sale.unitPrice).toLocaleString()}</TableCell>
             <TableCell className="text-right font-semibold">৳{parseFloat(sale.totalAmount).toLocaleString()}</TableCell>
+            <TableCell className="text-center">
+              <div className="flex gap-2 justify-center">
+                <Button size="sm" variant="outline">Edit</Button>
+                <Button size="sm" variant="destructive">Archive</Button>
+              </div>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

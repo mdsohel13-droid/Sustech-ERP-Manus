@@ -689,9 +689,42 @@ export async function getDailySales(startDate: string, endDate: string) {
   
   return await db.select().from(dailySales)
     .where(
-      sql`${dailySales.date} >= ${startDate} AND ${dailySales.date} <= ${endDate}`
+      sql`${dailySales.date} >= ${startDate} AND ${dailySales.date} <= ${endDate} AND ${dailySales.isArchived} = false`
     )
     .orderBy(desc(dailySales.date));
+}
+
+export async function updateDailySale(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(dailySales).set({
+    ...data,
+    updatedAt: new Date(),
+  }).where(eq(dailySales.id, id));
+}
+
+export async function archiveDailySale(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(dailySales).set({
+    isArchived: true,
+    archivedAt: new Date(),
+    archivedBy: userId,
+    updatedAt: new Date(),
+  }).where(eq(dailySales.id, id));
+}
+
+export async function getArchivedDailySales(startDate: string, endDate: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(dailySales)
+    .where(
+      sql`${dailySales.date} >= ${startDate} AND ${dailySales.date} <= ${endDate} AND ${dailySales.isArchived} = true`
+    )
+    .orderBy(desc(dailySales.archivedAt));
 }
 
 export async function createWeeklyTarget(target: any) {

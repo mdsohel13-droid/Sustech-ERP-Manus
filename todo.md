@@ -1114,3 +1114,17 @@
 - [x] Verify dropdown shows active salespeople with inactive ones disabled
 - [x] Verify Salespeople tab displays all employees with total sales
 - [x] Verify Products tab displays all available products
+
+## Daily Sales Hyperlinks & Actions (User Requested 🔗)
+- [x] Add hyperlinks to Product and Customer names in Daily Sales table
+- [x] Implement Edit button for incomplete sales records
+- [x] Implement Delete button with archive functionality
+- [x] Create Archive tab to view deleted/archived sales records
+- [x] Add Edit dialog for sales record modification
+- [x] Implement soft delete (archive) instead of permanent deletion
+- [x] Test hyperlink navigation
+- [x] Test edit functionality
+- [x] Test delete/archive functionality
+- [x] Verify archived records are retrievable
+- [x] Archive tab displays deleted records with restore option
+- [x] Backend mutations for edit, delete, and archive operations
