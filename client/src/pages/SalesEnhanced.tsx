@@ -34,6 +34,8 @@ export default function SalesEnhanced() {
   const [weeklyDialogOpen, setWeeklyDialogOpen] = useState(false);
   const [monthlyDialogOpen, setMonthlyDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState("this_month");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Fetch data
   const { data: dailySales, isLoading: loadingDaily } = trpc.salesEnhanced.getDailySales.useQuery({
@@ -48,7 +50,11 @@ export default function SalesEnhanced() {
   // Mutations
   const createDailySale = trpc.salesEnhanced.createDailySale.useMutation({
     onSuccess: () => {
-      utils.salesEnhanced.getDailySales.invalidate();
+      // Invalidate with the current query parameters to trigger immediate refetch
+      utils.salesEnhanced.getDailySales.invalidate({
+        startDate: getStartDate(selectedPeriod),
+        endDate: new Date().toISOString().split("T")[0],
+      });
       setDailyDialogOpen(false);
       toast.success("Daily sale recorded successfully");
     },
@@ -69,6 +75,32 @@ export default function SalesEnhanced() {
       utils.salesEnhanced.getMonthlyTargets.invalidate();
       setMonthlyDialogOpen(false);
       toast.success("Monthly target set successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const updateDailySale = trpc.salesEnhanced.updateDailySale.useMutation({
+    onSuccess: () => {
+      // Invalidate with the current query parameters to trigger immediate refetch
+      utils.salesEnhanced.getDailySales.invalidate({
+        startDate: getStartDate(selectedPeriod),
+        endDate: new Date().toISOString().split("T")[0],
+      });
+      setEditDialogOpen(false);
+      setEditingId(null);
+      toast.success("Sale updated successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const archiveDailySale = trpc.salesEnhanced.archiveDailySale.useMutation({
+    onSuccess: () => {
+      // Invalidate with the current query parameters to trigger immediate refetch
+      utils.salesEnhanced.getDailySales.invalidate({
+        startDate: getStartDate(selectedPeriod),
+        endDate: new Date().toISOString().split("T")[0],
+      });
+      toast.success("Sale archived successfully");
     },
     onError: (error: any) => toast.error(error.message),
   });
@@ -252,10 +284,35 @@ export default function SalesEnhanced() {
                     />
                   </DialogContent>
                 </Dialog>
+                <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Edit Sale</DialogTitle>
+                      <DialogDescription>Update sales transaction details</DialogDescription>
+                    </DialogHeader>
+                    {editingId && dailySales && (
+                      <DailySaleForm
+                        products={PRODUCTS}
+                        salespeople={salespeople || []}
+                        initialData={dailySales.find((s: any) => s.id === editingId)}
+                        onSubmit={(data) => updateDailySale.mutate({ id: editingId, ...data })}
+                        isLoading={updateDailySale.isPending}
+                      />
+                    )}
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardHeader>
             <CardContent>
-              <DailySalesTable sales={dailySales || []} isLoading={loadingDaily} />
+              <DailySalesTable 
+                sales={dailySales || []} 
+                isLoading={loadingDaily}
+                onEdit={(sale: any) => {
+                  setEditingId(sale.id);
+                  setEditDialogOpen(true);
+                }}
+                onArchive={(id: number) => archiveDailySale.mutate({ id })}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -505,15 +562,15 @@ export default function SalesEnhanced() {
 }
 
 // Helper Components
-function DailySaleForm({ products, salespeople, onSubmit, isLoading }: { products: any[]; salespeople: any[]; onSubmit: (data: any) => void; isLoading: boolean }) {
+function DailySaleForm({ products, salespeople, onSubmit, isLoading, initialData }: { products: any[]; salespeople: any[]; onSubmit: (data: any) => void; isLoading: boolean; initialData?: any }) {
   const [formData, setFormData] = useState({
-    date: format(new Date(), "yyyy-MM-dd"),
-    productId: "",
-    quantity: "",
-    unitPrice: "",
-    salespersonId: "",
-    customerName: "",
-    notes: "",
+    date: initialData ? format(new Date(initialData.date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+    productId: initialData ? initialData.productId : "",
+    quantity: initialData ? initialData.quantity.toString() : "",
+    unitPrice: initialData ? initialData.unitPrice.toString() : "",
+    salespersonId: initialData ? initialData.salespersonId.toString() : "",
+    customerName: initialData?.customerName || "",
+    notes: initialData?.notes || "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -867,7 +924,7 @@ function MonthlyTargetForm({ products, salespeople, onSubmit, isLoading }: { pro
   );
 }
 
-function DailySalesTable({ sales, isLoading }: any) {
+function DailySalesTable({ sales, isLoading, onEdit, onArchive }: any) {
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading sales data...</div>;
   }
@@ -902,8 +959,8 @@ function DailySalesTable({ sales, isLoading }: any) {
             <TableCell className="text-right font-semibold">৳{parseFloat(sale.totalAmount).toLocaleString()}</TableCell>
             <TableCell className="text-center">
               <div className="flex gap-2 justify-center">
-                <Button size="sm" variant="outline">Edit</Button>
-                <Button size="sm" variant="destructive">Archive</Button>
+                <Button size="sm" variant="outline" onClick={() => onEdit(sale)}>Edit</Button>
+                <Button size="sm" variant="destructive" onClick={() => onArchive(sale.id)}>Archive</Button>
               </div>
             </TableCell>
           </TableRow>

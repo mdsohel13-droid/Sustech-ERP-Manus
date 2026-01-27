@@ -117,7 +117,7 @@ export default function HumanResource() {
     { employeeId: selectedEmployeeForOnboarding?.employee?.id || 0 },
     { enabled: !!selectedEmployeeForOnboarding }
   );
-  const { data: teamMembers } = trpc.team.getAllMembers.useQuery();
+  const { data: teamMembers } = trpc.hr.getAllEmployees.useQuery();
 
   // Mutations
   const createUserMutation = trpc.users.create.useMutation({

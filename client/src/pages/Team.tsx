@@ -22,7 +22,7 @@ export default function Team() {
   const [selectedYear] = useState(currentDate.getFullYear());
 
   const utils = trpc.useUtils();
-  const { data: members } = trpc.team.getAllMembers.useQuery();
+  const { data: members } = trpc.hr.getAllEmployees.useQuery();
   const { data: attendance } = trpc.team.getAttendanceByMonth.useQuery({ year: selectedYear, month: selectedMonth });
   const { data: leaveRequests } = trpc.team.getAllLeaveRequests.useQuery();
 

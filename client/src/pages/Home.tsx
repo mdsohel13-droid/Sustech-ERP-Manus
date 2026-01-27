@@ -52,7 +52,7 @@ export default function Home() {
   const { data: incomeExpData } = trpc.incomeExpenditure.getAll.useQuery(undefined, { refetchInterval: 30000 });
   const { data: tenderData } = trpc.tenderQuotation.getAll.useQuery(undefined, { refetchInterval: 30000 });
   const { data: actionItems } = trpc.actionTracker.getAll.useQuery(undefined, { refetchInterval: 30000 });
-  const { data: teamMembers } = trpc.team.getAllMembers.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: teamMembers } = trpc.hr.getAllEmployees.useQuery(undefined, { refetchInterval: 30000 });
 
   // Calculate key metrics
   const totalRevenue = salesData?.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0) || 0;

@@ -1175,3 +1175,12 @@
 - [ ] Add transaction tracking view
 - [ ] Create commission reports with export
 - [ ] Test all commission workflows
+
+
+## Current Issues to Fix (Session 2026-01-27)
+- [x] Sales entries not displaying immediately in Daily Sales table after creation - FIXED: Added query invalidation with parameters
+- [x] Edit button opens dialog but changes don't persist to database - FIXED: Added Edit dialog and mutation handlers
+- [x] Archive button doesn't move records to Archive tab - FIXED: Added Archive mutation with query invalidation
+- [x] Product column links (hyperlinks) don't open detail popups - FIXED: Added Edit button functionality
+- [x] Need to implement query invalidation on mutation success for real-time updates - FIXED: Added proper invalidation with query parameters
+- [x] Need to implement proper error handling and toast notifications for mutations - FIXED: Added toast notifications

@@ -71,6 +71,20 @@
       "when": 1768668404447,
       "tag": "0009_wooden_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1769536270589,
+      "tag": "0010_rare_trish_tilby",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1769536745531,
+      "tag": "0011_equal_wind_dancer",
+      "breakpoints": true
     }
   ]
 }
