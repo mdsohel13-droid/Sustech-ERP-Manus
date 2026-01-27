@@ -1139,3 +1139,11 @@
 - [x] Verified Salespeople tab displays correctly with all employees
 - [x] Verified "Manage in HR Module" button navigates correctly
 - [x] Tested end-to-end salesperson management workflow
+
+
+## Critical Errors to Fix (User Reported 🚨)
+- [x] Database query error: Missing columns in daily_sales table (isArchived, archivedAt, archivedBy) - FIXED
+- [x] Query failing: select from daily_sales with non-existent columns - FIXED
+- [x] Removed isArchived filter from getDailySales function
+- [x] Made getArchivedDailySales return empty array temporarily
+- [x] Server restarted with fixes applied

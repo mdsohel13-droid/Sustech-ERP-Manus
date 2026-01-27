@@ -689,7 +689,7 @@ export async function getDailySales(startDate: string, endDate: string) {
   
   return await db.select().from(dailySales)
     .where(
-      sql`${dailySales.date} >= ${startDate} AND ${dailySales.date} <= ${endDate} AND ${dailySales.isArchived} = false`
+      sql`${dailySales.date} >= ${startDate} AND ${dailySales.date} <= ${endDate}`
     )
     .orderBy(desc(dailySales.date));
 }
@@ -720,11 +720,9 @@ export async function getArchivedDailySales(startDate: string, endDate: string) 
   const db = await getDb();
   if (!db) return [];
   
-  return await db.select().from(dailySales)
-    .where(
-      sql`${dailySales.date} >= ${startDate} AND ${dailySales.date} <= ${endDate} AND ${dailySales.isArchived} = true`
-    )
-    .orderBy(desc(dailySales.archivedAt));
+  // TODO: Implement archived sales retrieval once database migration is complete
+  // For now, return empty array as isArchived columns don't exist in database yet
+  return [];
 }
 
 export async function createWeeklyTarget(target: any) {
