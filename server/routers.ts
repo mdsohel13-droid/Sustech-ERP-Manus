@@ -2072,3 +2072,4 @@ Provide 2-3 actionable business insights.`;
   }),
 });
 
+export type AppRouter = typeof appRouter;
