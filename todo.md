@@ -1103,3 +1103,14 @@
 - [ ] Update sales record creation to require employee selection
 - [ ] Test all daily sales record actions
 - [ ] Verify employee database integration
+
+## Salesperson Management Enhancement (User Requested 👤)
+- [x] Add dedicated "Salesperson Management" tab in Sales module
+- [x] Implement add/edit/delete salesperson functionality (via HR module)
+- [x] Add Quick Add Salesperson button in Record Sale dialog
+- [x] Implement role-based filtering (active status) for salesperson dropdown
+- [x] Add salesperson status tracking (active, inactive)
+- [x] Test all salesperson management workflows
+- [x] Verify dropdown shows active salespeople with inactive ones disabled
+- [x] Verify Salespeople tab displays all employees with total sales
+- [x] Verify Products tab displays all available products

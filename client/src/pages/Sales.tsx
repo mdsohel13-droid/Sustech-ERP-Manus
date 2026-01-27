@@ -280,6 +280,7 @@ export default function Sales() {
           <TabsTrigger value="daily">Daily Sales</TabsTrigger>
           <TabsTrigger value="tracking">Weekly Targets</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="salespeople">Salespeople</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
 
@@ -311,13 +312,36 @@ export default function Sales() {
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="salesperson">Salesperson</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="salesperson">Salesperson</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            toast.info("Go to Sales > Salespeople tab to manage salespeople");
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          + Quick Add
+                        </Button>
+                      </div>
                       <Select name="salesperson" required>
                         <SelectTrigger><SelectValue placeholder="Select salesperson" /></SelectTrigger>
                         <SelectContent>
-                          {employees?.map((emp) => (
+                          {employees?.filter((emp: any) => emp.status === 'active').map((emp) => (
                             <SelectItem key={emp.id} value={String(emp.id)}>{emp.name}</SelectItem>
                           ))}
+                          {employees?.filter((emp: any) => emp.status !== 'active').length > 0 && (
+                            <>
+                              <div className="px-2 py-1 text-xs text-muted-foreground border-t">Inactive</div>
+                              {employees?.filter((emp: any) => emp.status !== 'active').map((emp) => (
+                                <SelectItem key={emp.id} value={String(emp.id)} disabled>
+                                  {emp.name} ({emp.status})
+                                </SelectItem>
+                              ))}
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -743,6 +767,87 @@ export default function Sales() {
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="salespeople" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-medium">Salespeople Management</h3>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button><Plus className="h-4 w-4 mr-2" />Add Salesperson</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  // This will be handled by Quick Add in Record Sale dialog
+                  toast.info("Please go to HR module to add new employees. They will automatically appear as salespeople.");
+                }}>
+                  <DialogHeader>
+                    <DialogTitle>Add New Salesperson</DialogTitle>
+                    <DialogDescription>Salespeople are managed through the HR module</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <p className="text-sm text-muted-foreground">To add a new salesperson:</p>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li>Go to <strong>Human Resource</strong> module</li>
+                      <li>Click on <strong>Employees</strong> tab</li>
+                      <li>Click <strong>Add Employee</strong> button</li>
+                      <li>Fill in the employee details</li>
+                      <li>The employee will automatically appear in the Salesperson dropdown</li>
+                    </ol>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => window.location.href = '/human-resource'}>Go to HR Module</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card className="editorial-card">
+            <CardHeader>
+              <CardTitle>Active Salespeople</CardTitle>
+              <CardDescription>Employees available for sales tracking</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {employees && employees.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {employees.map((emp: any) => (
+                      <TableRow key={emp.id}>
+                        <TableCell className="font-medium">{emp.name}</TableCell>
+                        <TableCell>{emp.email || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant={emp.status === 'active' ? 'default' : 'secondary'}>
+                            {emp.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/human-resource'} title="Edit in HR Module">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <p className="text-muted-foreground text-center mb-4">No salespeople added yet.</p>
+                  <Button onClick={() => window.location.href = '/human-resource'}>Go to HR Module</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

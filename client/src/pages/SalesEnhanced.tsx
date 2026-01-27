@@ -210,13 +210,15 @@ export default function SalesEnhanced() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="daily" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="daily">
             <Calendar className="h-4 w-4 mr-2" />
             Daily Sales
           </TabsTrigger>
           <TabsTrigger value="weekly">Weekly Targets</TabsTrigger>
           <TabsTrigger value="monthly">Monthly Targets</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="salespeople">Salespeople</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -402,6 +404,84 @@ export default function SalesEnhanced() {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Products Tab */}
+        <TabsContent value="products" className="space-y-6">
+          <Card className="editorial-card">
+            <CardHeader>
+              <CardTitle>Product Catalog</CardTitle>
+              <CardDescription>Available products for sales tracking</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {PRODUCTS.map((product) => (
+                  <Card key={product.id} className="border">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">{product.name}</CardTitle>
+                      <Badge variant="outline" className="w-fit text-xs mt-2">{product.category}</Badge>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Salespeople Tab */}
+        <TabsContent value="salespeople" className="space-y-6">
+          <Card className="editorial-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Salespeople Management</CardTitle>
+                  <CardDescription>Active salespeople available for sales tracking</CardDescription>
+                </div>
+                <Button variant="outline" onClick={() => window.location.href = '/human-resource'}>
+                  Manage in HR Module
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {salespeople && salespeople.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-center">Total Sales</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salespeople.map((person: any) => {
+                      const totalSales = dailySales
+                        ?.filter((s: any) => s.salespersonId === person.id)
+                        .reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount || 0), 0) || 0;
+                      return (
+                        <TableRow key={person.id}>
+                          <TableCell className="font-medium">{person.name}</TableCell>
+                          <TableCell>{person.email || '-'}</TableCell>
+                          <TableCell>
+                            <Badge variant={person.status === 'active' ? 'default' : 'secondary'}>
+                              {person.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center font-semibold">৳{totalSales.toLocaleString()}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-center mb-4">No salespeople added yet.</p>
+                  <Button onClick={() => window.location.href = '/human-resource'}>Go to HR Module</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -494,17 +574,40 @@ function DailySaleForm({ products, salespeople, onSubmit, isLoading }: { product
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="salesperson">Salesperson</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="salesperson">Salesperson</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              toast.info("Go to Sales > Salespeople tab to manage salespeople");
+            }}
+            className="text-xs text-blue-600 hover:text-blue-800"
+          >
+            + Quick Add
+          </Button>
+        </div>
         <Select value={formData.salespersonId} onValueChange={(value) => setFormData({ ...formData, salespersonId: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select salesperson" />
           </SelectTrigger>
           <SelectContent>
-            {salespeople.map((person: any) => (
+            {salespeople?.filter((p: any) => p.status === 'active').map((person: any) => (
               <SelectItem key={person.id} value={person.id.toString()}>
                 {person.name}
               </SelectItem>
             ))}
+            {salespeople?.filter((p: any) => p.status !== 'active').length > 0 && (
+              <>
+                <div className="px-2 py-1 text-xs text-muted-foreground border-t">Inactive</div>
+                {salespeople?.filter((p: any) => p.status !== 'active').map((person: any) => (
+                  <SelectItem key={person.id} value={person.id.toString()} disabled>
+                    {person.name} ({person.status})
+                  </SelectItem>
+                ))}
+              </>
+            )}
           </SelectContent>
         </Select>
       </div>
