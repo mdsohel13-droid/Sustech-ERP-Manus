@@ -355,10 +355,10 @@ export default function Sales() {
                         </TableCell>
                         <TableCell className="text-right">৳{total.toLocaleString()}</TableCell>
                         <TableCell className="text-center">
-                          <Button variant="ghost" size="sm" onClick={() => toast.info("Edit functionality coming soon")}>
+                          <Button variant="ghost" size="sm" onClick={() => setViewTrackingDialogOpen(true)} title="View details">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => toast.info("Delete functionality coming soon")}>
+                          <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: sale, type: 'tracking'})} title="Delete">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
