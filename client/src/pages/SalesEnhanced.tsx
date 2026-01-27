@@ -437,7 +437,7 @@ export default function SalesEnhanced() {
                   <CardTitle>Salespeople Management</CardTitle>
                   <CardDescription>Active salespeople available for sales tracking</CardDescription>
                 </div>
-                <Button variant="outline" onClick={() => window.location.href = '/human-resource'}>
+                <Button variant="outline" onClick={() => window.location.href = '/hr'}>
                   Manage in HR Module
                 </Button>
               </div>
@@ -477,7 +477,7 @@ export default function SalesEnhanced() {
                 <div className="flex flex-col items-center justify-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-muted-foreground text-center mb-4">No salespeople added yet.</p>
-                  <Button onClick={() => window.location.href = '/human-resource'}>Go to HR Module</Button>
+                  <Button onClick={() => window.location.href = '/hr'}>Go to HR Module</Button>
                 </div>
               )}
             </CardContent>
