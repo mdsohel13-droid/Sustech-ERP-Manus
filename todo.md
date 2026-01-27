@@ -116,6 +116,22 @@
 - [ ] Implement proper edit dialogs for Team attendance
 - [ ] Test all CRUD operations (Create, Read, Update, Delete)
 
+## Sales Module Enhancements (User Requested 🛒)
+- [x] Add hyperlinks to daily sales records (customer name and invoice number are clickable)
+- [x] Add edit/delete action buttons for daily sales records
+- [x] Add salesperson dropdown in Record Sale dialog
+- [x] Link salesperson field with employee database (HR module)
+- [x] Display salesperson and customer columns in Daily Sales table
+
+## Financial Module Batch Operations (User Requested ⚙️)
+- [x] Add batch selection checkboxes to AR table
+- [x] Add batch selection checkboxes to AP table
+- [x] Implement bulk delete functionality for AR records
+- [x] Implement bulk delete functionality for AP records
+- [x] Add export CSV functionality for selected records
+- [x] Add batch actions toolbar with select/deselect all
+- [x] Test batch operations in browser
+
 
 ## Attachment System Enhancement
 - [x] Make attachment upload buttons clearly visible in Sales module

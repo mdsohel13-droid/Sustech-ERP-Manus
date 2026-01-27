@@ -445,32 +445,19 @@ export default function Financial() {
         </TabsContent>
 
         <TabsContent value="receivables" className="space-y-4">
-          {arBatchSelection.selectedIds.size > 0 && (
+          {arBatchSelection.selectedIds.length > 0 && (
             <TableBatchActions
-              selectedCount={arBatchSelection.selectedIds.size}
+              selectedIds={arBatchSelection.selectedIds}
+              totalCount={arData?.length || 0}
+              onSelectAll={arBatchSelection.toggleSelectAll}
               isLoading={bulkDeletingAR}
               onBulkDelete={() => {
                 setBulkDeletingAR(true);
-                bulkDeleteARMutation.mutate({ ids: Array.from(arBatchSelection.selectedIds) });
+                bulkDeleteARMutation.mutate({ ids: arBatchSelection.selectedIds.map(id => Number(id)) });
               }}
-              onBulkExport={() => {
-                const selectedItems = arData?.filter((ar: any) => arBatchSelection.selectedIds.has(ar.id)) || [];
-                const csv = [
-                  ['Customer', 'Invoice', 'Due Date', 'Status', 'Amount'],
-                  ...selectedItems.map((ar: any) => [
-                    ar.customerName,
-                    ar.invoiceNumber,
-                    new Date(ar.dueDate).toLocaleDateString(),
-                    ar.status,
-                    ar.amount,
-                  ]),
-                ].map(row => row.join(',')).join('\n');
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ar-export.csv';
-                a.click();
+              onExport={() => {
+                const selectedItems = arData?.filter((ar: any) => arBatchSelection.selectedIds.includes(String(ar.id))) || [];
+                arBatchSelection.exportToCSV(selectedItems, 'ar-export');
               }}
             />
           )}
@@ -497,13 +484,9 @@ export default function Financial() {
                       <TableHead className="w-8">
                         <input
                           type="checkbox"
-                          checked={arBatchSelection.allSelected}
+                          checked={arBatchSelection.selectedIds.length === arData.filter((ar: any) => ar.status !== 'paid').length && arData.filter((ar: any) => ar.status !== 'paid').length > 0}
                           onChange={(e) => {
-                            if (e.target.checked) {
-                              arBatchSelection.selectAll();
-                            } else {
-                              arBatchSelection.clearSelection();
-                            }
+                            arBatchSelection.toggleSelectAll(e.target.checked);
                           }}
                           className="rounded"
                         />
@@ -522,13 +505,9 @@ export default function Financial() {
                         <TableCell className="w-8">
                           <input
                             type="checkbox"
-                            checked={arBatchSelection.selectedIds.has(ar.id)}
+                            checked={arBatchSelection.selectedIds.includes(String(ar.id))}
                             onChange={(e) => {
-                              if (e.target.checked) {
-                                arBatchSelection.toggleId(ar.id);
-                              } else {
-                                arBatchSelection.toggleId(ar.id);
-                              }
+                              arBatchSelection.toggleSelection(String(ar.id));
                             }}
                             className="rounded"
                           />
@@ -632,32 +611,19 @@ export default function Financial() {
         </TabsContent>
 
         <TabsContent value="payables" className="space-y-4">
-          {apBatchSelection.selectedIds.size > 0 && (
+          {apBatchSelection.selectedIds.length > 0 && (
             <TableBatchActions
-              selectedCount={apBatchSelection.selectedIds.size}
+              selectedIds={apBatchSelection.selectedIds}
+              totalCount={apData?.length || 0}
+              onSelectAll={apBatchSelection.toggleSelectAll}
               isLoading={bulkDeletingAP}
               onBulkDelete={() => {
                 setBulkDeletingAP(true);
-                bulkDeleteAPMutation.mutate({ ids: Array.from(apBatchSelection.selectedIds) });
+                bulkDeleteAPMutation.mutate({ ids: apBatchSelection.selectedIds.map(id => Number(id)) });
               }}
-              onBulkExport={() => {
-                const selectedItems = apData?.filter((ap: any) => apBatchSelection.selectedIds.has(ap.id)) || [];
-                const csv = [
-                  ['Vendor', 'Invoice', 'Due Date', 'Status', 'Amount'],
-                  ...selectedItems.map((ap: any) => [
-                    ap.vendorName,
-                    ap.invoiceNumber,
-                    new Date(ap.dueDate).toLocaleDateString(),
-                    ap.status,
-                    ap.amount,
-                  ]),
-                ].map(row => row.join(',')).join('\n');
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ap-export.csv';
-                a.click();
+              onExport={() => {
+                const selectedItems = apData?.filter((ap: any) => apBatchSelection.selectedIds.includes(String(ap.id))) || [];
+                apBatchSelection.exportToCSV(selectedItems, 'ap-export');
               }}
             />
           )}
@@ -674,13 +640,9 @@ export default function Financial() {
                       <TableHead className="w-8">
                         <input
                           type="checkbox"
-                          checked={apBatchSelection.allSelected}
+                          checked={apBatchSelection.selectedIds.length === apData.filter((ap: any) => ap.status !== 'paid').length && apData.filter((ap: any) => ap.status !== 'paid').length > 0}
                           onChange={(e) => {
-                            if (e.target.checked) {
-                              apBatchSelection.selectAll();
-                            } else {
-                              apBatchSelection.clearSelection();
-                            }
+                            apBatchSelection.toggleSelectAll(e.target.checked);
                           }}
                           className="rounded"
                         />
@@ -699,13 +661,9 @@ export default function Financial() {
                         <TableCell className="w-8">
                           <input
                             type="checkbox"
-                            checked={apBatchSelection.selectedIds.has(ap.id)}
+                            checked={apBatchSelection.selectedIds.includes(String(ap.id))}
                             onChange={(e) => {
-                              if (e.target.checked) {
-                                apBatchSelection.toggleId(ap.id);
-                              } else {
-                                apBatchSelection.toggleId(ap.id);
-                              }
+                              apBatchSelection.toggleSelection(String(ap.id));
                             }}
                             className="rounded"
                           />
