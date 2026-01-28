@@ -1988,7 +1988,7 @@ export async function deleteEmployeeConfidential(employeeId: number) {
 export async function getOnboardingTemplates() {
   const db = await getDb();
   if (!db) return [];
-  const result = await db.execute(sql`SELECT * FROM onboarding_templates WHERE is_active = 1 ORDER BY days_from_start ASC, task_category ASC`);
+  const result = await db.execute(sql`SELECT * FROM onboarding_templates WHERE is_active = true ORDER BY days_from_start ASC, task_category ASC`);
   return (result[0] as unknown) as any[];
 }
 

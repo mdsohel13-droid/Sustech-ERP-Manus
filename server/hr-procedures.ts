@@ -32,10 +32,12 @@ export const hrExtendedRouter = {
     }))
     .mutation(async ({ input }) => {
       const { joinDate, contractEndDate, ...rest } = input;
+      const parsedJoinDate = new Date(joinDate);
+      const parsedContractEndDate = contractEndDate ? new Date(contractEndDate) : undefined;
       await db.createEmployee({
         ...rest,
-        joinDate: new Date(joinDate) as any,
-        contractEndDate: contractEndDate ? new Date(contractEndDate) as any : undefined,
+        joinDate: parsedJoinDate.toISOString().split('T')[0] as any,
+        contractEndDate: parsedContractEndDate ? parsedContractEndDate.toISOString().split('T')[0] as any : undefined,
         status: "active",
       });
       return { success: true };
