@@ -1171,22 +1171,9 @@ function WeeklyTargetsTable({ targets, isLoading, onDelete }: any) {
                 </Badge>
               </TableCell>
               <TableCell className="text-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      className="text-destructive"
-                      onClick={() => onDelete(target.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex gap-2 justify-center">
+                  <Button size="sm" variant="destructive" onClick={() => onDelete(target.id)}>Delete</Button>
+                </div>
               </TableCell>
             </TableRow>
           );
@@ -1240,22 +1227,9 @@ function MonthlyTargetsTable({ targets, isLoading, onDelete }: any) {
                 </Badge>
               </TableCell>
               <TableCell className="text-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      className="text-destructive"
-                      onClick={() => onDelete(target.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex gap-2 justify-center">
+                  <Button size="sm" variant="destructive" onClick={() => onDelete(target.id)}>Delete</Button>
+                </div>
               </TableCell>
             </TableRow>
           );
