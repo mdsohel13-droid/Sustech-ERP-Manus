@@ -1510,6 +1510,32 @@ Provide 2-3 actionable business insights.`;
         return { success: true };
       }),
 
+    // Archive Weekly Target
+    archiveWeeklyTarget: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveWeeklyTarget(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    // Archive Monthly Target
+    archiveMonthlyTarget: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveMonthlyTarget(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    // Get Archived Weekly Targets
+    getArchivedWeeklyTargets: protectedProcedure.query(async () => {
+      return await db.getArchivedWeeklyTargets();
+    }),
+
+    // Get Archived Monthly Targets
+    getArchivedMonthlyTargets: protectedProcedure.query(async () => {
+      return await db.getArchivedMonthlyTargets();
+    }),
+
     // Salespeople
     getSalespeople: protectedProcedure.query(async () => {
       return await db.getSalespeople();

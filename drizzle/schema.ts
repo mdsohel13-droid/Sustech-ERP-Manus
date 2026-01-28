@@ -368,6 +368,8 @@ export const weeklySalesTargets = pgTable("weekly_sales_targets", {
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  archivedAt: timestamp("archivedAt"),
+  archivedBy: integer("archivedBy"),
 });
 
 export type WeeklySalesTarget = typeof weeklySalesTargets.$inferSelect;
@@ -388,6 +390,8 @@ export const monthlySalesTargets = pgTable("monthly_sales_targets", {
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  archivedAt: timestamp("archivedAt"),
+  archivedBy: integer("archivedBy"),
 });
 
 export type MonthlySalesTarget = typeof monthlySalesTargets.$inferSelect;

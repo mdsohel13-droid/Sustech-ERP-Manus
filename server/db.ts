@@ -822,6 +822,7 @@ export async function getWeeklyTargets() {
   if (!db) return [];
   
   return await db.select().from(weeklySalesTargets)
+    .where(isNull(weeklySalesTargets.archivedAt))
     .orderBy(desc(weeklySalesTargets.weekStartDate));
 }
 
@@ -838,6 +839,7 @@ export async function getMonthlyTargets() {
   if (!db) return [];
   
   return await db.select().from(monthlySalesTargets)
+    .where(isNull(monthlySalesTargets.archivedAt))
     .orderBy(desc(monthlySalesTargets.year), desc(monthlySalesTargets.month));
 }
 
@@ -857,6 +859,27 @@ export async function deleteWeeklyTarget(id: number) {
   await db.delete(weeklySalesTargets).where(eq(weeklySalesTargets.id, id));
 }
 
+export async function archiveWeeklyTarget(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(weeklySalesTargets).set({
+    archivedAt: new Date(),
+    archivedBy: userId,
+    updatedAt: new Date(),
+  }).where(eq(weeklySalesTargets.id, id));
+}
+
+export async function getArchivedWeeklyTargets() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select()
+    .from(weeklySalesTargets)
+    .where(sql`${weeklySalesTargets.archivedAt} IS NOT NULL`)
+    .orderBy(desc(weeklySalesTargets.archivedAt));
+}
+
 export async function updateMonthlyTarget(id: number, data: { targetAmount?: string; salespersonId?: number | null }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -871,6 +894,27 @@ export async function deleteMonthlyTarget(id: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(monthlySalesTargets).where(eq(monthlySalesTargets.id, id));
+}
+
+export async function archiveMonthlyTarget(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(monthlySalesTargets).set({
+    archivedAt: new Date(),
+    archivedBy: userId,
+    updatedAt: new Date(),
+  }).where(eq(monthlySalesTargets.id, id));
+}
+
+export async function getArchivedMonthlyTargets() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select()
+    .from(monthlySalesTargets)
+    .where(sql`${monthlySalesTargets.archivedAt} IS NOT NULL`)
+    .orderBy(desc(monthlySalesTargets.archivedAt));
 }
 
 export async function getSalespeople() {

@@ -58,6 +58,9 @@ export default function SalesEnhanced() {
     endDate: new Date().toISOString().split("T")[0],
   });
 
+  const { data: archivedWeeklyTargets, isLoading: loadingArchivedWeekly } = trpc.salesEnhanced.getArchivedWeeklyTargets.useQuery();
+  const { data: archivedMonthlyTargets, isLoading: loadingArchivedMonthly } = trpc.salesEnhanced.getArchivedMonthlyTargets.useQuery();
+
   const { data: weeklyTargets, isLoading: loadingWeekly } = trpc.salesEnhanced.getWeeklyTargets.useQuery();
   const { data: monthlyTargets, isLoading: loadingMonthly } = trpc.salesEnhanced.getMonthlyTargets.useQuery();
   const { data: salespeople } = trpc.salesEnhanced.getSalespeople.useQuery();
@@ -102,10 +105,11 @@ export default function SalesEnhanced() {
     onError: (error: any) => toast.error(error.message),
   });
 
-  const deleteWeeklyTarget = trpc.salesEnhanced.deleteWeeklyTarget.useMutation({
+  const archiveWeeklyTarget = trpc.salesEnhanced.archiveWeeklyTarget.useMutation({
     onSuccess: () => {
       utils.salesEnhanced.getWeeklyTargets.invalidate();
-      toast.success("Weekly target deleted successfully");
+      utils.salesEnhanced.getArchivedWeeklyTargets.invalidate();
+      toast.success("Weekly target archived successfully");
     },
     onError: (error: any) => toast.error(error.message),
   });
@@ -118,10 +122,11 @@ export default function SalesEnhanced() {
     onError: (error: any) => toast.error(error.message),
   });
 
-  const deleteMonthlyTarget = trpc.salesEnhanced.deleteMonthlyTarget.useMutation({
+  const archiveMonthlyTarget = trpc.salesEnhanced.archiveMonthlyTarget.useMutation({
     onSuccess: () => {
       utils.salesEnhanced.getMonthlyTargets.invalidate();
-      toast.success("Monthly target deleted successfully");
+      utils.salesEnhanced.getArchivedMonthlyTargets.invalidate();
+      toast.success("Monthly target archived successfully");
     },
     onError: (error: any) => toast.error(error.message),
   });
@@ -434,10 +439,9 @@ export default function SalesEnhanced() {
                 targets={weeklyTargets || []} 
                 isLoading={loadingWeekly} 
                 onEdit={(target: any) => {
-                  // TODO: Open edit dialog for weekly target
                   toast.info("Edit functionality coming soon");
                 }}
-                onArchive={(id: number) => deleteWeeklyTarget.mutate({ id })}
+                onArchive={(id: number) => archiveWeeklyTarget.mutate({ id })}
               />
             </CardContent>
           </Card>
@@ -479,10 +483,9 @@ export default function SalesEnhanced() {
                 targets={monthlyTargets || []} 
                 isLoading={loadingMonthly} 
                 onEdit={(target: any) => {
-                  // TODO: Open edit dialog for monthly target
                   toast.info("Edit functionality coming soon");
                 }}
-                onArchive={(id: number) => deleteMonthlyTarget.mutate({ id })}
+                onArchive={(id: number) => archiveMonthlyTarget.mutate({ id })}
               />
             </CardContent>
           </Card>
@@ -710,6 +713,92 @@ export default function SalesEnhanced() {
                   <p className="text-muted-foreground mb-4">Archived sales records will appear here</p>
                   <p className="text-sm text-muted-foreground">When you archive a sale, it will be moved to this section</p>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Archived Weekly Targets */}
+          <Card className="editorial-card">
+            <CardHeader>
+              <CardTitle>Archived Weekly Targets</CardTitle>
+              <CardDescription>Archived weekly sales targets</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingArchivedWeekly ? (
+                <div className="text-center py-8 text-muted-foreground">Loading archived weekly targets...</div>
+              ) : archivedWeeklyTargets && archivedWeeklyTargets.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-semibold">Week Period</th>
+                        <th className="text-left py-3 px-4 font-semibold">Product</th>
+                        <th className="text-left py-3 px-4 font-semibold">Salesperson</th>
+                        <th className="text-right py-3 px-4 font-semibold">Target</th>
+                        <th className="text-right py-3 px-4 font-semibold">Achieved</th>
+                        <th className="text-left py-3 px-4 font-semibold">Archived Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {archivedWeeklyTargets.map((target: any) => (
+                        <tr key={target.id} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4">
+                            {format(new Date(target.weekStartDate), "dd MMM")} - {format(new Date(target.weekEndDate), "dd MMM yyyy")}
+                          </td>
+                          <td className="py-3 px-4 font-medium">{target.productName}</td>
+                          <td className="py-3 px-4">{target.salespersonId ? "Individual" : "Team"}</td>
+                          <td className="py-3 px-4 text-right">৳{parseFloat(target.targetAmount).toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right">৳{parseFloat(target.achievedAmount).toLocaleString()}</td>
+                          <td className="py-3 px-4">{target.archivedAt ? format(new Date(target.archivedAt), "dd MMM yyyy") : "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">No archived weekly targets</div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Archived Monthly Targets */}
+          <Card className="editorial-card">
+            <CardHeader>
+              <CardTitle>Archived Monthly Targets</CardTitle>
+              <CardDescription>Archived monthly sales targets</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingArchivedMonthly ? (
+                <div className="text-center py-8 text-muted-foreground">Loading archived monthly targets...</div>
+              ) : archivedMonthlyTargets && archivedMonthlyTargets.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-semibold">Month</th>
+                        <th className="text-left py-3 px-4 font-semibold">Product</th>
+                        <th className="text-left py-3 px-4 font-semibold">Salesperson</th>
+                        <th className="text-right py-3 px-4 font-semibold">Target</th>
+                        <th className="text-right py-3 px-4 font-semibold">Achieved</th>
+                        <th className="text-left py-3 px-4 font-semibold">Archived Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {archivedMonthlyTargets.map((target: any) => (
+                        <tr key={target.id} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4">{format(new Date(target.year, target.month - 1, 1), "MMMM yyyy")}</td>
+                          <td className="py-3 px-4 font-medium">{target.productName}</td>
+                          <td className="py-3 px-4">{target.salespersonId ? "Individual" : "Team"}</td>
+                          <td className="py-3 px-4 text-right">৳{parseFloat(target.targetAmount).toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right">৳{parseFloat(target.achievedAmount).toLocaleString()}</td>
+                          <td className="py-3 px-4">{target.archivedAt ? format(new Date(target.archivedAt), "dd MMM yyyy") : "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">No archived monthly targets</div>
               )}
             </CardContent>
           </Card>
