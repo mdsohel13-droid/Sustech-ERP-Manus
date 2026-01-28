@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { InfoPopup } from "@/components/ui/info-popup";
 import { Badge } from "@/components/ui/badge";
 
 interface StockItem {
@@ -290,69 +290,69 @@ export default function Inventory() {
                       {filteredStock.map(item => (
                         <tr key={item.id} className="hover:bg-muted/30">
                           <td className="p-4">
-                            <HoverCard openDelay={200} closeDelay={100}>
-                              <HoverCardTrigger asChild>
+                            <InfoPopup
+                              trigger={
                                 <button onClick={() => { setSelectedItem(item); setShowAdjustDialog(true); }} className="flex items-center gap-3 text-left w-full hover:opacity-70">
                                   <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                                     <Package className="w-4 h-4 text-muted-foreground" />
                                   </div>
                                   <span className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline">{item.productName}</span>
                                 </button>
-                              </HoverCardTrigger>
-                              <HoverCardContent className="w-80" side="right">
-                                <div className="space-y-3">
-                                  <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                                      <Package className="w-5 h-5 text-muted-foreground" />
-                                    </div>
-                                    <div>
-                                      <h4 className="font-semibold text-lg">{item.productName}</h4>
-                                      <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
-                                    </div>
+                              }
+                              side="right"
+                            >
+                              <div className="space-y-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                                    <Package className="w-5 h-5 text-muted-foreground" />
                                   </div>
-                                  <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div>
-                                      <p className="text-muted-foreground">Category</p>
-                                      <p className="font-medium">{item.category}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground">Location</p>
-                                      <p className="font-medium">{item.location}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground">In Stock</p>
-                                      <p className="font-medium">{item.inStock} ({item.available} available)</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground">Reserved</p>
-                                      <p className="font-medium">{item.reserved}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground">Unit Cost</p>
-                                      <p className="font-medium">{formatCurrency(item.unitCost, currency)}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground">Total Value</p>
-                                      <p className="font-semibold text-primary">{formatCurrency(item.totalValue, currency)}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground">Reorder Point</p>
-                                      <p className="font-medium">{item.reorderPoint}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground">Status</p>
-                                      {item.available <= item.minStock ? (
-                                        <Badge variant="destructive">Low Stock</Badge>
-                                      ) : item.available <= item.reorderPoint ? (
-                                        <Badge variant="secondary" className="bg-orange-100 text-orange-700">Reorder</Badge>
-                                      ) : (
-                                        <Badge variant="secondary" className="bg-green-100 text-green-700">OK</Badge>
-                                      )}
-                                    </div>
+                                  <div>
+                                    <h4 className="font-semibold text-lg">{item.productName}</h4>
+                                    <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
                                   </div>
                                 </div>
-                              </HoverCardContent>
-                            </HoverCard>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>
+                                    <p className="text-muted-foreground">Category</p>
+                                    <p className="font-medium">{item.category}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Location</p>
+                                    <p className="font-medium">{item.location}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">In Stock</p>
+                                    <p className="font-medium">{item.inStock} ({item.available} available)</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Reserved</p>
+                                    <p className="font-medium">{item.reserved}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Unit Cost</p>
+                                    <p className="font-medium">{formatCurrency(item.unitCost, currency)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Total Value</p>
+                                    <p className="font-semibold text-primary">{formatCurrency(item.totalValue, currency)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Reorder Point</p>
+                                    <p className="font-medium">{item.reorderPoint}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Status</p>
+                                    {item.available <= item.minStock ? (
+                                      <Badge variant="destructive">Low Stock</Badge>
+                                    ) : item.available <= item.reorderPoint ? (
+                                      <Badge variant="secondary" className="bg-orange-100 text-orange-700">Reorder</Badge>
+                                    ) : (
+                                      <Badge variant="secondary" className="bg-green-100 text-green-700">OK</Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </InfoPopup>
                           </td>
                           <td className="p-4 text-sm text-muted-foreground">{item.sku}</td>
                           <td className="p-4 text-right font-medium">{item.inStock}</td>

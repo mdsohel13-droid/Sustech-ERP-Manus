@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { InfoPopup } from "@/components/ui/info-popup";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -1293,8 +1293,8 @@ export default function HumanResource() {
                     {employees?.map((emp: any) => (
                       <TableRow key={emp.employee.id}>
                         <TableCell>
-                          <HoverCard openDelay={200} closeDelay={100}>
-                            <HoverCardTrigger asChild>
+                          <InfoPopup
+                            trigger={
                               <button onClick={() => { setSelectedEmployee(emp); setViewEmployeeDialogOpen(true); }} className="flex items-center gap-2 text-left w-full hover:opacity-70">
                                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                                   <span className="text-sm font-semibold text-primary">
@@ -1306,51 +1306,51 @@ export default function HumanResource() {
                                   <p className="text-xs text-muted-foreground">{emp.user?.email}</p>
                                 </div>
                               </button>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80" side="right">
-                              <div className="space-y-3">
-                                <div className="flex items-start gap-3">
-                                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <span className="text-lg font-semibold text-primary">
-                                      {emp.user?.name?.charAt(0) || "?"}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold text-lg">{emp.user?.name}</h4>
-                                    <p className="text-sm text-muted-foreground">{emp.user?.email}</p>
-                                  </div>
+                            }
+                            side="right"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <span className="text-lg font-semibold text-primary">
+                                    {emp.user?.name?.charAt(0) || "?"}
+                                  </span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <div>
-                                    <p className="text-muted-foreground">Employee Code</p>
-                                    <p className="font-medium">{emp.employee.employeeCode}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Department</p>
-                                    <p className="font-medium">{emp.department?.name || '-'}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Designation</p>
-                                    <p className="font-medium">{emp.employee.designation || '-'}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Status</p>
-                                    <Badge variant={emp.employee.status === 'active' ? 'default' : 'secondary'} className="mt-1">
-                                      {emp.employee.status}
-                                    </Badge>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Join Date</p>
-                                    <p className="font-medium">{emp.employee.joinDate ? new Date(emp.employee.joinDate).toLocaleDateString() : '-'}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Phone</p>
-                                    <p className="font-medium">{emp.employee.phone || '-'}</p>
-                                  </div>
+                                <div>
+                                  <h4 className="font-semibold text-lg">{emp.user?.name}</h4>
+                                  <p className="text-sm text-muted-foreground">{emp.user?.email}</p>
                                 </div>
                               </div>
-                            </HoverCardContent>
-                          </HoverCard>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <p className="text-muted-foreground">Employee Code</p>
+                                  <p className="font-medium">{emp.employee.employeeCode}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Department</p>
+                                  <p className="font-medium">{emp.department?.name || '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Designation</p>
+                                  <p className="font-medium">{emp.employee.designation || '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Status</p>
+                                  <Badge variant={emp.employee.status === 'active' ? 'default' : 'secondary'} className="mt-1">
+                                    {emp.employee.status}
+                                  </Badge>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Join Date</p>
+                                  <p className="font-medium">{emp.employee.joinDate ? new Date(emp.employee.joinDate).toLocaleDateString() : '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Phone</p>
+                                  <p className="font-medium">{emp.employee.phone || '-'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </InfoPopup>
                         </TableCell>
                         <TableCell>{emp.employee.employeeCode}</TableCell>
                         <TableCell>{emp.department?.name || '-'}</TableCell>

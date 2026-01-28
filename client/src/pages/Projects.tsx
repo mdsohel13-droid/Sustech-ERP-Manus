@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { InfoPopup } from "@/components/ui/info-popup";
 import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
@@ -262,42 +262,42 @@ export default function Projects() {
                   <div key={project.id} className="kanban-card" draggable onDragStart={() => handleDragStart(project.id)}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <HoverCard openDelay={200} closeDelay={100}>
-                          <HoverCardTrigger asChild>
+                        <InfoPopup
+                          trigger={
                             <button onClick={(e) => { e.stopPropagation(); setEditingProject(project); setDialogOpen(true); }} className="font-semibold text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{project.name}</button>
-                          </HoverCardTrigger>
-                          <HoverCardContent className="w-80" side="right">
-                            <div className="space-y-3">
-                              <div>
-                                <h4 className="font-semibold text-lg">{project.name}</h4>
-                                <p className="text-sm text-muted-foreground">{project.customerName}</p>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                  <p className="text-muted-foreground">Value</p>
-                                  <p className="font-medium">{project.value ? formatCurrency(project.value, project.currency || currency) : '-'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Stage</p>
-                                  <Badge variant="secondary">{stageLabels[project.stage as ProjectStage]}</Badge>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Priority</p>
-                                  <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Close Date</p>
-                                  <p className="font-medium">{project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yyyy") : '-'}</p>
-                                </div>
-                              </div>
-                              {project.description && (
-                                <div className="pt-2 border-t">
-                                  <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
-                                </div>
-                              )}
+                          }
+                          side="right"
+                        >
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="font-semibold text-lg">{project.name}</h4>
+                              <p className="text-sm text-muted-foreground">{project.customerName}</p>
                             </div>
-                          </HoverCardContent>
-                        </HoverCard>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Value</p>
+                                <p className="font-medium">{project.value ? formatCurrency(project.value, project.currency || currency) : '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Stage</p>
+                                <Badge variant="secondary">{stageLabels[project.stage as ProjectStage]}</Badge>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Priority</p>
+                                <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Close Date</p>
+                                <p className="font-medium">{project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yyyy") : '-'}</p>
+                              </div>
+                            </div>
+                            {project.description && (
+                              <div className="pt-2 border-t">
+                                <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
+                              </div>
+                            )}
+                          </div>
+                        </InfoPopup>
                         <p className="text-xs text-muted-foreground mt-1">{project.customerName}</p>
                       </div>
                       <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
@@ -377,42 +377,42 @@ export default function Projects() {
                         'bg-gray-50/30'
                       }`}>
                         <td className="p-4 font-medium text-left">
-                          <HoverCard openDelay={200} closeDelay={100}>
-                            <HoverCardTrigger asChild>
+                          <InfoPopup
+                            trigger={
                               <button onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{project.name}</button>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80" side="right">
-                              <div className="space-y-3">
-                                <div>
-                                  <h4 className="font-semibold text-lg">{project.name}</h4>
-                                  <p className="text-sm text-muted-foreground">{project.customerName}</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <div>
-                                    <p className="text-muted-foreground">Value</p>
-                                    <p className="font-medium">{project.value ? formatCurrency(project.value, project.currency || currency) : '-'}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Stage</p>
-                                    <Badge variant="secondary">{stageLabels[project.stage as ProjectStage]}</Badge>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Priority</p>
-                                    <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Close Date</p>
-                                    <p className="font-medium">{project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yyyy") : '-'}</p>
-                                  </div>
-                                </div>
-                                {project.description && (
-                                  <div className="pt-2 border-t">
-                                    <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
-                                  </div>
-                                )}
+                            }
+                            side="right"
+                          >
+                            <div className="space-y-3">
+                              <div>
+                                <h4 className="font-semibold text-lg">{project.name}</h4>
+                                <p className="text-sm text-muted-foreground">{project.customerName}</p>
                               </div>
-                            </HoverCardContent>
-                          </HoverCard>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <p className="text-muted-foreground">Value</p>
+                                  <p className="font-medium">{project.value ? formatCurrency(project.value, project.currency || currency) : '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Stage</p>
+                                  <Badge variant="secondary">{stageLabels[project.stage as ProjectStage]}</Badge>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Priority</p>
+                                  <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Close Date</p>
+                                  <p className="font-medium">{project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yyyy") : '-'}</p>
+                                </div>
+                              </div>
+                              {project.description && (
+                                <div className="pt-2 border-t">
+                                  <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
+                                </div>
+                              )}
+                            </div>
+                          </InfoPopup>
                         </td>
                         <td className="p-4">{project.customerName}</td>
                         <td className="p-4">{formatCurrency(project.value, project.currency)}</td>
