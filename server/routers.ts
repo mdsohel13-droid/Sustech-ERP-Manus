@@ -1432,10 +1432,11 @@ Provide 2-3 actionable business insights.`;
         targetAmount: z.string(),
         salespersonId: z.number().nullable(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         await db.createWeeklyTarget({
           ...input,
           achievedAmount: "0",
+          createdBy: ctx.user.id,
         });
         return { success: true };
       }),
@@ -1454,10 +1455,11 @@ Provide 2-3 actionable business insights.`;
         targetAmount: z.string(),
         salespersonId: z.number().nullable(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         await db.createMonthlyTarget({
           ...input,
           achievedAmount: "0",
+          createdBy: ctx.user.id,
         });
         return { success: true };
       }),
