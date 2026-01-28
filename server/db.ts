@@ -876,7 +876,7 @@ export async function getArchivedWeeklyTargets() {
   
   return await db.select()
     .from(weeklySalesTargets)
-    .where(sql`${weeklySalesTargets.archivedAt} IS NOT NULL`)
+    .where(sql`"archivedAt" IS NOT NULL`)
     .orderBy(desc(weeklySalesTargets.archivedAt));
 }
 
@@ -913,7 +913,7 @@ export async function getArchivedMonthlyTargets() {
   
   return await db.select()
     .from(monthlySalesTargets)
-    .where(sql`${monthlySalesTargets.archivedAt} IS NOT NULL`)
+    .where(sql`"archivedAt" IS NOT NULL`)
     .orderBy(desc(monthlySalesTargets.archivedAt));
 }
 
