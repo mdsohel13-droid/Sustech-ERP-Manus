@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { InfoPopup } from "@/components/ui/info-popup";
-import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2, Edit } from "lucide-react";
+import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2, Edit, Archive, RotateCcw } from "lucide-react";
 import { InlineEditCell } from "@/components/InlineEditCell";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { ProductCombobox } from "@/components/ui/product-combobox";
@@ -29,7 +29,7 @@ export default function Sales() {
   const [viewProductDialogOpen, setViewProductDialogOpen] = useState(false);
   const [selectedTracking, setSelectedTracking] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'product' | 'tracking'}>({show: false, item: null, type: 'product'});
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'product' | 'tracking' | 'permanent'}>({show: false, item: null, type: 'product'});
   const [editingCell, setEditingCell] = useState<{rowId: number; field: string} | null>(null);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
@@ -46,6 +46,7 @@ export default function Sales() {
   const { data: dailySales } = trpc.sales.getAll.useQuery();
   const { data: employees } = trpc.hr.getAll.useQuery();
   const { data: customers } = trpc.customers.getAll.useQuery();
+  const { data: archivedSales } = trpc.sales.getAllArchivedDailySales.useQuery();
 
   const createProductMutation = trpc.sales.createProduct.useMutation({
     onSuccess: () => {
@@ -84,6 +85,28 @@ export default function Sales() {
       toast.success("Sales record deleted");
       setDeleteConfirm({show: false, item: null, type: 'tracking'});
       setViewTrackingDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete record: ${error.message}`);
+    },
+  });
+
+  const restoreDailySaleMutation = trpc.sales.restoreDailySale.useMutation({
+    onSuccess: () => {
+      utils.sales.getAll.invalidate();
+      utils.sales.getAllArchivedDailySales.invalidate();
+      toast.success("Sale record restored");
+    },
+    onError: (error) => {
+      toast.error(`Failed to restore record: ${error.message}`);
+    },
+  });
+
+  const permanentlyDeleteMutation = trpc.sales.permanentlyDeleteDailySale.useMutation({
+    onSuccess: () => {
+      utils.sales.getAllArchivedDailySales.invalidate();
+      toast.success("Sale record permanently deleted");
+      setDeleteConfirm({show: false, item: null, type: 'permanent'});
     },
     onError: (error) => {
       toast.error(`Failed to delete record: ${error.message}`);
@@ -286,9 +309,9 @@ export default function Sales() {
         <TabsList>
           <TabsTrigger value="daily">Daily Sales</TabsTrigger>
           <TabsTrigger value="tracking">Weekly Targets</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="salespeople">Salespeople</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="archive">Archive</TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily" className="space-y-4">
@@ -431,7 +454,16 @@ export default function Sales() {
                         <TableCell>
                           <InfoPopup
                             trigger={
-                              <button type="button" className="cursor-pointer hover:text-primary hover:underline text-left">
+                              <button 
+                                type="button" 
+                                className="cursor-pointer text-blue-600 hover:text-blue-800 hover:underline text-left"
+                                onClick={() => {
+                                  if (product) {
+                                    setSelectedProduct(product);
+                                    setViewProductDialogOpen(true);
+                                  }
+                                }}
+                              >
                                 {product?.name || `Product ${sale.productId}`}
                               </button>
                             }
@@ -703,93 +735,6 @@ export default function Sales() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="products" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-medium">Product Catalog</h3>
-            <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
-              <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-2" />Add Product</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <form onSubmit={handleProductSubmit}>
-                  <DialogHeader>
-                    <DialogTitle>Add New Product</DialogTitle>
-                    <DialogDescription>Register a product for sales tracking</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="name">Product Name</Label>
-                      <Input id="name" name="name" required placeholder="e.g., Atomberg Gorilla Fan" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select name="category" defaultValue="fan">
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fan">Fan (Units)</SelectItem>
-                          <SelectItem value="ess">ESS (Small/Comm)</SelectItem>
-                          <SelectItem value="solar_pv">Solar PV (kW)</SelectItem>
-                          <SelectItem value="epc_project">EPC Project (#)</SelectItem>
-                          <SelectItem value="testing">Elec. Testing & Insp.</SelectItem>
-                          <SelectItem value="installation">Installation Work</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="unit">Unit of Measurement</Label>
-                      <Input id="unit" name="unit" defaultValue="units" placeholder="units, kW, projects, etc." />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description (Optional)</Label>
-                      <Input id="description" name="description" placeholder="Additional details" />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="submit" disabled={createProductMutation.isPending}>
-                      {createProductMutation.isPending ? "Adding..." : "Add Product"}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {products && products.length > 0 ? (
-              products.map((product) => (
-                <Card 
-                  key={product.id} 
-                  className="editorial-card cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => {
-                    setSelectedProduct(product);
-                    setViewProductDialogOpen(true);
-                  }}
-                >
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); setViewProductDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex-1 text-left">{product.name}</button>
-                      <Paperclip className="h-4 w-4 text-muted-foreground" />
-                    </CardTitle>
-                    <Badge variant="outline" className="w-fit">{product.category}</Badge>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">Unit: {product.unit}</p>
-                    {product.description && <p className="text-sm mt-2">{product.description}</p>}
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <Card className="editorial-card col-span-full">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Target className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-center">No products added yet. Add your first product above.</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
-
         <TabsContent value="performance" className="space-y-4">
           <h3 className="text-2xl font-medium">Product Performance Summary</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -909,6 +854,86 @@ export default function Sales() {
                   <Button onClick={() => window.location.href = '/human-resource'}>Go to HR Module</Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="archive" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-medium">Archived Sales Records</h3>
+            <Badge variant="outline" className="text-muted-foreground">
+              <Archive className="h-4 w-4 mr-1" />
+              {archivedSales?.length || 0} archived records
+            </Badge>
+          </div>
+
+          <Card className="editorial-card">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Salesperson</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead className="text-right">Quantity</TableHead>
+                    <TableHead className="text-right">Total Amount</TableHead>
+                    <TableHead>Archived At</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archivedSales && archivedSales.length > 0 ? (
+                    archivedSales.map((sale: any) => {
+                      const product = products?.find(p => p.id === sale.productId);
+                      return (
+                        <TableRow key={sale.id} className="bg-muted/30">
+                          <TableCell>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
+                          <TableCell className="font-medium">{product?.name || sale.productName}</TableCell>
+                          <TableCell>{sale.salespersonName || "N/A"}</TableCell>
+                          <TableCell>{sale.customerName || "-"}</TableCell>
+                          <TableCell className="text-right">{Number(sale.quantity).toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-medium">৳{Number(sale.totalAmount).toLocaleString()}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {sale.archivedAt ? format(new Date(sale.archivedAt), "MMM dd, yyyy HH:mm") : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-center gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => restoreDailySaleMutation.mutate({ id: sale.id })}
+                                disabled={restoreDailySaleMutation.isPending}
+                                title="Restore"
+                                className="text-green-600 hover:text-green-800 hover:bg-green-100"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setDeleteConfirm({show: true, item: sale, type: 'permanent'})}
+                                title="Permanently Delete"
+                                className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-12">
+                        <Archive className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No archived sales records.</p>
+                        <p className="text-sm text-muted-foreground mt-1">Archived records will appear here.</p>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1041,20 +1066,29 @@ export default function Sales() {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         isOpen={deleteConfirm.show}
-        title={deleteConfirm.type === 'product' ? 'Delete Product?' : 'Delete Sales Record?'}
-        description={deleteConfirm.type === 'product' 
-          ? `Are you sure you want to delete "${deleteConfirm.item?.name}"? This action cannot be undone.`
-          : `Are you sure you want to delete this sales record for ${format(new Date(deleteConfirm.item?.weekStartDate), 'MMM dd, yyyy')}? This action cannot be undone.`
+        title={
+          deleteConfirm.type === 'product' ? 'Delete Product?' : 
+          deleteConfirm.type === 'permanent' ? 'Permanently Delete Sale Record?' :
+          'Delete Sales Record?'
+        }
+        description={
+          deleteConfirm.type === 'product' 
+            ? `Are you sure you want to delete "${deleteConfirm.item?.name}"? This action cannot be undone.`
+            : deleteConfirm.type === 'permanent'
+            ? `Are you sure you want to PERMANENTLY delete this sale record? This action cannot be undone and the record cannot be restored.`
+            : `Are you sure you want to delete this sales record for ${deleteConfirm.item?.weekStartDate ? format(new Date(deleteConfirm.item?.weekStartDate), 'MMM dd, yyyy') : 'this date'}? This action cannot be undone.`
         }
         onConfirm={async () => {
           if (deleteConfirm.type === 'product') {
             deleteProductMutation.mutate({ id: deleteConfirm.item.id });
+          } else if (deleteConfirm.type === 'permanent') {
+            permanentlyDeleteMutation.mutate({ id: deleteConfirm.item.id });
           } else {
             deleteTrackingMutation.mutate({ id: deleteConfirm.item.id });
           }
         }}
         onCancel={() => setDeleteConfirm({show: false, item: null, type: 'product'})}
-        isLoading={deleteProductMutation.isPending || deleteTrackingMutation.isPending}
+        isLoading={deleteProductMutation.isPending || deleteTrackingMutation.isPending || permanentlyDeleteMutation.isPending}
       />
     </div>
   );

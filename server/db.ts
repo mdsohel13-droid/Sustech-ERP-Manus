@@ -773,6 +773,34 @@ export async function getArchivedDailySales(startDate: string, endDate: string) 
     .orderBy(desc(dailySales.date));
 }
 
+export async function getAllArchivedDailySales() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(dailySales)
+    .where(eq(dailySales.isArchived, true))
+    .orderBy(desc(dailySales.date));
+}
+
+export async function restoreDailySale(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(dailySales).set({
+    isArchived: false,
+    archivedAt: null,
+    archivedBy: null,
+    updatedAt: new Date(),
+  }).where(eq(dailySales.id, id));
+}
+
+export async function permanentlyDeleteDailySale(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(dailySales).where(eq(dailySales.id, id));
+}
+
 export async function getProductById(productId: number) {
   const db = await getDb();
   if (!db) return null;

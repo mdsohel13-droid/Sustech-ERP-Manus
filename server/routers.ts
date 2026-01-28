@@ -1409,6 +1409,29 @@ Provide 2-3 actionable business insights.`;
         return await db.getArchivedDailySales(input.startDate, input.endDate);
       }),
 
+    getAllArchivedDailySales: protectedProcedure
+      .query(async () => {
+        return await db.getAllArchivedDailySales();
+      }),
+
+    restoreDailySale: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.restoreDailySale(input.id);
+        return { success: true };
+      }),
+
+    permanentlyDeleteDailySale: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.permanentlyDeleteDailySale(input.id);
+        return { success: true };
+      }),
+
     // Weekly Targets
     createWeeklyTarget: protectedProcedure
       .input(z.object({
