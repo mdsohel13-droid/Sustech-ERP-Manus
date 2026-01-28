@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, TrendingUp, TrendingDown, Target, DollarSign, Users, Calendar, BarChart3, Download } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Target, DollarSign, Users, Calendar, BarChart3, Download, Undo2, Trash2 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { format } from "date-fns";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
@@ -119,6 +119,32 @@ export default function SalesEnhanced() {
         endDate: new Date().toISOString().split("T")[0],
       });
       toast.success("Sale archived successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const restoreDailySale = trpc.salesEnhanced.restoreDailySale.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getDailySales.invalidate({
+        startDate: getStartDate(selectedPeriod),
+        endDate: new Date().toISOString().split("T")[0],
+      });
+      utils.salesEnhanced.getArchivedDailySales.invalidate({
+        startDate: getStartDate(selectedPeriod),
+        endDate: new Date().toISOString().split("T")[0],
+      });
+      toast.success("Sale restored successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const permanentlyDeleteSale = trpc.salesEnhanced.permanentlyDeleteDailySale.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getArchivedDailySales.invalidate({
+        startDate: getStartDate(selectedPeriod),
+        endDate: new Date().toISOString().split("T")[0],
+      });
+      toast.success("Sale permanently deleted");
     },
     onError: (error: any) => toast.error(error.message),
   });
@@ -267,7 +293,6 @@ export default function SalesEnhanced() {
           </TabsTrigger>
           <TabsTrigger value="weekly">Weekly Targets</TabsTrigger>
           <TabsTrigger value="monthly">Monthly Targets</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="salespeople">Salespeople</TabsTrigger>
           <TabsTrigger value="archive">Archive</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -586,7 +611,7 @@ export default function SalesEnhanced() {
                         <th className="text-right py-3 px-4 font-semibold">Quantity</th>
                         <th className="text-right py-3 px-4 font-semibold">Unit Price</th>
                         <th className="text-right py-3 px-4 font-semibold">Total Amount</th>
-                        <th className="text-left py-3 px-4 font-semibold">Archived By</th>
+                        <th className="text-left py-3 px-4 font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -599,7 +624,33 @@ export default function SalesEnhanced() {
                           <td className="py-3 px-4 text-right">{sale.quantity}</td>
                           <td className="py-3 px-4 text-right">৳{parseFloat(sale.unitPrice).toLocaleString()}</td>
                           <td className="py-3 px-4 text-right font-semibold">৳{parseFloat(sale.totalAmount).toLocaleString()}</td>
-                          <td className="py-3 px-4 text-sm text-muted-foreground">{sale.archivedBy ? "Admin" : "-"}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => restoreDailySale.mutate({ id: sale.id })}
+                                disabled={restoreDailySale.isPending}
+                              >
+                                <Undo2 className="h-4 w-4 mr-1" />
+                                Restore
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  if (confirm("Are you sure you want to permanently delete this sale record? This action cannot be undone.")) {
+                                    permanentlyDeleteSale.mutate({ id: sale.id });
+                                  }
+                                }}
+                                disabled={permanentlyDeleteSale.isPending}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
