@@ -2054,6 +2054,16 @@ Provide 2-3 actionable business insights.`;
         const { joinDate, contractEndDate, ...rest } = input;
         const parsedJoinDate = new Date(joinDate);
         const parsedContractEndDate = contractEndDate ? new Date(contractEndDate) : undefined;
+        
+        // Check if user already has an employee record
+        const existingEmployee = await db.getEmployeeByUserId(input.userId);
+        if (existingEmployee) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'This user already has an employee record. Please select a different user or edit the existing employee record.' 
+          });
+        }
+        
         await db.createEmployee({
           ...rest,
           joinDate: parsedJoinDate.toISOString().split('T')[0] as any,

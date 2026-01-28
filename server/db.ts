@@ -1555,6 +1555,13 @@ export async function updateEmployee(id: number, data: Partial<InsertEmployee>) 
   await db.update(employees).set(data).where(eq(employees.id, id));
 }
 
+export async function getEmployeeByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(employees).where(eq(employees.userId, userId)).limit(1);
+  return result[0] || null;
+}
+
 // ============ HR Module - Attendance Records ============
 export async function getEmployeeAttendanceRecords(employeeId: number, startDate: Date, endDate: Date) {
   const db = await getDb();
