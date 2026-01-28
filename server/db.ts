@@ -163,8 +163,8 @@ export async function getUserById(id: number) {
 export async function createAR(data: InsertAccountsReceivable) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(accountsReceivable).values(data);
-  return result;
+  const result = await db.insert(accountsReceivable).values(data).returning({ id: accountsReceivable.id });
+  return result[0];
 }
 
 export async function getAllAR() {
@@ -183,6 +183,13 @@ export async function deleteAR(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(accountsReceivable).where(eq(accountsReceivable.id, id));
+}
+
+export async function getARById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(accountsReceivable).where(eq(accountsReceivable.id, id));
+  return result[0] || null;
 }
 
 export async function getARSummary() {

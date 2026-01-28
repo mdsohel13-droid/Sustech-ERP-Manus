@@ -2,16 +2,8 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure, adminProcedure, managerProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
-
-// Admin-only procedure middleware
-const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== 'admin') {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
-  }
-  return next({ ctx });
-});
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
@@ -122,7 +114,19 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const { dueDate, ...data } = input;
-        await db.createAR({ ...data, dueDate: new Date(dueDate) as any, createdBy: ctx.user.id });
+        const result = await db.createAR({ ...data, dueDate: new Date(dueDate) as any, createdBy: ctx.user.id });
+        
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "create",
+          module: "financial",
+          entityType: "accounts_receivable",
+          entityId: String(result?.id || "new"),
+          entityName: input.customerName,
+          newValues: JSON.stringify(input),
+          status: "success",
+        });
+        
         return { success: true };
       }),
     
@@ -144,16 +148,44 @@ export const appRouter = router({
         invoiceNumber: z.string().optional(),
         notes: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const oldRecord = await db.getARById(input.id);
         const { id, dueDate, ...data } = input;
         await db.updateAR(id, { ...data, ...(dueDate ? { dueDate: new Date(dueDate) as any } : {}) });
+        
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "update",
+          module: "financial",
+          entityType: "accounts_receivable",
+          entityId: String(id),
+          entityName: input.customerName || oldRecord?.customerName,
+          oldValues: JSON.stringify(oldRecord),
+          newValues: JSON.stringify(input),
+          changes: Object.keys(data).filter(k => data[k as keyof typeof data] !== undefined).join(", "),
+          status: "success",
+        });
+        
         return { success: true };
       }),
     
     deleteAR: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const oldRecord = await db.getARById(input.id);
         await db.deleteAR(input.id);
+        
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "delete",
+          module: "financial",
+          entityType: "accounts_receivable",
+          entityId: String(input.id),
+          entityName: oldRecord?.customerName,
+          oldValues: JSON.stringify(oldRecord),
+          status: "success",
+        });
+        
         return { success: true };
       }),
     

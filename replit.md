@@ -56,10 +56,34 @@ API-level Zod validation also rejects negative amounts before database operation
 - `npm run build` - Build for production
 - `npm run db:push` - Push schema changes to database
 
-## Authentication
+## Authentication & Security
+
+### Authentication
 - OAuth via oauth.emergentagent.com
 - Email/password login also supported
-- Sessions stored in database
+- Sessions stored in database with secure cookies
+
+### Role-Based Access Control
+- `adminProcedure` - Admin-only routes (settings, security, user management)
+- `managerProcedure` - Manager or admin access
+- `protectedProcedure` - Any authenticated user
+
+### Session Security
+- All `/admin` and `/settings` routes require admin role
+- Unauthorized access attempts are blocked with FORBIDDEN error
+- Sessions are validated on every request via tRPC middleware
+
+### Audit Logging
+All financial mutations are automatically logged to `audit_logs` table:
+- **Who**: User ID performing the action
+- **What**: Action type (create/update/delete), entity type, old/new values
+- **When**: Timestamp of the action
+- **Where**: IP address and user agent
+
+### Transaction Safety
+- PostgreSQL transactions ensure financial operations fully succeed or fully rollback
+- Double-entry verification available for KPI updates
+- All amounts validated before database operations
 
 ## Environment Variables
 Required:
