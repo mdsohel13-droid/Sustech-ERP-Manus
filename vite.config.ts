@@ -27,19 +27,8 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
-    port: 3000,
-    allowedHosts: [
-      ".manuspre.computer",
-      ".manus.computer",
-      ".manus-asia.computer",
-      ".manuscomputer.ai",
-      ".manusvm.computer",
-      ".emergentagent.com",
-      ".preview.emergentagent.com",
-      "localhost",
-      "127.0.0.1",
-      "all",
-    ],
+    port: 5000,
+    allowedHosts: true,
     fs: {
       strict: true,
       deny: ["**/.*"],
