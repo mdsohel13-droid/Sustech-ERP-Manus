@@ -131,6 +131,24 @@ export default function SalesEnhanced() {
     onError: (error: any) => toast.error(error.message),
   });
 
+  const restoreWeeklyTarget = trpc.salesEnhanced.restoreWeeklyTarget.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getWeeklyTargets.invalidate();
+      utils.salesEnhanced.getArchivedWeeklyTargets.invalidate();
+      toast.success("Weekly target restored successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const restoreMonthlyTarget = trpc.salesEnhanced.restoreMonthlyTarget.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getMonthlyTargets.invalidate();
+      utils.salesEnhanced.getArchivedMonthlyTargets.invalidate();
+      toast.success("Monthly target restored successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
   const updateDailySale = trpc.salesEnhanced.updateDailySale.useMutation({
     onSuccess: () => {
       // Invalidate with the current query parameters to trigger immediate refetch
@@ -737,6 +755,7 @@ export default function SalesEnhanced() {
                         <th className="text-right py-3 px-4 font-semibold">Target</th>
                         <th className="text-right py-3 px-4 font-semibold">Achieved</th>
                         <th className="text-left py-3 px-4 font-semibold">Archived Date</th>
+                        <th className="text-left py-3 px-4 font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -750,6 +769,18 @@ export default function SalesEnhanced() {
                           <td className="py-3 px-4 text-right">৳{parseFloat(target.targetAmount).toLocaleString()}</td>
                           <td className="py-3 px-4 text-right">৳{parseFloat(target.achievedAmount).toLocaleString()}</td>
                           <td className="py-3 px-4">{target.archivedAt ? format(new Date(target.archivedAt), "dd MMM yyyy") : "-"}</td>
+                          <td className="py-3 px-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={() => restoreWeeklyTarget.mutate({ id: target.id })}
+                              disabled={restoreWeeklyTarget.isPending}
+                            >
+                              <Undo2 className="h-4 w-4 mr-1" />
+                              Restore
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -781,6 +812,7 @@ export default function SalesEnhanced() {
                         <th className="text-right py-3 px-4 font-semibold">Target</th>
                         <th className="text-right py-3 px-4 font-semibold">Achieved</th>
                         <th className="text-left py-3 px-4 font-semibold">Archived Date</th>
+                        <th className="text-left py-3 px-4 font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -792,6 +824,18 @@ export default function SalesEnhanced() {
                           <td className="py-3 px-4 text-right">৳{parseFloat(target.targetAmount).toLocaleString()}</td>
                           <td className="py-3 px-4 text-right">৳{parseFloat(target.achievedAmount).toLocaleString()}</td>
                           <td className="py-3 px-4">{target.archivedAt ? format(new Date(target.archivedAt), "dd MMM yyyy") : "-"}</td>
+                          <td className="py-3 px-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={() => restoreMonthlyTarget.mutate({ id: target.id })}
+                              disabled={restoreMonthlyTarget.isPending}
+                            >
+                              <Undo2 className="h-4 w-4 mr-1" />
+                              Restore
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

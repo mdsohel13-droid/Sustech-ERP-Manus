@@ -1536,6 +1536,22 @@ Provide 2-3 actionable business insights.`;
       return await db.getArchivedMonthlyTargets();
     }),
 
+    // Restore Weekly Target
+    restoreWeeklyTarget: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreWeeklyTarget(input.id);
+        return { success: true };
+      }),
+
+    // Restore Monthly Target
+    restoreMonthlyTarget: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreMonthlyTarget(input.id);
+        return { success: true };
+      }),
+
     // Salespeople
     getSalespeople: protectedProcedure.query(async () => {
       return await db.getSalespeople();

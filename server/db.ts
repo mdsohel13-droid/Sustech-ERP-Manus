@@ -880,6 +880,17 @@ export async function getArchivedWeeklyTargets() {
     .orderBy(desc(weeklySalesTargets.archivedAt));
 }
 
+export async function restoreWeeklyTarget(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(weeklySalesTargets).set({
+    archivedAt: null,
+    archivedBy: null,
+    updatedAt: new Date(),
+  }).where(eq(weeklySalesTargets.id, id));
+}
+
 export async function updateMonthlyTarget(id: number, data: { targetAmount?: string; salespersonId?: number | null }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -915,6 +926,17 @@ export async function getArchivedMonthlyTargets() {
     .from(monthlySalesTargets)
     .where(sql`"archivedAt" IS NOT NULL`)
     .orderBy(desc(monthlySalesTargets.archivedAt));
+}
+
+export async function restoreMonthlyTarget(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(monthlySalesTargets).set({
+    archivedAt: null,
+    archivedBy: null,
+    updatedAt: new Date(),
+  }).where(eq(monthlySalesTargets.id, id));
 }
 
 export async function getSalespeople() {
