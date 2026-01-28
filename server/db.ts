@@ -841,6 +841,38 @@ export async function getMonthlyTargets() {
     .orderBy(desc(monthlySalesTargets.year), desc(monthlySalesTargets.month));
 }
 
+export async function updateWeeklyTarget(id: number, data: { targetAmount?: string; salespersonId?: number | null }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(weeklySalesTargets)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(weeklySalesTargets.id, id));
+}
+
+export async function deleteWeeklyTarget(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(weeklySalesTargets).where(eq(weeklySalesTargets.id, id));
+}
+
+export async function updateMonthlyTarget(id: number, data: { targetAmount?: string; salespersonId?: number | null }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(monthlySalesTargets)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(monthlySalesTargets.id, id));
+}
+
+export async function deleteMonthlyTarget(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(monthlySalesTargets).where(eq(monthlySalesTargets.id, id));
+}
+
 export async function getSalespeople() {
   const db = await getDb();
   if (!db) return [];

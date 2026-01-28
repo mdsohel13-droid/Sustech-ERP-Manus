@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, TrendingUp, TrendingDown, Target, DollarSign, Users, Calendar, BarChart3, Download, Undo2, Trash2 } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Target, DollarSign, Users, Calendar, BarChart3, Download, Undo2, Trash2, MoreHorizontal, Pencil, Archive } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { format } from "date-fns";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
@@ -89,6 +90,38 @@ export default function SalesEnhanced() {
       utils.salesEnhanced.getMonthlyTargets.invalidate();
       setMonthlyDialogOpen(false);
       toast.success("Monthly target set successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const updateWeeklyTarget = trpc.salesEnhanced.updateWeeklyTarget.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getWeeklyTargets.invalidate();
+      toast.success("Weekly target updated successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const deleteWeeklyTarget = trpc.salesEnhanced.deleteWeeklyTarget.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getWeeklyTargets.invalidate();
+      toast.success("Weekly target deleted successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const updateMonthlyTarget = trpc.salesEnhanced.updateMonthlyTarget.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getMonthlyTargets.invalidate();
+      toast.success("Monthly target updated successfully");
+    },
+    onError: (error: any) => toast.error(error.message),
+  });
+
+  const deleteMonthlyTarget = trpc.salesEnhanced.deleteMonthlyTarget.useMutation({
+    onSuccess: () => {
+      utils.salesEnhanced.getMonthlyTargets.invalidate();
+      toast.success("Monthly target deleted successfully");
     },
     onError: (error: any) => toast.error(error.message),
   });
@@ -397,7 +430,11 @@ export default function SalesEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
-              <WeeklyTargetsTable targets={weeklyTargets || []} isLoading={loadingWeekly} />
+              <WeeklyTargetsTable 
+                targets={weeklyTargets || []} 
+                isLoading={loadingWeekly} 
+                onDelete={(id: number) => deleteWeeklyTarget.mutate({ id })}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -434,7 +471,11 @@ export default function SalesEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
-              <MonthlyTargetsTable targets={monthlyTargets || []} isLoading={loadingMonthly} />
+              <MonthlyTargetsTable 
+                targets={monthlyTargets || []} 
+                isLoading={loadingMonthly} 
+                onDelete={(id: number) => deleteMonthlyTarget.mutate({ id })}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -1086,7 +1127,7 @@ function DailySalesTable({ sales, isLoading, onEdit, onArchive, onProductClick }
   );
 }
 
-function WeeklyTargetsTable({ targets, isLoading }: any) {
+function WeeklyTargetsTable({ targets, isLoading, onDelete }: any) {
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading targets...</div>;
   }
@@ -1106,6 +1147,7 @@ function WeeklyTargetsTable({ targets, isLoading }: any) {
           <TableHead className="text-right">Achieved</TableHead>
           <TableHead className="text-right">Achievement</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead className="text-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -1128,6 +1170,24 @@ function WeeklyTargetsTable({ targets, isLoading }: any) {
                   {achievementRate >= 100 ? "Achieved" : achievementRate >= 80 ? "On Track" : "Behind"}
                 </Badge>
               </TableCell>
+              <TableCell className="text-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onClick={() => onDelete(target.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
             </TableRow>
           );
         })}
@@ -1136,7 +1196,7 @@ function WeeklyTargetsTable({ targets, isLoading }: any) {
   );
 }
 
-function MonthlyTargetsTable({ targets, isLoading }: any) {
+function MonthlyTargetsTable({ targets, isLoading, onDelete }: any) {
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading targets...</div>;
   }
@@ -1156,6 +1216,7 @@ function MonthlyTargetsTable({ targets, isLoading }: any) {
           <TableHead className="text-right">Achieved</TableHead>
           <TableHead className="text-right">Achievement</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead className="text-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -1177,6 +1238,24 @@ function MonthlyTargetsTable({ targets, isLoading }: any) {
                 >
                   {achievementRate >= 100 ? "Achieved" : achievementRate >= 80 ? "On Track" : "Behind"}
                 </Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onClick={() => onDelete(target.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
           );

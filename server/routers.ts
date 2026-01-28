@@ -1468,6 +1468,48 @@ Provide 2-3 actionable business insights.`;
       return await db.getMonthlyTargets();
     }),
 
+    // Update Weekly Target
+    updateWeeklyTarget: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        targetAmount: z.string().optional(),
+        salespersonId: z.number().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateWeeklyTarget(id, data);
+        return { success: true };
+      }),
+
+    // Delete Weekly Target
+    deleteWeeklyTarget: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteWeeklyTarget(input.id);
+        return { success: true };
+      }),
+
+    // Update Monthly Target
+    updateMonthlyTarget: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        targetAmount: z.string().optional(),
+        salespersonId: z.number().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateMonthlyTarget(id, data);
+        return { success: true };
+      }),
+
+    // Delete Monthly Target
+    deleteMonthlyTarget: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteMonthlyTarget(input.id);
+        return { success: true };
+      }),
+
     // Salespeople
     getSalespeople: protectedProcedure.query(async () => {
       return await db.getSalespeople();
