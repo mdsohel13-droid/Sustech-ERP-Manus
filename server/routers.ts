@@ -231,7 +231,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { sendSMS } = await import("./_core/sms");
-        const results = [];
+        const results: { phoneNumber: string; sent: boolean }[] = [];
         
         for (const phoneNumber of input.phoneNumbers) {
           const message = input.customMessage || "Please settle your overdue invoice at your earliest convenience. Thank you!";
@@ -1272,20 +1272,12 @@ Provide 2-3 actionable business insights.`;
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'User with this email already exists' });
         }
 
-        // Hash password
-        const bcrypt = await import('bcryptjs');
-        const passwordHash = await bcrypt.hash(input.password, 12);
-
-        // Create user
-        const openId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        // Create user (db.createUserWithPassword handles hashing internally)
         await db.createUserWithPassword({
-          openId,
           name: input.name,
           email: input.email,
+          password: input.password,
           role: input.role,
-          loginMethod: 'password',
-          passwordHash,
-          mustChangePassword: input.mustChangePassword || false,
         });
 
         return { success: true };
@@ -1307,10 +1299,8 @@ Provide 2-3 actionable business insights.`;
           });
         }
 
-        const bcrypt = await import('bcryptjs');
-        const passwordHash = await bcrypt.hash(input.newPassword, 12);
-
-        await db.updateUserPassword(input.userId, passwordHash, input.mustChangePassword || true);
+        // db.updateUserPassword handles hashing internally
+        await db.updateUserPassword(input.userId, input.newPassword);
         return { success: true };
       }),
 

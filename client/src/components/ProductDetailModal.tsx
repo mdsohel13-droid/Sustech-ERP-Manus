@@ -8,11 +8,11 @@ interface ProductSpec {
 }
 
 interface Product {
-  id: string;
+  id: string | number;
   name: string;
   category: string;
-  description: string;
-  specs: ProductSpec & { features: string[] };
+  description: string | null;
+  specs?: ProductSpec & { features?: string[] };
 }
 
 interface ProductDetailModalProps {
