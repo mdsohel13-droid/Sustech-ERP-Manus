@@ -244,15 +244,122 @@ export type IdeaNote = typeof ideaNotes.$inferSelect;
 export type InsertIdeaNote = typeof ideaNotes.$inferInsert;
 
 /**
- * Sales products table
+ * Product Categories - Dynamic categories for products/services
+ */
+export const productCategories = pgTable("product_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  description: text("description"),
+  parentId: integer("parent_id"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ProductCategory = typeof productCategories.$inferSelect;
+export type InsertProductCategory = typeof productCategories.$inferInsert;
+
+/**
+ * Product Units - Units of measurement
+ */
+export const productUnits = pgTable("product_units", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  shortName: varchar("short_name", { length: 20 }).notNull(),
+  allowDecimal: boolean("allow_decimal").default(true).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ProductUnit = typeof productUnits.$inferSelect;
+export type InsertProductUnit = typeof productUnits.$inferInsert;
+
+/**
+ * Product Brands
+ */
+export const productBrands = pgTable("product_brands", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ProductBrand = typeof productBrands.$inferSelect;
+export type InsertProductBrand = typeof productBrands.$inferInsert;
+
+/**
+ * Product Warranties
+ */
+export const productWarranties = pgTable("product_warranties", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  duration: integer("duration").notNull(),
+  durationUnit: varchar("duration_unit", { length: 20 }).notNull().default("months"),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ProductWarranty = typeof productWarranties.$inferSelect;
+export type InsertProductWarranty = typeof productWarranties.$inferInsert;
+
+/**
+ * Selling Price Groups
+ */
+export const sellingPriceGroups = pgTable("selling_price_groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SellingPriceGroup = typeof sellingPriceGroups.$inferSelect;
+export type InsertSellingPriceGroup = typeof sellingPriceGroups.$inferInsert;
+
+/**
+ * Product Variations - For products with variations
+ */
+export const productVariations = pgTable("product_variations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  values: text("values"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ProductVariation = typeof productVariations.$inferSelect;
+export type InsertProductVariation = typeof productVariations.$inferInsert;
+
+/**
+ * Sales products table - Enhanced with dynamic references
  */
 export const salesProducts = pgTable("sales_products", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  sku: varchar("sku", { length: 100 }),
+  barcode: varchar("barcode", { length: 100 }),
   category: productCategoryEnum("category").notNull(),
+  categoryId: integer("category_id"),
+  unitId: integer("unit_id"),
+  brandId: integer("brand_id"),
+  warrantyId: integer("warranty_id"),
   unit: varchar("unit", { length: 50 }).notNull().default("units"),
   description: text("description"),
+  purchasePrice: decimal("purchase_price", { precision: 15, scale: 2 }),
+  sellingPrice: decimal("selling_price", { precision: 15, scale: 2 }),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }),
+  alertQuantity: integer("alert_quantity"),
   isActive: integer("is_active").notNull().default(1),
+  archivedAt: timestamp("archived_at"),
+  archivedBy: integer("archived_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
