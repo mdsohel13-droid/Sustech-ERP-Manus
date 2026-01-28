@@ -3,6 +3,7 @@
 import requests
 import sys
 import json
+import os
 from datetime import datetime
 
 class ERPAPITester:
@@ -71,8 +72,8 @@ class ERPAPITester:
         
         # Test email/password login
         login_data = {
-            "email": "sohelemid@gmail.com",
-            "password": "123abc456"
+            "email": os.environ.get("TEST_ADMIN_EMAIL", "test@example.com"),
+            "password": os.environ.get("TEST_ADMIN_PASSWORD", "")
         }
         
         success, response = self.run_test(
