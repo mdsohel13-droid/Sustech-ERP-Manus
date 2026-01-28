@@ -2330,6 +2330,315 @@ Provide 2-3 actionable business insights.`;
         return await db.getOnboardingProgress(input.employeeId);
       }),
   }),
+
+  // ============ Products Module ============
+  products: router({
+    // Product Categories
+    getCategories: protectedProcedure.query(async () => {
+      return await db.getProductCategories();
+    }),
+
+    getAllCategories: protectedProcedure.query(async () => {
+      return await db.getAllProductCategories();
+    }),
+
+    createCategory: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        code: z.string().optional(),
+        description: z.string().optional(),
+        parentId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createProductCategory(input);
+        return { success: true };
+      }),
+
+    updateCategory: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        code: z.string().optional(),
+        description: z.string().optional(),
+        parentId: z.number().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateProductCategory(id, data);
+        return { success: true };
+      }),
+
+    deleteCategory: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProductCategory(input.id);
+        return { success: true };
+      }),
+
+    // Product Units
+    getUnits: protectedProcedure.query(async () => {
+      return await db.getProductUnits();
+    }),
+
+    getAllUnits: protectedProcedure.query(async () => {
+      return await db.getAllProductUnits();
+    }),
+
+    createUnit: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        shortName: z.string(),
+        allowDecimal: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createProductUnit(input);
+        return { success: true };
+      }),
+
+    updateUnit: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        shortName: z.string().optional(),
+        allowDecimal: z.boolean().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateProductUnit(id, data);
+        return { success: true };
+      }),
+
+    deleteUnit: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProductUnit(input.id);
+        return { success: true };
+      }),
+
+    // Product Brands
+    getBrands: protectedProcedure.query(async () => {
+      return await db.getProductBrands();
+    }),
+
+    getAllBrands: protectedProcedure.query(async () => {
+      return await db.getAllProductBrands();
+    }),
+
+    createBrand: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createProductBrand(input);
+        return { success: true };
+      }),
+
+    updateBrand: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateProductBrand(id, data);
+        return { success: true };
+      }),
+
+    deleteBrand: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProductBrand(input.id);
+        return { success: true };
+      }),
+
+    // Product Warranties
+    getWarranties: protectedProcedure.query(async () => {
+      return await db.getProductWarranties();
+    }),
+
+    getAllWarranties: protectedProcedure.query(async () => {
+      return await db.getAllProductWarranties();
+    }),
+
+    createWarranty: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        duration: z.number(),
+        durationUnit: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createProductWarranty(input);
+        return { success: true };
+      }),
+
+    updateWarranty: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        duration: z.number().optional(),
+        durationUnit: z.string().optional(),
+        description: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateProductWarranty(id, data);
+        return { success: true };
+      }),
+
+    deleteWarranty: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProductWarranty(input.id);
+        return { success: true };
+      }),
+
+    // Selling Price Groups
+    getPriceGroups: protectedProcedure.query(async () => {
+      return await db.getSellingPriceGroups();
+    }),
+
+    createPriceGroup: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createSellingPriceGroup(input);
+        return { success: true };
+      }),
+
+    updatePriceGroup: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateSellingPriceGroup(id, data);
+        return { success: true };
+      }),
+
+    deletePriceGroup: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteSellingPriceGroup(input.id);
+        return { success: true };
+      }),
+
+    // Product Variations
+    getVariations: protectedProcedure.query(async () => {
+      return await db.getProductVariations();
+    }),
+
+    createVariation: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        values: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createProductVariation(input);
+        return { success: true };
+      }),
+
+    updateVariation: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        values: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateProductVariation(id, data);
+        return { success: true };
+      }),
+
+    deleteVariation: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProductVariation(input.id);
+        return { success: true };
+      }),
+
+    // Products - Active & Archived
+    getActiveProducts: protectedProcedure.query(async () => {
+      return await db.getActiveProducts();
+    }),
+
+    getArchivedProducts: protectedProcedure.query(async () => {
+      return await db.getArchivedProducts();
+    }),
+
+    createProduct: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        sku: z.string().optional(),
+        barcode: z.string().optional(),
+        category: z.enum(["fan", "ess", "solar_pv", "epc_project", "testing", "installation", "other"]),
+        categoryId: z.number().optional(),
+        unitId: z.number().optional(),
+        brandId: z.number().optional(),
+        warrantyId: z.number().optional(),
+        unit: z.string().optional(),
+        description: z.string().optional(),
+        purchasePrice: z.string().optional(),
+        sellingPrice: z.string().optional(),
+        taxRate: z.string().optional(),
+        alertQuantity: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createProductFull(input as any);
+        return { success: true };
+      }),
+
+    updateProduct: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        sku: z.string().optional(),
+        barcode: z.string().optional(),
+        category: z.enum(["fan", "ess", "solar_pv", "epc_project", "testing", "installation", "other"]).optional(),
+        categoryId: z.number().optional(),
+        unitId: z.number().optional(),
+        brandId: z.number().optional(),
+        warrantyId: z.number().optional(),
+        unit: z.string().optional(),
+        description: z.string().optional(),
+        purchasePrice: z.string().optional(),
+        sellingPrice: z.string().optional(),
+        taxRate: z.string().optional(),
+        alertQuantity: z.number().optional(),
+        isActive: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateProductFull(id, data as any);
+        return { success: true };
+      }),
+
+    archiveProduct: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.archiveProduct(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    restoreProduct: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreProduct(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
