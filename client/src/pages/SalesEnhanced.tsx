@@ -433,7 +433,11 @@ export default function SalesEnhanced() {
               <WeeklyTargetsTable 
                 targets={weeklyTargets || []} 
                 isLoading={loadingWeekly} 
-                onDelete={(id: number) => deleteWeeklyTarget.mutate({ id })}
+                onEdit={(target: any) => {
+                  // TODO: Open edit dialog for weekly target
+                  toast.info("Edit functionality coming soon");
+                }}
+                onArchive={(id: number) => deleteWeeklyTarget.mutate({ id })}
               />
             </CardContent>
           </Card>
@@ -474,7 +478,11 @@ export default function SalesEnhanced() {
               <MonthlyTargetsTable 
                 targets={monthlyTargets || []} 
                 isLoading={loadingMonthly} 
-                onDelete={(id: number) => deleteMonthlyTarget.mutate({ id })}
+                onEdit={(target: any) => {
+                  // TODO: Open edit dialog for monthly target
+                  toast.info("Edit functionality coming soon");
+                }}
+                onArchive={(id: number) => deleteMonthlyTarget.mutate({ id })}
               />
             </CardContent>
           </Card>
@@ -1127,7 +1135,7 @@ function DailySalesTable({ sales, isLoading, onEdit, onArchive, onProductClick }
   );
 }
 
-function WeeklyTargetsTable({ targets, isLoading, onDelete }: any) {
+function WeeklyTargetsTable({ targets, isLoading, onEdit, onArchive }: any) {
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading targets...</div>;
   }
@@ -1172,7 +1180,8 @@ function WeeklyTargetsTable({ targets, isLoading, onDelete }: any) {
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-2 justify-center">
-                  <Button size="sm" variant="destructive" onClick={() => onDelete(target.id)}>Delete</Button>
+                  <Button size="sm" variant="outline" onClick={() => onEdit(target)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={() => onArchive(target.id)}>Archive</Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -1183,7 +1192,7 @@ function WeeklyTargetsTable({ targets, isLoading, onDelete }: any) {
   );
 }
 
-function MonthlyTargetsTable({ targets, isLoading, onDelete }: any) {
+function MonthlyTargetsTable({ targets, isLoading, onEdit, onArchive }: any) {
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading targets...</div>;
   }
@@ -1228,7 +1237,8 @@ function MonthlyTargetsTable({ targets, isLoading, onDelete }: any) {
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-2 justify-center">
-                  <Button size="sm" variant="destructive" onClick={() => onDelete(target.id)}>Delete</Button>
+                  <Button size="sm" variant="outline" onClick={() => onEdit(target)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={() => onArchive(target.id)}>Archive</Button>
                 </div>
               </TableCell>
             </TableRow>
