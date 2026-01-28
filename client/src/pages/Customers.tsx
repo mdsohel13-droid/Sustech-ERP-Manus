@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Phone, Mail, Building, Calendar, MessageSquare, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -217,7 +218,44 @@ export default function Customers() {
             {customers && customers.length > 0 ? (
               customers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium"><button onClick={() => { setEditingCustomer(customer); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{customer.name}</button></TableCell>
+                  <TableCell className="font-medium">
+                    <HoverCard openDelay={200} closeDelay={100}>
+                      <HoverCardTrigger asChild>
+                        <button onClick={() => { setEditingCustomer(customer); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{customer.name}</button>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-80" side="right">
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-lg">{customer.name}</h4>
+                            {customer.company && <p className="text-sm text-muted-foreground">{customer.company}</p>}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <p className="text-muted-foreground">Email</p>
+                              <p className="font-medium">{customer.email || '-'}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Phone</p>
+                              <p className="font-medium">{customer.phone || '-'}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Status</p>
+                              {getStatusBadge(customer.status)}
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Last Contact</p>
+                              <p className="font-medium">{customer.lastContactDate ? format(new Date(customer.lastContactDate), "MMM dd, yyyy") : "Never"}</p>
+                            </div>
+                          </div>
+                          {customer.notes && (
+                            <div className="pt-2 border-t">
+                              <p className="text-xs text-muted-foreground">{customer.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </TableCell>
                   <TableCell>{customer.company || "-"}</TableCell>
                   <TableCell>
                     <div className="space-y-1 text-xs">

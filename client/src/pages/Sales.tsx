@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2, Edit } from "lucide-react";
 import { InlineEditCell } from "@/components/InlineEditCell";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
@@ -427,7 +428,57 @@ export default function Sales() {
                           />
                         </TableCell>
                         <TableCell>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
-                        <TableCell>{product?.name || `Product ${sale.productId}`}</TableCell>
+                        <TableCell>
+                          <HoverCard openDelay={200} closeDelay={100}>
+                            <HoverCardTrigger asChild>
+                              <span className="cursor-pointer hover:text-primary hover:underline">
+                                {product?.name || `Product ${sale.productId}`}
+                              </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80" side="right">
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h4 className="font-semibold text-lg">{product?.name || `Product ${sale.productId}`}</h4>
+                                    {product?.category && <Badge variant="secondary" className="mt-1">{product.category}</Badge>}
+                                  </div>
+                                  <Badge variant="outline">Sale #{sale.id}</Badge>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>
+                                    <p className="text-muted-foreground">Date</p>
+                                    <p className="font-medium">{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Salesperson</p>
+                                    <p className="font-medium">{sale.salespersonName || "N/A"}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Customer</p>
+                                    <p className="font-medium">{sale.customerName || "Walk-in"}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Quantity</p>
+                                    <p className="font-medium">{Number(sale.quantity).toLocaleString()}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Unit Price</p>
+                                    <p className="font-medium">৳{Number(sale.unitPrice).toLocaleString()}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Total Amount</p>
+                                    <p className="font-semibold text-primary">৳{total.toLocaleString()}</p>
+                                  </div>
+                                </div>
+                                {product?.description && (
+                                  <div className="pt-2 border-t">
+                                    <p className="text-xs text-muted-foreground">{product.description}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </TableCell>
                         <TableCell>{sale.salespersonName || "N/A"}</TableCell>
                         <TableCell>{sale.customerName || "-"}</TableCell>
                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
