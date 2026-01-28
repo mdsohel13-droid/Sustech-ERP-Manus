@@ -821,9 +821,9 @@ export default function HumanResource() {
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
                           <SelectContent>
-                            {hrStats?.employeesByDept?.map((d: any) => (
-                              <SelectItem key={d.departmentId || d.department} value={(d.departmentId || 1).toString()}>
-                                {d.department}
+                            {departments?.map((d: any) => (
+                              <SelectItem key={d.id} value={d.id.toString()}>
+                                {d.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
