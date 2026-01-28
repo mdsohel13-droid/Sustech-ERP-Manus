@@ -13,6 +13,7 @@ import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2, Edit 
 import { InlineEditCell } from "@/components/InlineEditCell";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { ProductCombobox } from "@/components/ui/product-combobox";
+import { CustomerCombobox } from "@/components/ui/customer-combobox";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { TableBatchActions, useTableBatchSelection } from "@/components/TableBatchActions";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,6 +31,10 @@ export default function Sales() {
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'product' | 'tracking'}>({show: false, item: null, type: 'product'});
   const [editingCell, setEditingCell] = useState<{rowId: number; field: string} | null>(null);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [isWalkInCustomer, setIsWalkInCustomer] = useState(false);
+  const [trackingProductId, setTrackingProductId] = useState("");
   
   const batchSelection = useTableBatchSelection(dailySales || []);
 
@@ -39,6 +44,7 @@ export default function Sales() {
   const { data: performance } = trpc.sales.getPerformanceSummary.useQuery();
   const { data: dailySales } = trpc.sales.getAll.useQuery();
   const { data: employees } = trpc.hr.getAll.useQuery();
+  const { data: customers } = trpc.customers.getAll.useQuery();
 
   const createProductMutation = trpc.sales.createProduct.useMutation({
     onSuccess: () => {
@@ -347,18 +353,27 @@ export default function Sales() {
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="product">Product</Label>
-                      <Select name="product" required>
-                        <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
-                        <SelectContent>
-                          {products?.map((p) => (
-                            <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <ProductCombobox
+                        products={products || []}
+                        value={selectedProductId}
+                        onValueChange={setSelectedProductId}
+                        placeholder="Search products..."
+                      />
+                      <input type="hidden" name="product" value={selectedProductId} />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="customer">Customer (Optional)</Label>
-                      <Input id="customer" name="customer" type="text" placeholder="Customer name" />
+                      <Label htmlFor="customer">Customer</Label>
+                      <CustomerCombobox
+                        customers={customers || []}
+                        value={selectedCustomer}
+                        onValueChange={(value, isWalkIn) => {
+                          setSelectedCustomer(value);
+                          setIsWalkInCustomer(isWalkIn);
+                        }}
+                        placeholder="Search customers or walk-in..."
+                      />
+                      <input type="hidden" name="customer" value={isWalkInCustomer ? selectedCustomer.replace("walkin:", "") : ""} />
+                      <input type="hidden" name="customerId" value={!isWalkInCustomer && selectedCustomer ? selectedCustomer : ""} />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="quantity">Quantity</Label>
@@ -494,16 +509,13 @@ export default function Sales() {
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                       <Label htmlFor="productId">Product</Label>
-                      <Select name="productId" required>
-                        <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
-                        <SelectContent>
-                          {products?.map((product) => (
-                            <SelectItem key={product.id} value={String(product.id)}>
-                              {product.name} ({product.category})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <ProductCombobox
+                        products={products || []}
+                        value={trackingProductId}
+                        onValueChange={setTrackingProductId}
+                        placeholder="Search products..."
+                      />
+                      <input type="hidden" name="productId" value={trackingProductId} />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="weekStartDate">Week Start Date</Label>
