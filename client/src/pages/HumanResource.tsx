@@ -1811,8 +1811,8 @@ export default function HumanResource() {
                               </SelectTrigger>
                               <SelectContent>
                                 {(employees || []).map((emp: any) => (
-                                  <SelectItem key={emp.id} value={emp.id.toString()}>
-                                    {emp.name}
+                                  <SelectItem key={emp.employee.id} value={emp.employee.id.toString()}>
+                                    {emp.user?.name || emp.employee.employeeCode}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
