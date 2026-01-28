@@ -623,15 +623,38 @@ export async function getUserByEmail(email: string) {
 export async function getUserWithPassword(email: string) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.execute(sql`SELECT id, openId, name, email, role, passwordHash, mustChangePassword FROM users WHERE email = ${email} LIMIT 1`);
-  const rows = result[0] as any[];
-  return rows[0] || null;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result[0] || null;
 }
 
 export async function updateUserLastSignIn(userId: number) {
   const db = await getDb();
   if (!db) return;
-  await db.execute(sql`UPDATE users SET lastSignedIn = NOW() WHERE id = ${userId}`);
+  await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, userId));
+}
+
+export async function createUserWithPassword(data: { name: string; email: string; password: string; role: "admin" | "manager" | "viewer" | "user" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const bcrypt = await import('bcryptjs');
+  const passwordHash = await bcrypt.hash(data.password, 10);
+  const result = await db.insert(users).values({
+    openId: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name: data.name,
+    email: data.email,
+    loginMethod: "email",
+    passwordHash,
+    role: data.role,
+  }).returning();
+  return result[0];
+}
+
+export async function updateUserPassword(userId: number, newPassword: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const bcrypt = await import('bcryptjs');
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId));
 }
 
 export async function createUser(user: InsertUser) {
@@ -2289,20 +2312,6 @@ export async function getAllUsersWithDetails() {
     createdAt: users.createdAt,
     lastSignedIn: users.lastSignedIn,
   }).from(users).orderBy(asc(users.name));
-}
-
-export async function createUserWithPassword(data: InsertUser & { passwordHash: string; mustChangePassword: boolean }) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.execute(sql`INSERT INTO users (openId, name, email, role, loginMethod, passwordHash, mustChangePassword) VALUES (${data.openId}, ${data.name}, ${data.email}, ${data.role}, ${data.loginMethod}, ${data.passwordHash}, ${data.mustChangePassword})`);
-}
-
-export async function updateUserPassword(userId: number, passwordHash: string, mustChangePassword: boolean) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.execute(sql`UPDATE users SET passwordHash = ${passwordHash}, mustChangePassword = ${mustChangePassword}, passwordChangedAt = NOW(), failedLoginAttempts = 0, lockedUntil = NULL WHERE id = ${userId}`);
 }
 
 export async function lockUserAccount(userId: number, lockedUntil: Date) {

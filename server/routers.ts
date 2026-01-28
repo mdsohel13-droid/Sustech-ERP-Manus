@@ -1028,6 +1028,32 @@ Provide 2-3 actionable business insights.`;
         return { success: true };
       }),
 
+    createWithPassword: adminProcedure
+      .input(z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email address"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        role: z.enum(["admin", "manager", "viewer", "user"]),
+      }))
+      .mutation(async ({ input }) => {
+        const existingUser = await db.getUserByEmail(input.email);
+        if (existingUser) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'User with this email already exists' });
+        }
+        const user = await db.createUserWithPassword(input);
+        return { success: true, userId: user.id };
+      }),
+
+    updatePassword: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        newPassword: z.string().min(6, "Password must be at least 6 characters"),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateUserPassword(input.userId, input.newPassword);
+        return { success: true };
+      }),
+
     delete: protectedProcedure
       .input(z.object({ userId: z.number() }))
       .mutation(async ({ ctx, input }) => {
