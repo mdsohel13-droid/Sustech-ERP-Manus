@@ -52,6 +52,12 @@ import {
   commissionHistory, InsertCommissionHistory,
   commissionTransactions, InsertCommissionTransaction,
   commissionPayouts, InsertCommissionPayout,
+  productCategories, InsertProductCategory,
+  productUnits, InsertProductUnit,
+  productBrands, InsertProductBrand,
+  productWarranties, InsertProductWarranty,
+  sellingPriceGroups, InsertSellingPriceGroup,
+  productVariations, InsertProductVariation,
 } from "../drizzle/schema";
 const ENV = { ownerOpenId: process.env.OWNER_OPEN_ID || '' };
 
@@ -2634,6 +2640,303 @@ export async function getCommissionHistoryForPeriod(period: string) {
   return await db.select().from(commissionHistory)
     .where(eq(commissionHistory.period, period))
     .orderBy(desc(commissionHistory.commissionAmount));
+}
+
+// ============= PRODUCT CATEGORIES =============
+
+export async function getProductCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productCategories)
+    .where(eq(productCategories.isActive, true))
+    .orderBy(asc(productCategories.name));
+}
+
+export async function getAllProductCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productCategories)
+    .orderBy(asc(productCategories.name));
+}
+
+export async function createProductCategory(data: InsertProductCategory) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(productCategories).values(data).returning();
+  return result[0];
+}
+
+export async function updateProductCategory(id: number, data: Partial<InsertProductCategory>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(productCategories)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(productCategories.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteProductCategory(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(productCategories)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(productCategories.id, id));
+}
+
+// ============= PRODUCT UNITS =============
+
+export async function getProductUnits() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productUnits)
+    .where(eq(productUnits.isActive, true))
+    .orderBy(asc(productUnits.name));
+}
+
+export async function getAllProductUnits() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productUnits)
+    .orderBy(asc(productUnits.name));
+}
+
+export async function createProductUnit(data: InsertProductUnit) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(productUnits).values(data).returning();
+  return result[0];
+}
+
+export async function updateProductUnit(id: number, data: Partial<InsertProductUnit>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(productUnits)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(productUnits.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteProductUnit(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(productUnits)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(productUnits.id, id));
+}
+
+// ============= PRODUCT BRANDS =============
+
+export async function getProductBrands() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productBrands)
+    .where(eq(productBrands.isActive, true))
+    .orderBy(asc(productBrands.name));
+}
+
+export async function getAllProductBrands() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productBrands)
+    .orderBy(asc(productBrands.name));
+}
+
+export async function createProductBrand(data: InsertProductBrand) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(productBrands).values(data).returning();
+  return result[0];
+}
+
+export async function updateProductBrand(id: number, data: Partial<InsertProductBrand>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(productBrands)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(productBrands.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteProductBrand(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(productBrands)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(productBrands.id, id));
+}
+
+// ============= PRODUCT WARRANTIES =============
+
+export async function getProductWarranties() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productWarranties)
+    .where(eq(productWarranties.isActive, true))
+    .orderBy(asc(productWarranties.name));
+}
+
+export async function getAllProductWarranties() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productWarranties)
+    .orderBy(asc(productWarranties.name));
+}
+
+export async function createProductWarranty(data: InsertProductWarranty) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(productWarranties).values(data).returning();
+  return result[0];
+}
+
+export async function updateProductWarranty(id: number, data: Partial<InsertProductWarranty>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(productWarranties)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(productWarranties.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteProductWarranty(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(productWarranties)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(productWarranties.id, id));
+}
+
+// ============= SELLING PRICE GROUPS =============
+
+export async function getSellingPriceGroups() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(sellingPriceGroups)
+    .where(eq(sellingPriceGroups.isActive, true))
+    .orderBy(asc(sellingPriceGroups.name));
+}
+
+export async function createSellingPriceGroup(data: InsertSellingPriceGroup) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(sellingPriceGroups).values(data).returning();
+  return result[0];
+}
+
+export async function updateSellingPriceGroup(id: number, data: Partial<InsertSellingPriceGroup>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(sellingPriceGroups)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(sellingPriceGroups.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteSellingPriceGroup(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(sellingPriceGroups)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(sellingPriceGroups.id, id));
+}
+
+// ============= PRODUCT VARIATIONS =============
+
+export async function getProductVariations() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productVariations)
+    .where(eq(productVariations.isActive, true))
+    .orderBy(asc(productVariations.name));
+}
+
+export async function createProductVariation(data: InsertProductVariation) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(productVariations).values(data).returning();
+  return result[0];
+}
+
+export async function updateProductVariation(id: number, data: Partial<InsertProductVariation>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(productVariations)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(productVariations.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteProductVariation(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(productVariations)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(productVariations.id, id));
+}
+
+// ============= PRODUCTS ARCHIVE/RESTORE =============
+
+export async function getActiveProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(salesProducts)
+    .where(isNull(salesProducts.archivedAt))
+    .orderBy(desc(salesProducts.createdAt));
+}
+
+export async function getArchivedProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(salesProducts)
+    .where(sql`"archived_at" IS NOT NULL`)
+    .orderBy(desc(salesProducts.archivedAt));
+}
+
+export async function archiveProduct(id: number, archivedBy: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(salesProducts)
+    .set({ 
+      archivedAt: new Date(),
+      archivedBy: archivedBy,
+      updatedAt: new Date()
+    })
+    .where(eq(salesProducts.id, id));
+}
+
+export async function restoreProduct(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(salesProducts)
+    .set({ 
+      archivedAt: null,
+      archivedBy: null,
+      updatedAt: new Date()
+    })
+    .where(eq(salesProducts.id, id));
+}
+
+export async function createProductFull(data: InsertSalesProduct) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(salesProducts).values(data).returning();
+  return result[0];
+}
+
+export async function updateProductFull(id: number, data: Partial<InsertSalesProduct>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(salesProducts)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(salesProducts.id, id))
+    .returning();
+  return result[0];
 }
 
 
