@@ -813,8 +813,8 @@ export async function createWeeklyTarget(target: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const [result] = await db.insert(weeklySalesTargets).values(target);
-  return result;
+  const result = await db.insert(weeklySalesTargets).values(target).returning();
+  return result[0];
 }
 
 export async function getWeeklyTargets() {
@@ -829,8 +829,8 @@ export async function createMonthlyTarget(target: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const [result] = await db.insert(monthlySalesTargets).values(target);
-  return result;
+  const result = await db.insert(monthlySalesTargets).values(target).returning();
+  return result[0];
 }
 
 export async function getMonthlyTargets() {
