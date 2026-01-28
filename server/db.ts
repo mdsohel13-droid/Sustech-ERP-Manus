@@ -1009,6 +1009,193 @@ export async function deleteIncomeExpenditure(id: number) {
   await db.delete(incomeExpenditure).where(eq(incomeExpenditure.id, id));
 }
 
+// ============ Dashboard KPI Analytics ============
+export async function getDashboardKPIs() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const twoMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  
+  const [allIncomeData, allCustomers, allSales, allQuotations] = await Promise.all([
+    db.select().from(incomeExpenditure),
+    db.select().from(customers),
+    db.select().from(dailySales).where(eq(dailySales.isArchived, false)),
+    db.select().from(quotationItems),
+  ]);
+  
+  const totalRevenue = allIncomeData
+    .filter(r => r.type === "income")
+    .reduce((sum, r) => sum + Number(r.amount), 0);
+  
+  const currentMonthIncome = allIncomeData
+    .filter(r => r.type === "income" && new Date(r.date) >= currentMonthStart)
+    .reduce((sum, r) => sum + Number(r.amount), 0);
+  
+  const lastMonthIncome = allIncomeData
+    .filter(r => {
+      const d = new Date(r.date);
+      return r.type === "income" && d >= lastMonthStart && d < currentMonthStart;
+    })
+    .reduce((sum, r) => sum + Number(r.amount), 0);
+  
+  const revenueChange = lastMonthIncome > 0
+    ? ((currentMonthIncome - lastMonthIncome) / lastMonthIncome * 100)
+    : (currentMonthIncome > 0 ? 100 : 0);
+  
+  const activeCustomers = allCustomers.length;
+  
+  const currentMonthCustomers = allCustomers.filter(c => 
+    new Date(c.createdAt) >= currentMonthStart
+  ).length;
+  const lastMonthCustomers = allCustomers.filter(c => {
+    const d = new Date(c.createdAt);
+    return d >= lastMonthStart && d < currentMonthStart;
+  }).length;
+  const customersChange = lastMonthCustomers > 0
+    ? ((currentMonthCustomers - lastMonthCustomers) / lastMonthCustomers * 100)
+    : (currentMonthCustomers > 0 ? 100 : 0);
+  
+  const totalOrders = allSales.length;
+  
+  const currentMonthOrders = allSales.filter(s =>
+    new Date(s.date) >= currentMonthStart
+  ).length;
+  const lastMonthOrders = allSales.filter(s => {
+    const d = new Date(s.date);
+    return d >= lastMonthStart && d < currentMonthStart;
+  }).length;
+  const ordersChange = lastMonthOrders > 0
+    ? ((currentMonthOrders - lastMonthOrders) / lastMonthOrders * 100)
+    : (currentMonthOrders > 0 ? 100 : 0);
+  
+  const inventoryValue = allQuotations.reduce((sum, q) => sum + Number(q.finalAmount), 0);
+  
+  const currentMonthInventory = allQuotations
+    .filter(q => new Date(q.createdAt) >= currentMonthStart)
+    .reduce((sum, q) => sum + Number(q.finalAmount), 0);
+  const lastMonthInventory = allQuotations
+    .filter(q => {
+      const d = new Date(q.createdAt);
+      return d >= lastMonthStart && d < currentMonthStart;
+    })
+    .reduce((sum, q) => sum + Number(q.finalAmount), 0);
+  const inventoryChange = lastMonthInventory > 0
+    ? ((currentMonthInventory - lastMonthInventory) / lastMonthInventory * 100)
+    : (currentMonthInventory > 0 ? 100 : 0);
+  
+  return {
+    totalRevenue,
+    activeCustomers,
+    totalOrders,
+    inventoryValue,
+    revenueChange: Math.round(revenueChange * 10) / 10,
+    customersChange: Math.round(customersChange * 10) / 10,
+    ordersChange: Math.round(ordersChange * 10) / 10,
+    inventoryChange: Math.round(inventoryChange * 10) / 10,
+  };
+}
+
+export async function getRevenueTrends() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const months = [];
+  const now = new Date();
+  
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(date.toISOString().slice(0, 7));
+  }
+  
+  const incomeData = await db.select().from(incomeExpenditure);
+  
+  return months.map(monthStr => {
+    const monthLabel = new Date(monthStr + '-01').toLocaleDateString('en-US', { month: 'short' });
+    
+    const monthRecords = incomeData.filter(r => {
+      const recordDate = new Date(r.date).toISOString().slice(0, 7);
+      return recordDate === monthStr;
+    });
+    
+    const revenue = monthRecords
+      .filter(r => r.type === "income")
+      .reduce((sum, r) => sum + Number(r.amount), 0);
+    
+    const expenses = monthRecords
+      .filter(r => r.type === "expenditure")
+      .reduce((sum, r) => sum + Number(r.amount), 0);
+    
+    return {
+      month: monthLabel,
+      revenue,
+      expenses,
+      profit: revenue - expenses,
+    };
+  });
+}
+
+export async function getTopProductsSales() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const items = await db.select().from(quotationItems);
+  
+  const productSales = items.reduce((acc, p) => {
+    const desc = p.description || "Unknown Product";
+    if (!acc[desc]) {
+      acc[desc] = { sales: 0, revenue: 0, cost: 0 };
+    }
+    acc[desc].sales += Number(p.quantity);
+    acc[desc].revenue += Number(p.finalAmount);
+    acc[desc].cost += Number(p.amount) - Number(p.discountAmount || 0);
+    return acc;
+  }, {} as Record<string, { sales: number; revenue: number; cost: number }>);
+  
+  return Object.entries(productSales)
+    .map(([name, data]) => {
+      const margin = data.revenue > 0 
+        ? Math.round(((data.revenue - data.cost) / data.revenue) * 100)
+        : 0;
+      return {
+        name: name.length > 30 ? name.substring(0, 30) + "..." : name,
+        sales: data.sales,
+        revenue: data.revenue,
+        margin: Math.max(0, Math.min(margin, 100)),
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+}
+
+export async function getDepartmentDistribution() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const depts = await db.select().from(departments);
+  const emps = await db.select().from(employees).where(eq(employees.status, "active"));
+  
+  const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#ec4899"];
+  
+  const deptCounts = depts.map((dept, i) => {
+    const count = emps.filter(e => e.departmentId === dept.id).length;
+    return {
+      name: dept.name,
+      value: count,
+      color: colors[i % colors.length],
+    };
+  });
+  
+  const total = deptCounts.reduce((sum, d) => sum + d.value, 0);
+  
+  return deptCounts.map(d => ({
+    ...d,
+    value: total > 0 ? Math.round((d.value / total) * 100) : 0,
+  }));
+}
+
 // ============ Budget Module ============
 export async function createBudget(data: InsertBudget) {
   const db = await getDb();

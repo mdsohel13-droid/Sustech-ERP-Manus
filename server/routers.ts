@@ -710,6 +710,22 @@ export const appRouter = router({
     getNotifications: protectedProcedure.query(async () => {
       return await db.getRecentNotifications(10);
     }),
+    
+    getKPIs: protectedProcedure.query(async () => {
+      return await db.getDashboardKPIs();
+    }),
+    
+    getRevenueTrends: protectedProcedure.query(async () => {
+      return await db.getRevenueTrends();
+    }),
+    
+    getTopProducts: protectedProcedure.query(async () => {
+      return await db.getTopProductsSales();
+    }),
+    
+    getDepartmentDistribution: protectedProcedure.query(async () => {
+      return await db.getDepartmentDistribution();
+    }),
   }),
 
   // ============ Insights Module ============
