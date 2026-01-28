@@ -729,7 +729,7 @@ function DailySaleForm({ products, salespeople, onSubmit, isLoading, initialData
             </SelectTrigger>
             <SelectContent>
               {products.map((product: any) => (
-                <SelectItem key={product.id} value={product.id}>
+                <SelectItem key={product.id} value={product.id.toString()}>
                   {product.name}
                 </SelectItem>
               ))}
@@ -891,7 +891,7 @@ function WeeklyTargetForm({ products, salespeople, onSubmit, isLoading }: { prod
           </SelectTrigger>
           <SelectContent>
             {products.map((product: any) => (
-              <SelectItem key={product.id} value={product.id}>
+              <SelectItem key={product.id} value={product.id.toString()}>
                 {product.name}
               </SelectItem>
             ))}
@@ -913,12 +913,12 @@ function WeeklyTargetForm({ products, salespeople, onSubmit, isLoading }: { prod
 
       <div className="space-y-2">
         <Label htmlFor="salesperson">Salesperson (Optional - Leave empty for team target)</Label>
-        <Select value={formData.salespersonId} onValueChange={(value) => setFormData({ ...formData, salespersonId: value })}>
+        <Select value={formData.salespersonId || "team"} onValueChange={(value) => setFormData({ ...formData, salespersonId: value === "team" ? "" : value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select salesperson or leave for team" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Team Target</SelectItem>
+            <SelectItem value="team">Team Target</SelectItem>
             {salespeople.map((person: any) => (
               <SelectItem key={person.id} value={person.id.toString()}>
                 {person.name}
@@ -996,7 +996,7 @@ function MonthlyTargetForm({ products, salespeople, onSubmit, isLoading }: { pro
           </SelectTrigger>
           <SelectContent>
             {products.map((product: any) => (
-              <SelectItem key={product.id} value={product.id}>
+              <SelectItem key={product.id} value={product.id.toString()}>
                 {product.name}
               </SelectItem>
             ))}
@@ -1018,12 +1018,12 @@ function MonthlyTargetForm({ products, salespeople, onSubmit, isLoading }: { pro
 
       <div className="space-y-2">
         <Label htmlFor="salesperson">Salesperson (Optional - Leave empty for team target)</Label>
-        <Select value={formData.salespersonId} onValueChange={(value) => setFormData({ ...formData, salespersonId: value })}>
+        <Select value={formData.salespersonId || "team"} onValueChange={(value) => setFormData({ ...formData, salespersonId: value === "team" ? "" : value })}>
           <SelectTrigger>
             <SelectValue placeholder="Select salesperson or leave for team" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Team Target</SelectItem>
+            <SelectItem value="team">Team Target</SelectItem>
             {salespeople.map((person: any) => (
               <SelectItem key={person.id} value={person.id.toString()}>
                 {person.name}
