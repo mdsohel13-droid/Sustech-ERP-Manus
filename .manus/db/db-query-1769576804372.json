@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, \"productId\", \"productName\", \"salespersonId\", \"salespersonName\" FROM daily_sales LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mZrnr2Ed9aCf94.e70a2c25fc99 --database PN9NN3GJE6ZdsW9AYjn6LX --execute SELECT id, \"productId\", \"productName\", \"salespersonId\", \"salespersonName\" FROM daily_sales LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "30001",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "60001",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "60002",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "90001",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "90002",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "90003",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "90004",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "90005",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    },
+    {
+      "id": "90006",
+      "productId": "productId",
+      "productName": "productName",
+      "salespersonId": "salespersonId",
+      "salespersonName": "salespersonName"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproductId\tproductName\tsalespersonId\tsalespersonName\n1\tproductId\tproductName\tsalespersonId\tsalespersonName\n30001\tproductId\tproductName\tsalespersonId\tsalespersonName\n60001\tproductId\tproductName\tsalespersonId\tsalespersonName\n60002\tproductId\tproductName\tsalespersonId\tsalespersonName\n90001\tproductId\tproductName\tsalespersonId\tsalespersonName\n90002\tproductId\tproductName\tsalespersonId\tsalespersonName\n90003\tproductId\tproductName\tsalespersonId\tsalespersonName\n90004\tproductId\tproductName\tsalespersonId\tsalespersonName\n90005\tproductId\tproductName\tsalespersonId\tsalespersonName\n90006\tproductId\tproductName\tsalespersonId\tsalespersonName\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

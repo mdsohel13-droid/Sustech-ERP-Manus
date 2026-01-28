@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { format } from "date-fns";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
-import { PRODUCTS_WITH_SPECS, getProductById } from "@/lib/productsData";
 
 const PRODUCTS = [
   { id: "fan", name: "Atomberg Gorilla Fan", category: "fan" },
@@ -38,11 +37,22 @@ export default function SalesEnhanced() {
   const [selectedPeriod, setSelectedPeriod] = useState("this_month");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  
+  // Fetch product details when selectedProductId changes
+  const { data: selectedProduct } = trpc.salesEnhanced.getProductById.useQuery(
+    { productId: selectedProductId || 0 },
+    { enabled: selectedProductId !== null && selectedProductId > 0 }
+  );
 
   // Fetch data
   const { data: dailySales, isLoading: loadingDaily } = trpc.salesEnhanced.getDailySales.useQuery({
+    startDate: getStartDate(selectedPeriod),
+    endDate: new Date().toISOString().split("T")[0],
+  });
+
+  const { data: archivedDailySales, isLoading: loadingArchived } = trpc.salesEnhanced.getArchivedDailySales.useQuery({
     startDate: getStartDate(selectedPeriod),
     endDate: new Date().toISOString().split("T")[0],
   });
@@ -99,8 +109,12 @@ export default function SalesEnhanced() {
 
   const archiveDailySale = trpc.salesEnhanced.archiveDailySale.useMutation({
     onSuccess: () => {
-      // Invalidate with the current query parameters to trigger immediate refetch
+      // Invalidate both daily sales and archived sales queries
       utils.salesEnhanced.getDailySales.invalidate({
+        startDate: getStartDate(selectedPeriod),
+        endDate: new Date().toISOString().split("T")[0],
+      });
+      utils.salesEnhanced.getArchivedDailySales.invalidate({
         startDate: getStartDate(selectedPeriod),
         endDate: new Date().toISOString().split("T")[0],
       });
@@ -317,11 +331,9 @@ export default function SalesEnhanced() {
                 }}
                 onArchive={(id: number) => archiveDailySale.mutate({ id })}
                 onProductClick={(productId: number | string) => {
-                  const product = getProductById(productId);
-                  if (product) {
-                    setSelectedProductId(productId);
-                    setProductModalOpen(true);
-                  }
+                  const numProductId = typeof productId === 'string' ? parseInt(productId) : productId;
+                  setSelectedProductId(numProductId);
+                  setProductModalOpen(true);
                 }}
               />
             </CardContent>
@@ -560,23 +572,56 @@ export default function SalesEnhanced() {
               <CardDescription>Deleted sales records are stored here for reference</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">Archived sales records will appear here</p>
-                <p className="text-sm text-muted-foreground">When you archive a sale, it will be moved to this section</p>
-              </div>
+              {loadingArchived ? (
+                <div className="text-center py-8 text-muted-foreground">Loading archived records...</div>
+              ) : archivedDailySales && archivedDailySales.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-semibold">Date</th>
+                        <th className="text-left py-3 px-4 font-semibold">Product</th>
+                        <th className="text-left py-3 px-4 font-semibold">Salesperson</th>
+                        <th className="text-left py-3 px-4 font-semibold">Customer</th>
+                        <th className="text-right py-3 px-4 font-semibold">Quantity</th>
+                        <th className="text-right py-3 px-4 font-semibold">Unit Price</th>
+                        <th className="text-right py-3 px-4 font-semibold">Total Amount</th>
+                        <th className="text-left py-3 px-4 font-semibold">Archived By</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {archivedDailySales.map((sale: any) => (
+                        <tr key={sale.id} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4">{format(new Date(sale.date), "dd MMM yyyy")}</td>
+                          <td className="py-3 px-4 font-medium">{sale.productName}</td>
+                          <td className="py-3 px-4">{sale.salespersonName}</td>
+                          <td className="py-3 px-4">{sale.customerName || "-"}</td>
+                          <td className="py-3 px-4 text-right">{sale.quantity}</td>
+                          <td className="py-3 px-4 text-right">৳{parseFloat(sale.unitPrice).toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right font-semibold">৳{parseFloat(sale.totalAmount).toLocaleString()}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">{sale.archivedBy ? "Admin" : "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">Archived sales records will appear here</p>
+                  <p className="text-sm text-muted-foreground">When you archive a sale, it will be moved to this section</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
       {/* Product Detail Modal */}
-      {selectedProductId && (
-        <ProductDetailModal
-          open={productModalOpen}
-          onOpenChange={setProductModalOpen}
-          product={getProductById(selectedProductId)}
-        />
-      )}
+      <ProductDetailModal
+        open={productModalOpen && selectedProductId !== null}
+        onOpenChange={setProductModalOpen}
+        product={selectedProduct || null}
+      />
     </div>
   );
 }

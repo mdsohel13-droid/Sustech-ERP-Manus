@@ -326,6 +326,10 @@
 - [ ] Add filters and exports to all modules
 - [ ] Complete health checks for all modules
 
+## Current Issues (Session 2026-01-27 - Continuation)
+- [ ] Product modal always shows "Atomberg Gorilla Fan" instead of clicked product details
+- [ ] Archive button doesn't move records to Archive tab - records stay in Daily Sales
+
 ## Critical Modules Implementation (Phase 3)
 
 ### Purchases Module (IN PROGRESS)

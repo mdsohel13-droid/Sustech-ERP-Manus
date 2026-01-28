@@ -1394,6 +1394,14 @@ Provide 2-3 actionable business insights.`;
         await db.createSalesperson(input);
         return { success: true };
       }),
+
+    getProductById: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getProductById(input.productId);
+      }),
   }),
 
   // ============ Income & Expenditure Module ============
