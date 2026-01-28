@@ -113,8 +113,8 @@ export const appRouter = router({
     // Accounts Receivable
     createAR: protectedProcedure
       .input(z.object({
-        customerName: z.string(),
-        amount: z.string(),
+        customerName: z.string().min(1, "Customer name is required"),
+        amount: z.string().refine(val => parseFloat(val) >= 0, "Amount cannot be negative"),
         dueDate: z.string(),
         status: z.enum(["pending", "overdue", "paid"]).optional(),
         invoiceNumber: z.string().optional(),
@@ -138,7 +138,7 @@ export const appRouter = router({
       .input(z.object({
         id: z.number(),
         customerName: z.string().optional(),
-        amount: z.string().optional(),
+        amount: z.string().refine(val => !val || parseFloat(val) >= 0, "Amount cannot be negative").optional(),
         dueDate: z.string().optional(),
         status: z.enum(["pending", "overdue", "paid"]).optional(),
         invoiceNumber: z.string().optional(),
@@ -214,8 +214,8 @@ export const appRouter = router({
     // Accounts Payable
     createAP: protectedProcedure
       .input(z.object({
-        vendorName: z.string(),
-        amount: z.string(),
+        vendorName: z.string().min(1, "Vendor name is required"),
+        amount: z.string().refine(val => parseFloat(val) >= 0, "Amount cannot be negative"),
         dueDate: z.string(),
         status: z.enum(["pending", "overdue", "paid"]).optional(),
         invoiceNumber: z.string().optional(),
@@ -277,8 +277,8 @@ export const appRouter = router({
         productType: z.enum(["fan", "ess", "solar_pv", "projects", "testing", "installation"]),
         weekNumber: z.number().min(1).max(4),
         monthYear: z.string(),
-        target: z.string().optional(),
-        actual: z.string().optional(),
+        target: z.string().refine(val => !val || parseFloat(val) >= 0, "Target cannot be negative").optional(),
+        actual: z.string().refine(val => !val || parseFloat(val) >= 0, "Actual cannot be negative").optional(),
         unit: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
@@ -1426,9 +1426,9 @@ Provide 2-3 actionable business insights.`;
       .input(z.object({
         date: z.string(),
         type: z.enum(["income", "expenditure"]),
-        category: z.string(),
+        category: z.string().min(1, "Category is required"),
         subcategory: z.string().optional(),
-        amount: z.string(),
+        amount: z.string().refine(val => parseFloat(val) >= 0, "Amount cannot be negative"),
         currency: z.string().default("BDT"),
         description: z.string().optional(),
         referenceNumber: z.string().optional(),
@@ -1475,7 +1475,7 @@ Provide 2-3 actionable business insights.`;
         type: z.enum(["income", "expenditure"]).optional(),
         category: z.string().optional(),
         subcategory: z.string().optional(),
-        amount: z.string().optional(),
+        amount: z.string().refine(val => !val || parseFloat(val) >= 0, "Amount cannot be negative").optional(),
         currency: z.string().optional(),
         description: z.string().optional(),
         referenceNumber: z.string().optional(),
@@ -1501,8 +1501,8 @@ Provide 2-3 actionable business insights.`;
       .input(z.object({
         monthYear: z.string(), // Format: YYYY-MM
         type: z.enum(["income", "expenditure"]),
-        category: z.string(),
-        budgetAmount: z.string(),
+        category: z.string().min(1, "Category is required"),
+        budgetAmount: z.string().refine(val => parseFloat(val) >= 0, "Budget amount cannot be negative"),
         currency: z.string().default("BDT"),
         notes: z.string().optional(),
       }))
@@ -1752,13 +1752,13 @@ Provide 2-3 actionable business insights.`;
         quotationId: z.number(),
         description: z.string(),
         specifications: z.string().optional(),
-        quantity: z.number(),
+        quantity: z.number().min(0, "Quantity cannot be negative"),
         unit: z.string(),
-        unitPrice: z.number(),
-        amount: z.number(),
-        discount: z.number(),
-        discountAmount: z.number(),
-        finalAmount: z.number(),
+        unitPrice: z.number().min(0, "Unit price cannot be negative"),
+        amount: z.number().min(0, "Amount cannot be negative"),
+        discount: z.number().min(0).max(100, "Discount must be 0-100%"),
+        discountAmount: z.number().min(0, "Discount amount cannot be negative"),
+        finalAmount: z.number().min(0, "Final amount cannot be negative"),
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
