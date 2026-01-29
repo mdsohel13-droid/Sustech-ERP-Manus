@@ -36,6 +36,8 @@ drizzle/              # Database schema and migrations
   - **Status Badges**: Color-coded badges (Not Started, Preparing, Submitted, Won, Loss, PO Received)
   - **CRUD Dialogs**: Add/Edit/View dialogs with proper form fields (Reference ID, Description, Client, Dates, Value, Status, Notes)
   - **Archive/Restore**: Archive tenders/quotations and restore from archive
+  - **Auto-Archive on Loss**: Items marked as "Loss" automatically move to archive (no data disappears)
+  - **Auto-Project Creation**: When a Tender/Quotation is marked as "Win" or "PO Received", automatically creates a Project with all data
   - **Database Integration**: Uses tRPC queries (tenderQuotation.getAll, customers.getAll) for real-time data
   - **Backend Integration**: Properly uses authenticated user context for createdBy field, restore endpoint for unarchiving
 - **Sales Module Redesign v2**: Complete layout restructure with 35% dashboard / 65% data entry split

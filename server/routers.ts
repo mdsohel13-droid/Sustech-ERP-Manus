@@ -1836,27 +1836,29 @@ Provide 2-3 actionable business insights.`;
         notes: z.string().optional(),
         transferredToProjectId: z.number().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { id, submissionDate, followUpDate, ...data } = input;
         
-        // Auto-transfer to Projects if status is "po_received"
-        if (data.status === "po_received" && !data.transferredToProjectId) {
+        // Auto-transfer to Projects if status is "win" or "po_received"
+        if ((data.status === "win" || data.status === "po_received") && !data.transferredToProjectId) {
           const tender = await db.getTenderQuotationById(id);
-          if (tender) {
+          if (tender && !tender.transferredToProjectId) {
             // Create new project from tender/quotation
             const projectResult = await db.createProject({
               name: tender.description,
               customerName: tender.clientName,
-              stage: "lead",
+              stage: "won",
               value: tender.estimatedValue || "0",
               currency: tender.currency,
               startDate: new Date() as any,
-              description: `Transferred from ${tender.type === "government_tender" ? "Government Tender" : "Private Quotation"}: ${tender.referenceId}`,
-              createdBy: tender.createdBy
+              description: `Created from ${tender.type === "government_tender" ? "Government Tender" : "Private Quotation"}: ${tender.referenceId}`,
+              createdBy: ctx.user.id
             });
             
             // Update tender with project ID
-            data.transferredToProjectId = Number(projectResult[0].insertId);
+            if (projectResult && projectResult[0]) {
+              data.transferredToProjectId = projectResult[0].id;
+            }
           }
         }
         

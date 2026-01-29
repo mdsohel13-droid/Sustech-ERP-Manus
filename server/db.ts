@@ -313,7 +313,7 @@ export async function getSalesSummary(monthYear: string) {
 export async function createProject(data: InsertProject) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.insert(projects).values(data);
+  return await db.insert(projects).values(data).returning({ id: projects.id });
 }
 
 export async function getAllProjects() {

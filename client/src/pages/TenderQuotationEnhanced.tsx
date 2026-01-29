@@ -389,7 +389,7 @@ export default function TenderQuotationEnhanced() {
                   <TableCell>
                     {item.submissionDate ? format(new Date(item.submissionDate), 'MMM dd, yyyy') : '-'}
                   </TableCell>
-                  <TableCell>{getFollowUpBadge(item.status, item.followUpDate)}</TableCell>
+                  <TableCell>{getStatusBadge(item.status)}</TableCell>
                   <TableCell className="text-right font-medium">
                     {item.estimatedValue ? formatCurrency(parseFloat(item.estimatedValue), currency) : '-'}
                   </TableCell>
