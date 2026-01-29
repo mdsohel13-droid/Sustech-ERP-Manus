@@ -47,6 +47,18 @@ import {
   Circle,
   Plus,
   Trash2,
+  Home,
+  UserCog,
+  ClipboardList,
+  TrendingUp,
+  Copy,
+  History,
+  SortAsc,
+  MoreHorizontal,
+  RefreshCw,
+  Eye,
+  Settings,
+  Check,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -514,140 +526,310 @@ export default function HumanResource() {
         )}
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
+      {/* Key Metrics - Colorful Gradient Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        {/* Total Users - Blue Gradient */}
+        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+          <div className="absolute top-3 right-3 opacity-20">
+            <Users className="h-12 w-12" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-100 flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Total Users
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold flex items-center gap-2">
-              <Users className="h-6 w-6 text-blue-600" />
-              {allUsers?.length || 0}
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-100" />
+              <span className="text-3xl font-bold">{allUsers?.length || 0}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">System users</p>
+            <p className="text-xs text-blue-100 mt-1">System users</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
+        {/* Admins - Amber Gradient */}
+        <Card className="relative overflow-hidden bg-gradient-to-br from-amber-400 to-amber-500 text-white border-0 shadow-lg">
+          <div className="absolute top-3 right-3 opacity-20">
+            <Award className="h-12 w-12" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Admins</CardTitle>
+            <CardTitle className="text-sm font-medium text-amber-100 flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Admins
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold flex items-center gap-2 text-red-600">
-              <Shield className="h-6 w-6" />
-              {allUsers?.filter((u: any) => u.role === 'admin').length || 0}
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-amber-100" />
+              <span className="text-3xl font-bold">{allUsers?.filter((u: any) => u.role === 'admin').length || 0}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Full access users</p>
+            <p className="text-xs text-amber-100 mt-1">Full access users</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
+        {/* Pending Leaves - Red/Pink Gradient */}
+        <Card className="relative overflow-hidden bg-gradient-to-br from-rose-400 to-rose-500 text-white border-0 shadow-lg">
+          <div className="absolute top-3 right-3 opacity-20">
+            <Calendar className="h-12 w-12" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Leaves</CardTitle>
+            <CardTitle className="text-sm font-medium text-rose-100 flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Pending Leaves
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold flex items-center gap-2 text-orange-600">
-              <Calendar className="h-6 w-6" />
-              {hrStats?.pendingLeaves || 0}
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-rose-100" />
+              <span className="text-3xl font-bold">{hrStats?.pendingLeaves || 0}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
+            <p className="text-xs text-rose-100 mt-1">Awaiting approval</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        {/* Departments - Purple Gradient */}
+        <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
+          <div className="absolute top-3 right-3 opacity-20">
+            <Building2 className="h-12 w-12" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Departments</CardTitle>
+            <CardTitle className="text-sm font-medium text-purple-100 flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Departments
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold flex items-center gap-2 text-purple-600">
-              <Building2 className="h-6 w-6" />
-              {hrStats?.employeesByDept?.length || 0}
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-purple-100" />
+              <span className="text-3xl font-bold">{hrStats?.employeesByDept?.length || 0}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Active departments</p>
+            <p className="text-xs text-purple-100 mt-1">Active departments</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-10">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users & Access</TabsTrigger>
-          <TabsTrigger value="employees">Employees</TabsTrigger>
-          <TabsTrigger value="departments">Departments</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="leaves">Leaves</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="job-descriptions">Job Descriptions</TabsTrigger>
-          <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
-          {user?.role === 'admin' && <TabsTrigger value="commission">Commission</TabsTrigger>}
-          {user?.role === 'admin' && <TabsTrigger value="confidential">Confidential</TabsTrigger>}
-          <TabsTrigger value="roles">Role Guide</TabsTrigger>
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="overview" className="flex items-center gap-1.5">
+            <Home className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-1.5">
+            <UserCog className="h-4 w-4" />
+            Users & Access
+          </TabsTrigger>
+          <TabsTrigger value="employees" className="flex items-center gap-1.5">
+            <Users className="h-4 w-4" />
+            Employees
+          </TabsTrigger>
+          <TabsTrigger value="departments" className="flex items-center gap-1.5">
+            <Building2 className="h-4 w-4" />
+            Departments
+          </TabsTrigger>
+          <TabsTrigger value="attendance" className="flex items-center gap-1.5">
+            <ClipboardCheck className="h-4 w-4" />
+            Attendance
+          </TabsTrigger>
+          <TabsTrigger value="leaves" className="flex items-center gap-1.5">
+            <Calendar className="h-4 w-4" />
+            Leaves
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="flex items-center gap-1.5">
+            <TrendingUp className="h-4 w-4" />
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="job-descriptions" className="flex items-center gap-1.5">
+            <Briefcase className="h-4 w-4" />
+            Job Descriptions
+          </TabsTrigger>
+          <TabsTrigger value="onboarding" className="flex items-center gap-1.5">
+            <ClipboardList className="h-4 w-4" />
+            Onboarding
+          </TabsTrigger>
+          {user?.role === 'admin' && (
+            <TabsTrigger value="commission" className="flex items-center gap-1.5">
+              <Award className="h-4 w-4" />
+              Commission
+            </TabsTrigger>
+          )}
+          {user?.role === 'admin' && (
+            <TabsTrigger value="confidential" className="flex items-center gap-1.5">
+              <Shield className="h-4 w-4" />
+              Confidential
+            </TabsTrigger>
+          )}
+          <TabsTrigger value="roles" className="flex items-center gap-1.5">
+            <FileText className="h-4 w-4" />
+            Role Guide
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Employees by Department
-                </CardTitle>
+          {/* Action Bar */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+              <Copy className="h-4 w-4" />
+              Copies
+              <Badge variant="secondary" className="ml-1 text-xs">ERU</Badge>
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+              <History className="h-4 w-4" />
+              Recent Activity
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+              <SortAsc className="h-4 w-4" />
+              Sorted Employees
+            </Button>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+                <Building2 className="h-4 w-4" />
+                Departments
+              </Button>
+              <Badge variant="secondary" className="px-3 py-1.5 text-sm font-semibold">
+                {departments?.length || 0}
+              </Badge>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Three Card Layout */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Employees by Department Card */}
+            <Card className="border-2 border-blue-100">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <div className="p-2 rounded-lg bg-blue-100">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                    </div>
+                    Employees by Department
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
                 <CardDescription>Workforce distribution across departments</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {hrStats?.employeesByDept?.map((dept, idx) => (
-                    <div key={idx} className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{dept.departmentName || "Unassigned"}</span>
-                      <Badge variant="secondary">{dept.count} employees</Badge>
-                    </div>
-                  ))}
-                  {(!hrStats?.employeesByDept || hrStats.employeesByDept.length === 0) && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No department data available
-                    </p>
-                  )}
+              <CardContent className="space-y-3">
+                {hrStats?.employeesByDept?.slice(0, 4).map((dept, idx) => (
+                  <div key={idx} className="flex items-center justify-between py-1">
+                    <span className="text-sm font-medium">{dept.departmentName || "Unassigned"}</span>
+                    <Badge variant="outline" className="bg-blue-50">{dept.count} Employee{dept.count !== 1 ? 's' : ''}</Badge>
+                  </div>
+                ))}
+                {(!hrStats?.employeesByDept || hrStats.employeesByDept.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No department data available
+                  </p>
+                )}
+                <div className="flex gap-2 pt-3">
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setActiveTab('users')}>
+                    <Users className="h-4 w-4 mr-1" />
+                    Manage Users
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setActiveTab('attendance')}>
+                    <ClipboardCheck className="h-4 w-4 mr-1" />
+                    View Attendance
+                  </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Pending Leave Requests
-                </CardTitle>
+            {/* Pending Leave Requests Card */}
+            <Card className="border-2 border-amber-100">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <div className="p-2 rounded-lg bg-amber-100">
+                      <ClipboardList className="h-5 w-5 text-amber-600" />
+                    </div>
+                    Pending Leave Requests
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
                 <CardDescription>Requests awaiting manager approval</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {pendingLeaves?.slice(0, 5).map((item) => (
-                    <div key={item.application.id} className="flex items-center justify-between p-2 bg-muted rounded">
+              <CardContent className="space-y-3">
+                {pendingLeaves && pendingLeaves.length > 0 ? (
+                  pendingLeaves.slice(0, 3).map((item) => (
+                    <div key={item.application.id} className="flex items-center justify-between py-1 px-2 bg-amber-50 rounded">
                       <div>
                         <p className="text-sm font-medium">{item.user?.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {item.application.leaveType} - {item.application.daysCount} days
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">Approve</Button>
-                        <Button size="sm" variant="outline">Reject</Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center py-6 text-muted-foreground">
+                    <Calendar className="h-5 w-5 mr-2 opacity-50" />
+                    No pending leave requests
+                  </div>
+                )}
+                <div className="flex gap-2 pt-3">
+                  <Button size="sm" className="bg-amber-500 hover:bg-amber-600" onClick={() => setActiveTab('leaves')}>
+                    <Check className="h-4 w-4 mr-1" />
+                    Approve Leave
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Departments Card */}
+            <Card className="border-2 border-purple-100">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <div className="p-2 rounded-lg bg-purple-100">
+                      <Plus className="h-5 w-5 text-purple-600" />
+                    </div>
+                    Departments
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {departments?.slice(0, 4).map((dept: any) => (
+                  <div key={dept.id} className="flex items-center justify-between py-2 px-3 bg-purple-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded bg-purple-200">
+                        <Building2 className="h-4 w-4 text-purple-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-purple-900">{dept.name}</p>
+                        <p className="text-xs text-purple-600">
+                          {hrStats?.employeesByDept?.find(d => d.departmentName === dept.name)?.count || 0} Employee(s)
+                        </p>
                       </div>
                     </div>
-                  ))}
-                  {(!pendingLeaves || pendingLeaves.length === 0) && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No pending leave requests
-                    </p>
-                  )}
-                </div>
+                    <Badge variant="outline" className="bg-purple-100 text-purple-700">
+                      {hrStats?.employeesByDept?.find(d => d.departmentName === dept.name)?.count || 0} Employee
+                    </Badge>
+                  </div>
+                ))}
+                {(!departments || departments.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No departments available
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
 
+          {/* Quick Actions */}
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
@@ -656,19 +838,19 @@ export default function HumanResource() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-4">
                 <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setAddUserDialogOpen(true)}>
-                  <UserPlus className="h-6 w-6 mb-2" />
+                  <UserPlus className="h-6 w-6 mb-2 text-blue-600" />
                   <span>Add User</span>
                 </Button>
                 <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setMarkAttendanceDialogOpen(true)}>
-                  <Clock className="h-6 w-6 mb-2" />
+                  <Clock className="h-6 w-6 mb-2 text-green-600" />
                   <span>Mark Attendance</span>
                 </Button>
                 <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setGenerateReportDialogOpen(true)}>
-                  <FileText className="h-6 w-6 mb-2" />
+                  <FileText className="h-6 w-6 mb-2 text-amber-600" />
                   <span>Generate Report</span>
                 </Button>
                 <Button variant="outline" className="h-auto flex-col py-4" onClick={() => setPerformanceReviewDialogOpen(true)}>
-                  <Award className="h-6 w-6 mb-2" />
+                  <Award className="h-6 w-6 mb-2 text-purple-600" />
                   <span>Performance Review</span>
                 </Button>
               </div>
@@ -2598,6 +2780,128 @@ export default function HumanResource() {
         teamMembers={teamMembers || []}
         employees={employees || []}
       />
+
+      {/* Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-center gap-1 py-2 overflow-x-auto">
+            <Button 
+              variant={activeTab === "overview" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("overview")}
+            >
+              <Home className="h-4 w-4" />
+              Overview
+            </Button>
+            <Button 
+              variant={activeTab === "users" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("users")}
+            >
+              <UserCog className="h-4 w-4" />
+              Users & Access
+            </Button>
+            <Button 
+              variant={activeTab === "employees" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("employees")}
+            >
+              <Users className="h-4 w-4" />
+              Employees
+            </Button>
+            <Button 
+              variant={activeTab === "departments" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("departments")}
+            >
+              <Building2 className="h-4 w-4" />
+              Departments
+            </Button>
+            <Button 
+              variant={activeTab === "attendance" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("attendance")}
+            >
+              <ClipboardCheck className="h-4 w-4" />
+              Attendance
+            </Button>
+            <Button 
+              variant={activeTab === "leaves" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("leaves")}
+            >
+              <Calendar className="h-4 w-4" />
+              Leaves
+            </Button>
+            <Button 
+              variant={activeTab === "performance" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("performance")}
+            >
+              <TrendingUp className="h-4 w-4" />
+              Performance
+            </Button>
+            <Button 
+              variant={activeTab === "job-descriptions" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("job-descriptions")}
+            >
+              <Briefcase className="h-4 w-4" />
+              Job Descriptions
+            </Button>
+            <Button 
+              variant={activeTab === "onboarding" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("onboarding")}
+            >
+              <ClipboardList className="h-4 w-4" />
+              Onboarding
+            </Button>
+            {isAdmin && (
+              <Button 
+                variant={activeTab === "commission" ? "default" : "ghost"} 
+                size="sm" 
+                className="flex items-center gap-1.5 min-w-fit"
+                onClick={() => setActiveTab("commission")}
+              >
+                <Award className="h-4 w-4" />
+                Commission
+              </Button>
+            )}
+            {isAdmin && (
+              <Button 
+                variant={activeTab === "confidential" ? "default" : "ghost"} 
+                size="sm" 
+                className="flex items-center gap-1.5 min-w-fit"
+                onClick={() => setActiveTab("confidential")}
+              >
+                <Shield className="h-4 w-4" />
+                Confidential
+              </Button>
+            )}
+            <Button 
+              variant={activeTab === "roles" ? "default" : "ghost"} 
+              size="sm" 
+              className="flex items-center gap-1.5 min-w-fit"
+              onClick={() => setActiveTab("roles")}
+            >
+              <FileText className="h-4 w-4" />
+              Role Guide
+            </Button>
+          </div>
+        </div>
+      </div>
+      {/* Bottom padding for fixed nav */}
+      <div className="h-16"></div>
     </div>
   );
 }
