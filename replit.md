@@ -30,6 +30,20 @@ drizzle/              # Database schema and migrations
 - `ERP_MODULE_UPDATE_PROMPT.md` - Reusable prompt for future module updates
 
 ## Recent Changes (Jan 29, 2026)
+- **Procurement Module Complete Redesign**: Renamed from "Purchases" to "Procurement" with modern dashboard
+  - **Route Change**: /purchases → /procurement (all navigation, breadcrumbs, hyperlinks updated)
+  - **New Database Tables**: vendors, purchase_orders, purchase_order_items with proper enums (purchase_order_status, vendor_status, purchase_category)
+  - **6 Colorful Gradient KPI Cards**: Total Purchase Orders (indigo/purple), Pending Approvals (teal/cyan), In Transit (emerald/green), Overdue Deliveries (orange/amber), Total Spend YTD (rose/pink), Active Vendors (violet/purple)
+  - **Spend Trend Line Chart**: Shows 6-month procurement spending trend
+  - **Top 5 Vendors by Spend**: Bar chart with color-coded vendor spending
+  - **Procurement Analytics Pie Chart**: Shows order distribution by status (Received, In Transit, Pending)
+  - **Orders by Category Bar Chart**: Displays procurement by category (Electronics, Raw Materials, Equipment, etc.)
+  - **Recent Purchase Orders Table**: Clickable PO numbers, vendor info, status badges, action buttons
+  - **Tabs**: Overview (dashboard), All Orders, Vendors, Archive
+  - **Vendor Management**: Full CRUD operations for vendors with contact details, payment terms, status tracking
+  - **Archive/Restore**: Archive functionality for purchase orders and vendors
+  - **Auto-Generated PO Numbers**: Format PO-YYYY-### (e.g., PO-2026-001)
+  - **Backend**: Full tRPC routes for vendors, purchase orders, items, dashboard stats, spend analytics
 - **CRM Module Complete Redesign**: Renamed from "Customers" to "CRM" with modern dashboard
   - **New Database Tables**: crm_leads, crm_opportunities, crm_activities, crm_tasks with proper enums
   - **5 Colorful Gradient KPI Cards**: Total Leads (teal), Active Opportunities (emerald), Deals Won (violet), Total Revenue YTD (amber), Tasks Due (slate)
