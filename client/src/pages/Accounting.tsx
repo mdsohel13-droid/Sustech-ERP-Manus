@@ -10,13 +10,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, Filter, RefreshCw, Eye, MoreHorizontal } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, Filter, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line, ComposedChart } from "recharts";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const COLORS = ['#22c55e', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
@@ -29,6 +30,9 @@ export default function Accounting() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [showArchived, setShowArchived] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; item: any; type: 'archive' | 'delete' | 'permanent' }>({ show: false, item: null, type: 'archive' });
+  const [viewingEntry, setViewingEntry] = useState<any>(null);
 
   const utils = trpc.useUtils();
   const { currency } = useCurrency();
@@ -39,6 +43,7 @@ export default function Accounting() {
   const { data: balanceSheet } = trpc.financial.getBalanceSheet.useQuery();
   const { data: arData = [] } = trpc.financial.getAllAR.useQuery();
   const { data: apData = [] } = trpc.financial.getAllAP.useQuery();
+  const { data: archivedEntries = [] } = trpc.incomeExpenditure.getArchived.useQuery();
 
   const createMutation = trpc.incomeExpenditure.create.useMutation({
     onSuccess: () => {
@@ -73,6 +78,41 @@ export default function Accounting() {
       utils.incomeExpenditure.getIncomeByCategory.invalidate();
       utils.incomeExpenditure.getExpenditureByCategory.invalidate();
       toast.success("Entry deleted");
+      setDeleteConfirm({ show: false, item: null, type: 'delete' });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const archiveMutation = trpc.incomeExpenditure.archive.useMutation({
+    onSuccess: () => {
+      utils.incomeExpenditure.getAll.invalidate();
+      utils.incomeExpenditure.getArchived.invalidate();
+      utils.incomeExpenditure.getSummary.invalidate();
+      utils.incomeExpenditure.getIncomeByCategory.invalidate();
+      utils.incomeExpenditure.getExpenditureByCategory.invalidate();
+      toast.success("Entry archived successfully");
+      setDeleteConfirm({ show: false, item: null, type: 'archive' });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const restoreMutation = trpc.incomeExpenditure.restore.useMutation({
+    onSuccess: () => {
+      utils.incomeExpenditure.getAll.invalidate();
+      utils.incomeExpenditure.getArchived.invalidate();
+      utils.incomeExpenditure.getSummary.invalidate();
+      utils.incomeExpenditure.getIncomeByCategory.invalidate();
+      utils.incomeExpenditure.getExpenditureByCategory.invalidate();
+      toast.success("Entry restored successfully");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const permanentDeleteMutation = trpc.incomeExpenditure.permanentlyDelete.useMutation({
+    onSuccess: () => {
+      utils.incomeExpenditure.getArchived.invalidate();
+      toast.success("Entry permanently deleted");
+      setDeleteConfirm({ show: false, item: null, type: 'permanent' });
     },
     onError: (error) => toast.error(error.message),
   });
@@ -427,17 +467,21 @@ export default function Accounting() {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setViewingEntry(entry)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-amber-600"
+                          onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'archive' })}
+                        >
+                          <Archive className="h-4 w-4 mr-2" />
+                          Archive
+                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="text-red-600"
-                          onClick={() => {
-                            if (confirm("Are you sure you want to delete this entry?")) {
-                              deleteMutation.mutate({ id: entry.id });
-                            }
-                          }}
+                          onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'delete' })}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
@@ -678,6 +722,195 @@ export default function Accounting() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {archivedEntries.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Archive className="h-5 w-5 text-muted-foreground" />
+              <CardTitle>Archived Entries</CardTitle>
+              <Badge variant="secondary">{archivedEntries.length}</Badge>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowArchived(!showArchived)}>
+              {showArchived ? "Hide" : "Show"} Archived
+            </Button>
+          </CardHeader>
+          {showArchived && (
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Archived On</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archivedEntries.map((entry: any) => (
+                    <TableRow key={entry.id} className="bg-muted/30">
+                      <TableCell>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{entry.description || '-'}</TableCell>
+                      <TableCell>{entry.category}</TableCell>
+                      <TableCell>
+                        <Badge variant={entry.type === 'income' ? 'default' : 'destructive'}>
+                          {entry.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className={`text-right font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                        {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {entry.archivedAt ? format(new Date(entry.archivedAt), 'MMM dd, yyyy') : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => restoreMutation.mutate({ id: entry.id })}
+                            disabled={restoreMutation.isPending}
+                          >
+                            <RotateCcw className="h-4 w-4 mr-1" />
+                            Restore
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'permanent' })}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      <AlertDialog open={deleteConfirm.show} onOpenChange={(open) => !open && setDeleteConfirm({ show: false, item: null, type: 'archive' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className={`h-5 w-5 ${deleteConfirm.type === 'permanent' ? 'text-red-500' : 'text-amber-500'}`} />
+              {deleteConfirm.type === 'archive' ? 'Archive Entry' : deleteConfirm.type === 'delete' ? 'Delete Entry' : 'Permanently Delete Entry'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteConfirm.type === 'archive' ? (
+                <>This entry will be moved to the archive. You can restore it later if needed.</>
+              ) : deleteConfirm.type === 'delete' ? (
+                <>Are you sure you want to delete this entry? This action cannot be undone.</>
+              ) : (
+                <>This will permanently delete the entry from the system. This action cannot be undone.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={deleteConfirm.type === 'permanent' || deleteConfirm.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-600 hover:bg-amber-700'}
+              onClick={() => {
+                if (deleteConfirm.item) {
+                  if (deleteConfirm.type === 'archive') {
+                    archiveMutation.mutate({ id: deleteConfirm.item.id });
+                  } else if (deleteConfirm.type === 'delete') {
+                    deleteMutation.mutate({ id: deleteConfirm.item.id });
+                  } else {
+                    permanentDeleteMutation.mutate({ id: deleteConfirm.item.id });
+                  }
+                }
+              }}
+              disabled={archiveMutation.isPending || deleteMutation.isPending || permanentDeleteMutation.isPending}
+            >
+              {deleteConfirm.type === 'archive' ? 'Archive' : deleteConfirm.type === 'delete' ? 'Delete' : 'Permanently Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!viewingEntry} onOpenChange={(open) => !open && setViewingEntry(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Entry Details</DialogTitle>
+          </DialogHeader>
+          {viewingEntry && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Type</Label>
+                  <p className="font-medium">
+                    <Badge variant={viewingEntry.type === 'income' ? 'default' : 'destructive'}>
+                      {viewingEntry.type === 'income' ? 'Income' : 'Expense'}
+                    </Badge>
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date</Label>
+                  <p className="font-medium">{viewingEntry.date ? format(new Date(viewingEntry.date), 'MMMM dd, yyyy') : '-'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Category</Label>
+                  <p className="font-medium">{viewingEntry.category}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Amount</Label>
+                  <p className={`font-bold text-lg ${viewingEntry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                    {viewingEntry.type === 'income' ? '+' : '-'}{formatCurrency(Number(viewingEntry.amount || 0), currency)}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Reference Number</Label>
+                  <p className="font-medium">{viewingEntry.referenceNumber || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Payment Method</Label>
+                  <p className="font-medium capitalize">{viewingEntry.paymentMethod?.replace('_', ' ') || '-'}</p>
+                </div>
+              </div>
+              {viewingEntry.description && (
+                <div>
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="font-medium">{viewingEntry.description}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                <div>
+                  <Label className="text-muted-foreground text-xs">Created</Label>
+                  <p className="text-sm">{viewingEntry.createdAt ? format(new Date(viewingEntry.createdAt), 'MMM dd, yyyy HH:mm') : '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground text-xs">Last Updated</Label>
+                  <p className="text-sm">{viewingEntry.updatedAt ? format(new Date(viewingEntry.updatedAt), 'MMM dd, yyyy HH:mm') : '-'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingEntry(null)}>Close</Button>
+            <Button onClick={() => {
+              setEditingEntry(viewingEntry);
+              setEntryType(viewingEntry.type);
+              setViewingEntry(null);
+              setDialogOpen(true);
+            }}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
