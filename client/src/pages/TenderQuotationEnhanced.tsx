@@ -98,12 +98,13 @@ export default function TenderQuotationEnhanced() {
   );
 
   const dashboardStats = useMemo(() => {
-    const govTenders = tenders;
-    const privateQuotations = quotations;
-    const wonPoReceived = allTenderQuotations.filter((t: any) => 
+    const activeItems = allTenderQuotations.filter((t: any) => !t.archivedAt);
+    const govTenders = activeItems.filter((t: any) => t.type === 'government_tender');
+    const privateQuotations = activeItems.filter((t: any) => t.type === 'private_quotation');
+    const wonPoReceived = activeItems.filter((t: any) => 
       t.status === 'win' || t.status === 'po_received'
     );
-    const pendingFollowUp = allTenderQuotations.filter((t: any) => {
+    const pendingFollowUp = activeItems.filter((t: any) => {
       if (!t.followUpDate) return false;
       const followUp = new Date(t.followUpDate);
       const today = new Date();
@@ -116,7 +117,7 @@ export default function TenderQuotationEnhanced() {
       wonPoReceived: wonPoReceived.length,
       pendingFollowUp: pendingFollowUp.length,
     };
-  }, [tenders, quotations, allTenderQuotations]);
+  }, [allTenderQuotations]);
 
   const getStatusBadge = (status: TenderStatus) => {
     const statusConfig: Record<TenderStatus, { label: string; className: string }> = {
