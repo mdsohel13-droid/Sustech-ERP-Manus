@@ -34,6 +34,15 @@ drizzle/              # Database schema and migrations
   - Added Inventory tab showing stock levels by product and warehouse
   - Added Warehouses tab for managing storage locations
   - Added Stock Adjustment dialog for recording stock changes (purchases, sales, adjustments, transfers, etc.)
+- **Product Detail Popup**: Click on any product name to view comprehensive product details
+  - Shows stock levels, pricing, profit margin in quick stats cards
+  - Displays stock locations by warehouse
+  - Shows all product attributes (category, brand, unit, warranty, tax rate, etc.)
+  - Quick actions to adjust stock or edit product
+- **Enhanced Dashboard**: Products module now shows 10 KPI cards
+  - Row 1: Total Products, Total Stock, Stock Value, Low Stock Alerts, Out of Stock, Warehouses
+  - Row 2: Categories, Brands, Units, Archived
+  - Visual alerts for low stock (yellow) and out of stock (red) conditions
 - Products module now uses only dynamic categories (static category enum deprecated)
 - Fixed product creation with proper handling of optional fields
 
