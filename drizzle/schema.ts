@@ -1624,3 +1624,77 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
 
 export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
 export type InsertPurchaseOrderItem = typeof purchaseOrderItems.$inferInsert;
+
+/**
+ * Financial Account Types Enum
+ */
+export const financialAccountTypeEnum = pgEnum("financial_account_type", [
+  "asset",
+  "liability",
+  "equity",
+  "revenue",
+  "expense"
+]);
+
+export const financialAccountSubtypeEnum = pgEnum("financial_account_subtype", [
+  "cash",
+  "bank",
+  "deposits",
+  "accounts_receivable",
+  "inventory",
+  "fixed_assets",
+  "accounts_payable",
+  "wages_payable",
+  "taxes_payable",
+  "provisions",
+  "other_payable",
+  "common_stock",
+  "retained_earnings",
+  "sales_revenue",
+  "service_revenue",
+  "cost_of_goods_sold",
+  "operating_expenses",
+  "other"
+]);
+
+/**
+ * Financial Accounts - Chart of Accounts for Balance Sheet
+ */
+export const financialAccounts = pgTable("financial_accounts", {
+  id: serial("id").primaryKey(),
+  accountCode: varchar("account_code", { length: 20 }).notNull().unique(),
+  accountName: varchar("account_name", { length: 255 }).notNull(),
+  accountType: financialAccountTypeEnum("account_type").notNull(),
+  accountSubtype: financialAccountSubtypeEnum("account_subtype").notNull(),
+  balance: decimal("balance", { precision: 15, scale: 2 }).default("0").notNull(),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type FinancialAccount = typeof financialAccounts.$inferSelect;
+export type InsertFinancialAccount = typeof financialAccounts.$inferInsert;
+
+/**
+ * Journal Entries - Double-entry accounting
+ */
+export const journalEntries = pgTable("journal_entries", {
+  id: serial("id").primaryKey(),
+  entryNumber: varchar("entry_number", { length: 50 }).notNull().unique(),
+  entryDate: date("entry_date").notNull(),
+  description: text("description").notNull(),
+  reference: varchar("reference", { length: 100 }),
+  debitAccountId: integer("debit_account_id").notNull(),
+  creditAccountId: integer("credit_account_id").notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
+  isPosted: boolean("is_posted").default(false).notNull(),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type JournalEntry = typeof journalEntries.$inferSelect;
+export type InsertJournalEntry = typeof journalEntries.$inferInsert;

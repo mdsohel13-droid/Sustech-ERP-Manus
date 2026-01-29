@@ -68,6 +68,8 @@ import {
   vendors, InsertVendor,
   purchaseOrders, InsertPurchaseOrder,
   purchaseOrderItems, InsertPurchaseOrderItem,
+  financialAccounts, InsertFinancialAccount,
+  journalEntries, InsertJournalEntry,
 } from "../drizzle/schema";
 const ENV = { ownerOpenId: process.env.OWNER_OPEN_ID || '' };
 
@@ -3807,10 +3809,14 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startDate = period === 'mtd' ? startOfMonth : startOfYear;
   
-  const allIncome = await db.select().from(incomeExpenditure);
-  const allAR = await db.select().from(accountsReceivable);
-  const allAP = await db.select().from(accountsPayable);
-  const allSales = await db.select().from(dailySales);
+  const [allIncome, allAR, allAP, allSales, allFinancialAccounts, allInventory] = await Promise.all([
+    db.select().from(incomeExpenditure),
+    db.select().from(accountsReceivable),
+    db.select().from(accountsPayable),
+    db.select().from(dailySales),
+    db.select().from(financialAccounts).where(eq(financialAccounts.isActive, true)),
+    db.select().from(productInventory)
+  ]);
   
   const periodIncome = allIncome.filter(ie => new Date(ie.date) >= startDate);
   const periodSales = allSales.filter(s => new Date(s.date) >= startDate);
@@ -3829,18 +3835,31 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
   const operatingExpenseRatio = revenue > 0 ? (opex / revenue) * 100 : 0;
   const netProfitMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
   
-  const totalAR = allAR.reduce((sum, ar) => sum + Number(ar.amount || 0), 0);
-  const totalAP = allAP.reduce((sum, ap) => sum + Number(ap.amount || 0), 0);
+  const totalAR = allAR.filter(ar => ar.status === 'pending').reduce((sum, ar) => sum + Number(ar.amount || 0), 0);
+  const totalAP = allAP.filter(ap => ap.status === 'pending').reduce((sum, ap) => sum + Number(ap.amount || 0), 0);
   
-  const cashBalance = 795404;
-  const deposits = 2686247;
-  const inventory = 221798;
+  const getAccountBalance = (subtype: string) => {
+    const account = allFinancialAccounts.find(a => a.accountSubtype === subtype);
+    return account ? Number(account.balance || 0) : 0;
+  };
+  
+  const cashBalance = getAccountBalance('cash');
+  const deposits = getAccountBalance('deposits') + getAccountBalance('bank');
+  const inventoryValue = allInventory.reduce((sum, inv) => sum + Number(inv.quantity || 0) * 100, 0);
+  const inventory = inventoryValue || getAccountBalance('inventory');
   const totalAssets = cashBalance + deposits + totalAR + inventory;
   
-  const wagesPayable = 70234;
-  const provisions = 2439345;
-  const otherPayable = 1236240;
+  const wagesPayable = getAccountBalance('wages_payable');
+  const provisions = getAccountBalance('provisions');
+  const otherPayable = getAccountBalance('other_payable');
   const totalLiabilities = wagesPayable + totalAP + provisions + otherPayable;
+  
+  const lastYearRevenue = allIncome
+    .filter(ie => ie.type === 'income' && new Date(ie.date).getFullYear() === now.getFullYear() - 1)
+    .reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
+  const lastYearExpenses = allIncome
+    .filter(ie => ie.type === 'expenditure' && new Date(ie.date).getFullYear() === now.getFullYear() - 1)
+    .reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
   
   return {
     revenue,
@@ -3856,12 +3875,118 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
     currentAssets: { cashBalance, deposits, accountReceivables: totalAR, inventory },
     currentLiabilities: { wagesPayable, accountPayables: totalAP, provisions, otherPayable },
     benchmarks: {
-      revenueBenchmark: 1520000,
-      cogsBenchmark: 1060000,
-      grossProfitBenchmark: 460000,
-      netProfitBenchmark: -350000
+      revenueBenchmark: lastYearRevenue > 0 ? lastYearRevenue : revenue * 1.1,
+      cogsBenchmark: lastYearExpenses > 0 ? lastYearExpenses * 0.59 : cogs * 1.1,
+      grossProfitBenchmark: lastYearRevenue > 0 ? lastYearRevenue - (lastYearExpenses * 0.59) : grossProfit * 1.1,
+      netProfitBenchmark: lastYearRevenue > 0 ? lastYearRevenue - lastYearExpenses : netProfit * 1.1
     }
   };
+}
+
+export async function getAllFinancialAccounts() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(financialAccounts).where(eq(financialAccounts.isActive, true)).orderBy(asc(financialAccounts.accountCode));
+}
+
+export async function createFinancialAccount(data: InsertFinancialAccount) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(financialAccounts).values(data).returning();
+  return result;
+}
+
+export async function updateFinancialAccountBalance(accountId: number, balance: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(financialAccounts).set({ balance, updatedAt: new Date() }).where(eq(financialAccounts.id, accountId));
+}
+
+export async function getBalanceSheetData() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [accounts, allAR, allAP, allInventory] = await Promise.all([
+    db.select().from(financialAccounts).where(eq(financialAccounts.isActive, true)),
+    db.select().from(accountsReceivable).where(eq(accountsReceivable.status, 'pending')),
+    db.select().from(accountsPayable).where(eq(accountsPayable.status, 'pending')),
+    db.select().from(productInventory)
+  ]);
+  
+  const getAccountsByType = (type: string) => accounts.filter(a => a.accountType === type);
+  const sumBySubtype = (subtype: string) => {
+    const account = accounts.find(a => a.accountSubtype === subtype);
+    return account ? Number(account.balance || 0) : 0;
+  };
+  
+  const cashBalance = sumBySubtype('cash');
+  const bankBalance = sumBySubtype('bank');
+  const deposits = sumBySubtype('deposits');
+  const arTotal = allAR.reduce((sum, ar) => sum + Number(ar.amount || 0), 0);
+  const inventoryValue = allInventory.reduce((sum, inv) => sum + Number(inv.quantity || 0) * 100, 0) || sumBySubtype('inventory');
+  const fixedAssets = sumBySubtype('fixed_assets');
+  
+  const totalCurrentAssets = cashBalance + bankBalance + deposits + arTotal + inventoryValue;
+  const totalAssets = totalCurrentAssets + fixedAssets;
+  
+  const apTotal = allAP.reduce((sum, ap) => sum + Number(ap.amount || 0), 0);
+  const wagesPayable = sumBySubtype('wages_payable');
+  const taxesPayable = sumBySubtype('taxes_payable');
+  const provisions = sumBySubtype('provisions');
+  const otherPayable = sumBySubtype('other_payable');
+  
+  const totalCurrentLiabilities = apTotal + wagesPayable + taxesPayable + provisions + otherPayable;
+  const totalLiabilities = totalCurrentLiabilities;
+  
+  const commonStock = sumBySubtype('common_stock');
+  const retainedEarnings = sumBySubtype('retained_earnings');
+  const totalEquity = totalAssets - totalLiabilities;
+  
+  return {
+    assets: {
+      currentAssets: {
+        cash: cashBalance,
+        bank: bankBalance,
+        deposits,
+        accountsReceivable: arTotal,
+        inventory: inventoryValue,
+        total: totalCurrentAssets
+      },
+      fixedAssets: {
+        total: fixedAssets
+      },
+      totalAssets
+    },
+    liabilities: {
+      currentLiabilities: {
+        accountsPayable: apTotal,
+        wagesPayable,
+        taxesPayable,
+        provisions,
+        otherPayable,
+        total: totalCurrentLiabilities
+      },
+      totalLiabilities
+    },
+    equity: {
+      commonStock,
+      retainedEarnings: totalEquity - commonStock,
+      totalEquity
+    }
+  };
+}
+
+export async function getAllJournalEntries() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(journalEntries).orderBy(desc(journalEntries.entryDate));
+}
+
+export async function createJournalEntry(data: InsertJournalEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(journalEntries).values(data).returning();
+  return result;
 }
 
 export async function getFinanceMonthlyTrend(months = 12) {

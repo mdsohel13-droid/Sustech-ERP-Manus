@@ -380,6 +380,58 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getIncomeStatement(input?.period || 'ytd');
       }),
+    
+    getBalanceSheet: protectedProcedure.query(async () => {
+      return await db.getBalanceSheetData();
+    }),
+    
+    getAllFinancialAccounts: protectedProcedure.query(async () => {
+      return await db.getAllFinancialAccounts();
+    }),
+    
+    createFinancialAccount: protectedProcedure
+      .input(z.object({
+        accountCode: z.string().min(1),
+        accountName: z.string().min(1),
+        accountType: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense']),
+        accountSubtype: z.enum(['cash', 'bank', 'deposits', 'accounts_receivable', 'inventory', 'fixed_assets', 'accounts_payable', 'wages_payable', 'taxes_payable', 'provisions', 'other_payable', 'common_stock', 'retained_earnings', 'sales_revenue', 'service_revenue', 'cost_of_goods_sold', 'operating_expenses', 'other']),
+        balance: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createFinancialAccount(input as any);
+        return { success: true };
+      }),
+    
+    updateAccountBalance: protectedProcedure
+      .input(z.object({
+        accountId: z.number(),
+        balance: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateFinancialAccountBalance(input.accountId, input.balance);
+        return { success: true };
+      }),
+    
+    getAllJournalEntries: protectedProcedure.query(async () => {
+      return await db.getAllJournalEntries();
+    }),
+    
+    createJournalEntry: protectedProcedure
+      .input(z.object({
+        entryNumber: z.string().min(1),
+        entryDate: z.string(),
+        description: z.string().min(1),
+        reference: z.string().optional(),
+        debitAccountId: z.number(),
+        creditAccountId: z.number(),
+        amount: z.string().refine(val => parseFloat(val) > 0, "Amount must be positive"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { entryDate, ...data } = input;
+        await db.createJournalEntry({ ...data, entryDate: new Date(entryDate) as any, createdBy: ctx.user.id } as any);
+        return { success: true };
+      }),
   }),
 
   // ============ Project Module ============

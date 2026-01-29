@@ -75,6 +75,8 @@ export default function Finance() {
   const { data: apAging } = trpc.financial.getAgingReport.useQuery({ type: 'payable' });
   const { data: arData = [] } = trpc.financial.getAllAR.useQuery();
   const { data: apData = [] } = trpc.financial.getAllAP.useQuery();
+  const { data: balanceSheet } = trpc.financial.getBalanceSheet.useQuery();
+  const { data: financialAccounts = [] } = trpc.financial.getAllFinancialAccounts.useQuery();
 
   const createAR = trpc.financial.createAR.useMutation({
     onSuccess: () => {
@@ -448,9 +450,9 @@ export default function Finance() {
   );
 
   const renderBalanceSheetTab = () => {
-    const totalAssets = stats?.totalAssets || 0;
-    const totalLiabilities = stats?.totalLiabilities || 0;
-    const equity = totalAssets - totalLiabilities;
+    const totalAssets = balanceSheet?.assets?.totalAssets || stats?.totalAssets || 0;
+    const totalLiabilities = balanceSheet?.liabilities?.totalLiabilities || stats?.totalLiabilities || 0;
+    const equity = balanceSheet?.equity?.totalEquity || (totalAssets - totalLiabilities);
 
     return (
       <div className="space-y-6">
@@ -523,23 +525,39 @@ export default function Finance() {
                   <Table>
                     <TableBody>
                       <TableRow>
-                        <TableCell>Cash & Bank Balances</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentAssets?.cashBalance || 0, currency)}</TableCell>
+                        <TableCell>Cash</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.cash || stats?.currentAssets?.cashBalance || 0, currency)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Bank Balances</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.bank || 0, currency)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Accounts Receivable</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentAssets?.accountReceivables || 0, currency)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.accountsReceivable || stats?.currentAssets?.accountReceivables || 0, currency)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Deposits & Prepayments</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentAssets?.deposits || 0, currency)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.deposits || stats?.currentAssets?.deposits || 0, currency)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Inventory</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentAssets?.inventory || 0, currency)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.inventory || stats?.currentAssets?.inventory || 0, currency)}</TableCell>
                       </TableRow>
                       <TableRow className="bg-muted/50">
                         <TableCell className="font-semibold">Total Current Assets</TableCell>
+                        <TableCell className="text-right font-bold">{formatCurrency(balanceSheet?.assets?.currentAssets?.total || totalAssets, currency)}</TableCell>
+                      </TableRow>
+                      {(balanceSheet?.assets?.fixedAssets?.total || 0) > 0 && (
+                        <>
+                          <TableRow>
+                            <TableCell>Fixed Assets</TableCell>
+                            <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.fixedAssets?.total || 0, currency)}</TableCell>
+                          </TableRow>
+                        </>
+                      )}
+                      <TableRow className="bg-emerald-50 dark:bg-emerald-950/30">
+                        <TableCell className="font-bold">Total Assets</TableCell>
                         <TableCell className="text-right font-bold">{formatCurrency(totalAssets, currency)}</TableCell>
                       </TableRow>
                     </TableBody>
@@ -561,21 +579,25 @@ export default function Finance() {
                     <TableBody>
                       <TableRow>
                         <TableCell>Wages Payable</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentLiabilities?.wagesPayable || 0, currency)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.wagesPayable || stats?.currentLiabilities?.wagesPayable || 0, currency)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Accounts Payable</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentLiabilities?.accountPayables || 0, currency)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.accountsPayable || stats?.currentLiabilities?.accountPayables || 0, currency)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Taxes Payable</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.taxesPayable || 0, currency)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Provisions & Accruals</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentLiabilities?.provisions || 0, currency)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.provisions || stats?.currentLiabilities?.provisions || 0, currency)}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Other Payables</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(stats?.currentLiabilities?.otherPayable || 0, currency)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.otherPayable || stats?.currentLiabilities?.otherPayable || 0, currency)}</TableCell>
                       </TableRow>
-                      <TableRow className="bg-muted/50">
+                      <TableRow className="bg-red-50 dark:bg-red-950/30">
                         <TableCell className="font-semibold">Total Liabilities</TableCell>
                         <TableCell className="text-right font-bold">{formatCurrency(totalLiabilities, currency)}</TableCell>
                       </TableRow>
