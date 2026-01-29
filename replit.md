@@ -25,6 +25,10 @@ drizzle/              # Database schema and migrations
   schema.ts           # Drizzle schema definitions
 ```
 
+## Audit Documents
+- `ERP_AUDIT_SUMMARY.md` - Comprehensive audit findings for all modules
+- `ERP_MODULE_UPDATE_PROMPT.md` - Reusable prompt for future module updates
+
 ## Recent Changes (Jan 29, 2026)
 - **Tender/Quotation Module Redesign**: Complete UI overhaul with database integration
   - **4 Colorful KPI Cards**: Government Tenders, Private Quotations, Won/PO Received, Pending Follow-Up

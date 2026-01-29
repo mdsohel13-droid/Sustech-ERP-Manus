@@ -977,8 +977,8 @@ export async function createProjectTransaction(transaction: InsertProjectTransac
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const [result] = await db.insert(projectTransactions).values(transaction);
-  return result.insertId;
+  const result = await db.insert(projectTransactions).values(transaction).returning({ id: projectTransactions.id });
+  return result[0]?.id;
 }
 
 export async function getProjectTransactions(projectId: number) {
