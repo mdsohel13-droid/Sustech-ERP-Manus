@@ -103,7 +103,7 @@ export function AIAssistant({ open, onClose }: AIAssistantProps) {
       ];
     }
 
-    if (location.includes("/financial") || location.includes("/income-expenditure")) {
+    if (location.includes("/financial") || location.includes("/accounting")) {
       return [
         {
           id: "cash-flow",

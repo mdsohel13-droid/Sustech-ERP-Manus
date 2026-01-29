@@ -10,7 +10,7 @@ I prefer simple language. I like functional programming. I want iterative develo
 The system is built with a modern web stack. The frontend utilizes **React, TypeScript, and Vite** for a responsive user interface, styled with **Tailwind CSS and shadcn/ui components**. Data visualization is handled by **Recharts**. The backend is powered by **Express.js with tRPC** for type-safe API interactions. **PostgreSQL** serves as the primary database, managed through **Drizzle ORM**.
 
 Key architectural decisions and features include:
-- **Modular Design**: The system is organized into distinct modules (Finance, Procurement, CRM, Sales, Inventory, Products, Tenders/Quotations) each with its own dashboard and functionalities.
+- **Modular Design**: The system is organized into distinct modules (Finance, Accounting, Procurement, CRM, Sales, Inventory, Products, Tenders/Quotations) each with its own dashboard and functionalities.
 - **Modern UI/UX**: Dashboards feature colorful gradient KPI cards, dual-axis charts, funnel charts, and responsive layouts for intuitive data representation.
 - **Real-time Data Integration**: All modules are designed to pull and display real-time data from the PostgreSQL database via tRPC queries.
 - **Comprehensive CRUD Operations**: Full Create, Read, Update, and Delete functionalities are available for critical entities across modules (e.g., vendors, leads, products, warehouses, tenders).
@@ -44,6 +44,26 @@ The Finance module is a comprehensive financial management system with full data
 - Syncs with AR/AP modules for aging calculations
 - Integrates with Inventory module for stock value calculations
 - Connects to Products module for COGS calculations
+
+## Accounting Module Architecture
+The Accounting module (formerly "Income & Expense") provides comprehensive financial tracking and analytics:
+
+**Dashboard Features:**
+- **KPI Cards**: Total Cash, Revenue MTD, Expense MTD, Pending Invoices, Net Profit with margin percentage
+- **Chart of Accounts Overview**: Donut chart showing Asset, Expense, Income, Liability, Equity distribution
+- **Income & Expense Chart**: 12-month trend with bar chart and net profit line overlay
+- **Journal Entries & Transactions**: Filterable table with date, description, category, amount, status
+- **Income vs Expense Comparison**: Side-by-side bar chart for recent months
+- **Transaction List**: Tabbed view (Income/Expense) with search and quick edit functionality
+
+**Database Integration:**
+- Pulls from `income_expenditure` table for transaction data
+- Integrates with `financial.getBalanceSheet` for asset/liability/equity totals
+- Uses `financial.getAllAR` for pending invoices count
+- Uses `financial.getAllAP` for accounts payable data
+
+**URL**: `/accounting`
+**Router**: `incomeExpenditure` (backend maintains compatibility)
 
 ## External Dependencies
 - **OAuth Provider**: `oauth.emergentagent.com` for authentication.

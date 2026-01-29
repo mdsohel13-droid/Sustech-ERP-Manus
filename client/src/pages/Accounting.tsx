@@ -36,10 +36,9 @@ export default function Accounting() {
   const { data: summary } = trpc.incomeExpenditure.getSummary.useQuery();
   const { data: incomeByCategory = [] } = trpc.incomeExpenditure.getIncomeByCategory.useQuery();
   const { data: expenditureByCategory = [] } = trpc.incomeExpenditure.getExpenditureByCategory.useQuery();
-  const { data: financialAccounts = [] } = trpc.finance.getFinancialAccounts.useQuery();
-  const { data: journalEntries = [] } = trpc.finance.getJournalEntries.useQuery();
-  const { data: arData = [] } = trpc.ar.getAll.useQuery();
-  const { data: apData = [] } = trpc.ap.getAll.useQuery();
+  const { data: balanceSheet } = trpc.financial.getBalanceSheet.useQuery();
+  const { data: arData = [] } = trpc.financial.getAllAR.useQuery();
+  const { data: apData = [] } = trpc.financial.getAllAP.useQuery();
 
   const createMutation = trpc.incomeExpenditure.create.useMutation({
     onSuccess: () => {
@@ -118,23 +117,21 @@ export default function Accounting() {
 
   const pendingInvoices = arData.filter((ar: any) => ar.status === 'pending').length;
 
-  const cashAccount = financialAccounts.find((a: any) => a.accountSubtype === 'cash');
-  const totalCash = cashAccount ? Number(cashAccount.balance || 0) : 0;
+  const totalCash = balanceSheet?.assets?.currentAssets?.cash || 0;
 
   const chartOfAccountsData = useMemo(() => {
-    const typeBalances: { [key: string]: number } = {};
-    financialAccounts.forEach((acc: any) => {
-      const type = acc.accountType || 'other';
-      typeBalances[type] = (typeBalances[type] || 0) + Number(acc.balance || 0);
-    });
-    return Object.entries(typeBalances).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value: Math.abs(value),
-    }));
-  }, [financialAccounts]);
+    if (!balanceSheet) return [];
+    return [
+      { name: 'Asset', value: Math.abs(balanceSheet.assets?.totalAssets || 0) },
+      { name: 'Expense', value: Math.abs(totalExpenditure) },
+      { name: 'Income', value: Math.abs(totalIncome) },
+      { name: 'Liability', value: Math.abs(balanceSheet.liabilities?.totalLiabilities || 0) },
+      { name: 'Equity', value: Math.abs(balanceSheet.equity?.totalEquity || 0) },
+    ].filter(item => item.value > 0);
+  }, [balanceSheet, totalIncome, totalExpenditure]);
 
   const last12MonthsData = useMemo(() => {
-    const months = [];
+    const months: { month: string; income: number; expense: number; netProfit: number }[] = [];
     for (let i = 11; i >= 0; i--) {
       const date = subMonths(new Date(), i);
       const monthStart = startOfMonth(date);
