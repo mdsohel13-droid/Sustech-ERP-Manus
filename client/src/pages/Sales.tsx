@@ -40,21 +40,21 @@ export default function Sales() {
   const [isWalkInCustomer, setIsWalkInCustomer] = useState(false);
   const [trackingProductId, setTrackingProductId] = useState("");
   const [saleDate, setSaleDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  
-  const batchSelection = useTableBatchSelection(dailySales || []);
 
   const utils = trpc.useUtils();
   const { data: products } = trpc.sales.getAllProducts.useQuery();
   const { data: tracking } = trpc.sales.getAllTracking.useQuery();
   const { data: performance } = trpc.sales.getPerformanceSummary.useQuery();
-  
-  // Products from Products module (for linking)
-  const { data: catalogProducts = [] } = trpc.products.getActiveProducts.useQuery();
-  const { data: productsWithInventory = [] } = trpc.products.getProductsWithInventory.useQuery();
   const { data: dailySales } = trpc.sales.getAll.useQuery();
   const { data: employees } = trpc.hr.getAll.useQuery();
   const { data: customers } = trpc.customers.getAll.useQuery();
   const { data: archivedSales } = trpc.sales.getAllArchivedDailySales.useQuery();
+  
+  // Products from Products module (for linking)
+  const { data: catalogProducts = [] } = trpc.products.getActiveProducts.useQuery();
+  const { data: productsWithInventory = [] } = trpc.products.getProductsWithInventory.useQuery();
+  
+  const batchSelection = useTableBatchSelection(dailySales || []);
 
   const createProductMutation = trpc.sales.createProduct.useMutation({
     onSuccess: () => {
@@ -697,17 +697,26 @@ export default function Sales() {
                       </div>
                     </div>
                     
-                    {/* Quantity with Stock Info */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="quantity">Quantity</Label>
-                      <Input id="quantity" name="quantity" type="number" min="1" required />
-                      {selectedProductId && (
-                        <p className="text-xs text-muted-foreground">
-                          Available stock: <span className={`font-medium ${selectedProductStock !== null && selectedProductStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {selectedProductStock !== null ? selectedProductStock.toLocaleString() : 0} units
-                          </span>
-                        </p>
-                      )}
+                    {/* Hidden input for product ID */}
+                    <input type="hidden" name="productId" value={selectedProductId} />
+                    
+                    {/* Quantity and Unit Price Row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="quantity">Quantity</Label>
+                        <Input id="quantity" name="quantity" type="number" min="1" required />
+                        {selectedProductId && (
+                          <p className="text-xs text-muted-foreground">
+                            Available: <span className={`font-medium ${selectedProductStock !== null && selectedProductStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {selectedProductStock !== null ? selectedProductStock.toLocaleString() : 0}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="unitPrice">Unit Price</Label>
+                        <Input id="unitPrice" name="unitPrice" type="number" step="0.01" min="0" required />
+                      </div>
                     </div>
                     
                     {/* Salesperson */}

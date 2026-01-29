@@ -26,6 +26,17 @@ drizzle/              # Database schema and migrations
 ```
 
 ## Recent Changes (Jan 29, 2026)
+- **Sales Module Redesign**: Complete overhaul of Sales dashboard with modern design
+  - Colorful gradient KPI cards: Total Sales, Open Opportunities, Sales This Month, Revenue This Quarter
+  - Sales Funnel visualization with 6 stages (Hot Leads, Qualification, Needs Analysis, Proposal, Negotiation, Closure)
+  - Sales Performance area chart and Sales Pipeline bar chart
+  - Status cards: Revenue Forecast, Deals Closing Soon, Top Salesperson, Overdue Invoices
+  - Activities table displaying recent sales conversions
+  - Top Products widget with revenue rankings
+  - **Products Module Integration**: Record Daily Sale dialog now uses catalog products from Products module
+  - Added Date field and Notes field to Record Daily Sale dialog
+  - Shows available stock below Quantity field with real-time inventory levels
+  - Queries: `trpc.products.getActiveProducts`, `trpc.products.getProductsWithInventory`
 - **Inventory Module Upgrade**: Complete overhaul of Inventory page to use real database
   - Replaced sample/static data with real database queries via tRPC
   - Stock Levels tab shows real inventory data by product and warehouse
