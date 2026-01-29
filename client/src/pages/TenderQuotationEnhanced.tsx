@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit2, Trash2, Eye, MoreHorizontal, Search, Calendar, Filter, FileText, Building2, Clock, CheckCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, MoreHorizontal, Search, Calendar, Filter, FileText, Building2, Clock, CheckCircle, Archive, RotateCcw } from 'lucide-react';
 import { format, parseISO, isAfter, isBefore, addDays } from 'date-fns';
 import { toast } from 'sonner';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -24,7 +24,7 @@ export default function TenderQuotationEnhanced() {
   const { currency } = useCurrency();
   const utils = trpc.useUtils();
   
-  const [activeTab, setActiveTab] = useState<'tenders' | 'quotations'>('tenders');
+  const [activeTab, setActiveTab] = useState<'tenders' | 'quotations' | 'archive'>('tenders');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -66,19 +66,40 @@ export default function TenderQuotationEnhanced() {
     onError: (err) => toast.error(err.message),
   });
 
+  const archiveMutation = trpc.tenderQuotation.archive.useMutation({
+    onSuccess: () => {
+      utils.tenderQuotation.getAll.invalidate();
+      toast.success('Archived successfully');
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const restoreMutation = trpc.tenderQuotation.restore.useMutation({
+    onSuccess: () => {
+      utils.tenderQuotation.getAll.invalidate();
+      toast.success('Restored successfully');
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const tenders = useMemo(() => 
-    allTenderQuotations.filter((t: any) => t.type === 'government_tender'),
+    allTenderQuotations.filter((t: any) => t.type === 'government_tender' && !t.archivedAt),
     [allTenderQuotations]
   );
 
   const quotations = useMemo(() => 
-    allTenderQuotations.filter((t: any) => t.type === 'private_quotation'),
+    allTenderQuotations.filter((t: any) => t.type === 'private_quotation' && !t.archivedAt),
+    [allTenderQuotations]
+  );
+
+  const archivedItems = useMemo(() => 
+    allTenderQuotations.filter((t: any) => t.archivedAt),
     [allTenderQuotations]
   );
 
   const dashboardStats = useMemo(() => {
-    const govTenders = tenders.filter((t: any) => !t.archivedAt);
-    const privateQuotations = quotations.filter((q: any) => !q.archivedAt);
+    const govTenders = tenders;
+    const privateQuotations = quotations;
     const wonPoReceived = allTenderQuotations.filter((t: any) => 
       t.status === 'win' || t.status === 'po_received'
     );
@@ -180,6 +201,18 @@ export default function TenderQuotationEnhanced() {
   const handleDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this item?')) {
       deleteMutation.mutate({ id });
+    }
+  };
+
+  const handleArchive = (id: number) => {
+    if (confirm('Are you sure you want to archive this item?')) {
+      archiveMutation.mutate({ id });
+    }
+  };
+
+  const handleRestore = (id: number) => {
+    if (confirm('Are you sure you want to restore this item?')) {
+      restoreMutation.mutate({ id });
     }
   };
 
@@ -344,7 +377,12 @@ export default function TenderQuotationEnhanced() {
             ) : (
               filteredData.map((item: any) => (
                 <TableRow key={item.id} className="hover:bg-muted/50">
-                  <TableCell className="font-medium text-blue-600">{item.referenceId}</TableCell>
+                  <TableCell 
+                    className="font-medium text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => handleView(item)}
+                  >
+                    {item.referenceId}
+                  </TableCell>
                   <TableCell className="max-w-[200px] truncate">{item.description}</TableCell>
                   <TableCell className="text-muted-foreground">{item.clientName}</TableCell>
                   <TableCell>
@@ -370,12 +408,95 @@ export default function TenderQuotationEnhanced() {
                           <Edit2 className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleArchive(item.id)}>
+                          <Archive className="h-4 w-4 mr-2" />
+                          Archive
+                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => handleDelete(item.id)}
                           className="text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  const ArchiveTable = ({ data }: { data: any[] }) => {
+    const filteredData = filterData(data);
+    
+    return (
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[100px]">Type</TableHead>
+              <TableHead className="w-[120px]">Reference ID</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Archived Date</TableHead>
+              <TableHead className="w-[80px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  No archived items found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredData.map((item: any) => (
+                <TableRow key={item.id} className="hover:bg-muted/50">
+                  <TableCell>
+                    <Badge variant="outline" className={item.type === 'government_tender' ? 'border-green-500 text-green-700' : 'border-orange-500 text-orange-700'}>
+                      {item.type === 'government_tender' ? 'Tender' : 'Quotation'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell 
+                    className="font-medium text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => handleView(item)}
+                  >
+                    {item.referenceId}
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">{item.description}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.clientName}</TableCell>
+                  <TableCell>{getStatusBadge(item.status)}</TableCell>
+                  <TableCell>
+                    {item.archivedAt ? format(new Date(item.archivedAt), 'MMM dd, yyyy') : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleView(item)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleRestore(item.id)}>
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Restore
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Permanently
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -447,12 +568,18 @@ export default function TenderQuotationEnhanced() {
           <TabsList>
             <TabsTrigger value="tenders" className="px-6">Tenders</TabsTrigger>
             <TabsTrigger value="quotations" className="px-6">Quotations</TabsTrigger>
+            <TabsTrigger value="archive" className="px-6">
+              <Archive className="h-4 w-4 mr-1" />
+              Archive ({archivedItems.length})
+            </TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button variant="outline" onClick={() => handleOpenAddDialog(activeTab === 'tenders' ? 'tender' : 'quotation')}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add New {activeTab === 'tenders' ? 'Tender' : 'Quotation'}
-        </Button>
+        {activeTab !== 'archive' && (
+          <Button variant="outline" onClick={() => handleOpenAddDialog(activeTab === 'tenders' ? 'tender' : 'quotation')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add New {activeTab === 'tenders' ? 'Tender' : 'Quotation'}
+          </Button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -513,14 +640,19 @@ export default function TenderQuotationEnhanced() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
-            {activeTab === 'tenders' ? 'Tender ID' : 'Quotation ID'}
+            {activeTab === 'tenders' ? 'Tenders' : activeTab === 'quotations' ? 'Quotations' : 'Archived Items'}
           </CardTitle>
+          {activeTab === 'archive' && (
+            <CardDescription>Past, due, or lost tenders and quotations</CardDescription>
+          )}
         </CardHeader>
         <CardContent className="pt-0">
           {activeTab === 'tenders' ? (
             <DataTable data={tenders} type="tender" />
-          ) : (
+          ) : activeTab === 'quotations' ? (
             <DataTable data={quotations} type="quotation" />
+          ) : (
+            <ArchiveTable data={archivedItems} />
           )}
         </CardContent>
       </Card>

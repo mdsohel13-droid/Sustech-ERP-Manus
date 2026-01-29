@@ -1887,6 +1887,13 @@ Provide 2-3 actionable business insights.`;
         return { success: true };
       }),
 
+    restore: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.updateTenderQuotation(input.id, { archivedAt: null } as any);
+        return { success: true };
+      }),
+
     getOverdue: protectedProcedure.query(async () => {
       return await db.getOverdueTenderQuotations();
     }),
