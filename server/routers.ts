@@ -1862,16 +1862,19 @@ Provide 2-3 actionable business insights.`;
           }
         }
         
-        // Archive if status is "loss"
-        if (data.status === "loss") {
-          await db.archiveTenderQuotation(id);
-        }
-        
-        await db.updateTenderQuotation(id, {
+        // Build update data with proper date handling
+        const updateData: any = {
           ...data,
           submissionDate: submissionDate ? (new Date(submissionDate) as any) : undefined,
           followUpDate: followUpDate ? (new Date(followUpDate) as any) : undefined,
-        });
+        };
+        
+        // Auto-archive if status is "loss" - set archivedAt in the same update
+        if (data.status === "loss") {
+          updateData.archivedAt = new Date();
+        }
+        
+        await db.updateTenderQuotation(id, updateData);
         return { success: true };
       }),
 
