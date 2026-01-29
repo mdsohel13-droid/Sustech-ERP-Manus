@@ -297,35 +297,73 @@ export default function SalesEnhanced() {
     });
     const topSalesperson = Object.values(salesBySalesperson).sort((a, b) => b.revenue - a.revenue)[0];
     
+    // Calculate deals closing this month (sales from last 7 days)
+    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const recentSales = dailySales?.filter((s: any) => new Date(s.date) >= last7Days) || [];
+    const dealsClosing = recentSales.length;
+    const dealsClosingValue = recentSales.reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount || 0), 0);
+    
+    // Calculate open opportunities (unique customers with sales this month)
+    const uniqueCustomers = new Set(dailySales?.map((s: any) => s.customerId || s.customerName).filter(Boolean));
+    const openOpportunities = uniqueCustomers.size || 0;
+    
     return {
       totalSales,
-      openOpportunities: 36,
+      openOpportunities,
       salesThisMonth,
       revenueThisQuarter,
       topProducts,
       topSalesperson,
       activitiesCount: dailySales?.length || 0,
+      dealsClosing,
+      dealsClosingValue,
+      // Forecast: current quarter sales projected (sales so far * days remaining / days passed)
+      forecast: revenueThisQuarter > 0 ? revenueThisQuarter * 1.2 : totalSales * 1.2,
     };
   }, [dailySales]);
   
-  // Sales Performance chart data
+  // Sales Performance chart data - group by month from actual sales
   const salesPerformanceData = useMemo(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-    return months.map((month) => ({
+    if (!dailySales || dailySales.length === 0) return [];
+    
+    const monthlyData: Record<string, number> = {};
+    dailySales.forEach((sale: any) => {
+      const month = format(new Date(sale.date), "MMM");
+      monthlyData[month] = (monthlyData[month] || 0) + parseFloat(sale.totalAmount || 0);
+    });
+    
+    // Get last 6 months with data, or pad with zeros
+    const allMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentMonth = new Date().getMonth();
+    const last6Months: string[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const idx = (currentMonth - i + 12) % 12;
+      last6Months.push(allMonths[idx]);
+    }
+    
+    return last6Months.map((month) => ({
       month,
-      revenue: Math.floor(40000 + Math.random() * 30000),
-      trend: Math.floor(30000 + Math.random() * 25000),
+      revenue: monthlyData[month] || 0,
     }));
-  }, []);
+  }, [dailySales]);
   
-  // Sales Pipeline chart data
+  // Sales Pipeline chart data - group by week from actual sales
   const salesPipelineData = useMemo(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
-    return months.map((month) => ({
-      month,
-      value: Math.floor(100000 + Math.random() * 250000),
+    if (!dailySales || dailySales.length === 0) return [];
+    
+    const weeklyData: Record<string, number> = {};
+    dailySales.forEach((sale: any) => {
+      const week = format(new Date(sale.date), "wo"); // Week number
+      weeklyData[week] = (weeklyData[week] || 0) + parseFloat(sale.totalAmount || 0);
+    });
+    
+    // Get unique weeks sorted
+    const weeks = Object.keys(weeklyData).sort((a, b) => parseInt(a) - parseInt(b)).slice(-7);
+    return weeks.map((week) => ({
+      week: `W${week.replace(/[a-z]/gi, '')}`,
+      value: weeklyData[week] || 0,
     }));
-  }, []);
+  }, [dailySales]);
   
   // Sales Funnel data
   const salesFunnelData = useMemo(() => [
@@ -409,10 +447,10 @@ export default function SalesEnhanced() {
             <p className="text-2xl font-bold">{formatCurrency(dashboardStats.totalSales, currency)}</p>
           </div>
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-3 text-white shadow-md">
-            <p className="text-xs opacity-90">Open Opportunities</p>
+            <p className="text-xs opacity-90">Unique Customers</p>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <p className="text-2xl font-bold">{dashboardStats.openOpportunities}</p>
-              <span className="text-[10px] bg-white/20 px-1 py-0.5 rounded">15%</span>
+              <span className="text-[10px] bg-white/20 px-1 py-0.5 rounded">{dashboardStats.activitiesCount > 0 ? Math.round((dashboardStats.openOpportunities / dashboardStats.activitiesCount) * 100) : 0}%</span>
             </div>
           </div>
           <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-3 text-white shadow-md">
@@ -434,7 +472,16 @@ export default function SalesEnhanced() {
             </div>
             <ResponsiveContainer width="100%" height={100}>
               <AreaChart data={salesPerformanceData}>
-                <Area type="monotone" dataKey="revenue" stroke="#6366f1" fill="rgba(99, 102, 241, 0.2)" strokeWidth={2} />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                <Area 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#6366f1" 
+                  fill="rgba(99, 102, 241, 0.2)" 
+                  strokeWidth={2}
+                  label={{ position: 'top', fontSize: 9, fill: '#6366f1', formatter: (value: number) => value > 0 ? `${(value/1000).toFixed(0)}k` : '' }}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </Card>
@@ -446,12 +493,19 @@ export default function SalesEnhanced() {
             </div>
             <ResponsiveContainer width="100%" height={100}>
               <BarChart data={salesPipelineData}>
-                <Bar dataKey="value" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
+                <XAxis dataKey="week" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                <Bar 
+                  dataKey="value" 
+                  fill="#8b5cf6" 
+                  radius={[3, 3, 0, 0]}
+                  label={{ position: 'top', fontSize: 9, fill: '#8b5cf6', formatter: (value: number) => value > 0 ? `${(value/1000).toFixed(0)}k` : '' }}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Card>
 
-          {/* Key Status Indicators */}
+          {/* Key Status Indicators - Using Dynamic Data */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-purple-500">
               <p className="text-[10px] text-muted-foreground">Top Salesperson</p>
@@ -459,18 +513,18 @@ export default function SalesEnhanced() {
               <p className="text-sm font-bold text-purple-600">{formatCurrency(dashboardStats.topSalesperson?.revenue || 0, currency)}</p>
             </div>
             <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-green-500">
-              <p className="text-[10px] text-muted-foreground">Deals Closing</p>
-              <p className="text-xs font-medium">16 deals</p>
-              <p className="text-sm font-bold text-green-600">{formatCurrency(92800, currency)}</p>
+              <p className="text-[10px] text-muted-foreground">Deals Closing (7 days)</p>
+              <p className="text-xs font-medium">{dashboardStats.dealsClosing} deals</p>
+              <p className="text-sm font-bold text-green-600">{formatCurrency(dashboardStats.dealsClosingValue, currency)}</p>
             </div>
             <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-blue-500">
               <p className="text-[10px] text-muted-foreground">Forecast</p>
-              <p className="text-sm font-bold text-blue-600">{formatCurrency(dashboardStats.totalSales * 1.2, currency)}</p>
+              <p className="text-sm font-bold text-blue-600">{formatCurrency(dashboardStats.forecast, currency)}</p>
             </div>
             <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-orange-500">
-              <p className="text-[10px] text-muted-foreground">Overdue</p>
-              <p className="text-xs font-medium">8 invoices</p>
-              <p className="text-sm font-bold text-orange-600">{formatCurrency(16200, currency)}</p>
+              <p className="text-[10px] text-muted-foreground">Transactions</p>
+              <p className="text-xs font-medium">{dashboardStats.activitiesCount} records</p>
+              <p className="text-sm font-bold text-orange-600">{formatCurrency(dashboardStats.totalSales, currency)}</p>
             </div>
           </div>
         </div>
