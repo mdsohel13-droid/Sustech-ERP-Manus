@@ -19,16 +19,7 @@ import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 
-const PRODUCTS = [
-  { id: "fan", name: "Atomberg Gorilla Fan", category: "fan" },
-  { id: "ess_small", name: "Growatt ESS (Small)", category: "ess" },
-  { id: "ess_commercial", name: "Growatt ESS (Commercial)", category: "ess" },
-  { id: "solar_jinko", name: "Jinko Solar PV Panel", category: "solar_pv" },
-  { id: "solar_ja", name: "JA Solar PV Panel", category: "solar_pv" },
-  { id: "epc_project", name: "EPC Solar Project", category: "epc_project" },
-  { id: "testing", name: "Electrical Testing & Inspection", category: "testing" },
-  { id: "installation", name: "Installation Work", category: "installation" },
-];
+// Products are now loaded dynamically from the Products module via catalogProducts query
 
 const CHART_COLORS = ["#8b5cf6", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#ec4899"];
 
@@ -567,7 +558,7 @@ export default function SalesEnhanced() {
                       <DialogDescription>Enter sales transaction details</DialogDescription>
                     </DialogHeader>
                     <DailySaleForm
-                      products={PRODUCTS}
+                      products={catalogProducts.map((p: any) => ({ id: String(p.id), name: p.name, category: p.category || "other" }))}
                       salespeople={salespeople || []}
                       onSubmit={(data) => createDailySale.mutate(data)}
                       isLoading={createDailySale.isPending}
@@ -582,7 +573,7 @@ export default function SalesEnhanced() {
                     </DialogHeader>
                     {editingId && dailySales && (
                       <DailySaleForm
-                        products={PRODUCTS}
+                        products={catalogProducts.map((p: any) => ({ id: String(p.id), name: p.name, category: p.category || "other" }))}
                         salespeople={salespeople || []}
                         initialData={dailySales.find((s: any) => s.id === editingId)}
                         onSubmit={(data) => updateDailySale.mutate({ id: editingId, ...data })}
@@ -634,7 +625,7 @@ export default function SalesEnhanced() {
                       <DialogDescription>Define sales goals for the week</DialogDescription>
                     </DialogHeader>
                     <WeeklyTargetForm
-                      products={PRODUCTS}
+                      products={catalogProducts.map((p: any) => ({ id: String(p.id), name: p.name, category: p.category || "other" }))}
                       salespeople={salespeople || []}
                       onSubmit={(data) => createWeeklyTarget.mutate(data)}
                       isLoading={createWeeklyTarget.isPending}
@@ -678,7 +669,7 @@ export default function SalesEnhanced() {
                       <DialogDescription>Define sales goals for the month</DialogDescription>
                     </DialogHeader>
                     <MonthlyTargetForm
-                      products={PRODUCTS}
+                      products={catalogProducts.map((p: any) => ({ id: String(p.id), name: p.name, category: p.category || "other" }))}
                       salespeople={salespeople || []}
                       onSubmit={(data) => createMonthlyTarget.mutate(data)}
                       isLoading={createMonthlyTarget.isPending}
@@ -781,14 +772,19 @@ export default function SalesEnhanced() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {PRODUCTS.map((product) => (
+                {catalogProducts.map((product: any) => (
                   <Card key={product.id} className="border">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base">{product.name}</CardTitle>
-                      <Badge variant="outline" className="w-fit text-xs mt-2">{product.category}</Badge>
+                      <Badge variant="outline" className="w-fit text-xs mt-2">{product.category || "other"}</Badge>
                     </CardHeader>
                   </Card>
                 ))}
+                {catalogProducts.length === 0 && (
+                  <div className="col-span-3 text-center py-8 text-muted-foreground">
+                    No products found. Add products in the Products module.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
