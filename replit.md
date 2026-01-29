@@ -33,7 +33,11 @@ drizzle/              # Database schema and migrations
   - Warehouses tab with full CRUD operations (create, edit, delete)
   - Stock Adjustment dialog supports Add, Remove, and Set Stock Level operations
   - Proper transaction type mapping based on reason (count, damage, return, purchase, sale)
-  - Enhanced KPI dashboard with 6 cards: Total SKUs, Total Stock, Stock Value, Low Stock, Out of Stock, Warehouses
+  - **Redesigned Dashboard** matching modern design with:
+    - Top KPI row: 5 colorful gradient cards (Total Stock, Out of Stock, Stock Value, Low Stock, Health Score)
+    - Charts row: Inventory Turnover line chart + Stock Level bar chart
+    - Status cards row: Low Stock, Expiry Soon, Out of Stock, Overstocked with colored borders
+    - Bottom widgets: Low Stock Items table, Stock Distribution pie chart, Purchase Orders list
 - **Products & Inventory Integration**: Integrated inventory management into Products module
   - Added `warehouses` table for storage locations
   - Added `product_inventory` table for stock levels per product per warehouse
