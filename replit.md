@@ -30,6 +30,20 @@ drizzle/              # Database schema and migrations
 - `ERP_MODULE_UPDATE_PROMPT.md` - Reusable prompt for future module updates
 
 ## Recent Changes (Jan 29, 2026)
+- **CRM Module Complete Redesign**: Renamed from "Customers" to "CRM" with modern dashboard
+  - **New Database Tables**: crm_leads, crm_opportunities, crm_activities, crm_tasks with proper enums
+  - **5 Colorful Gradient KPI Cards**: Total Leads (teal), Active Opportunities (emerald), Deals Won (violet), Total Revenue YTD (amber), Tasks Due (slate)
+  - **Sales Pipeline Funnel Chart**: Colored horizontal bars showing lead progression (Prospecting → Qualification → Proposal → Negotiation)
+  - **Sales Performance Trend**: Line chart showing monthly revenue performance
+  - **Recent Leads Table**: Shows latest leads with clickable reference IDs, status badges
+  - **Open Opportunities Table**: Displays active opportunities with customer, stage, amount, owner
+  - **Recent Activities Sidebar**: Timeline of calls, emails, meetings, tasks with icons
+  - **Top Sales Reps Widget**: Shows top 3 performers with gold/silver/bronze badges
+  - **Tabs**: Overview (dashboard), All Leads, All Opportunities, Archive, legacy Customers
+  - **CRUD Dialogs**: Add/Edit/View dialogs for leads, opportunities, activities
+  - **Archive/Restore**: Archive functionality for leads and opportunities
+  - **Route Change**: /customers → /crm (all navigation, breadcrumbs, hyperlinks updated)
+  - **Backend**: Full tRPC routes for leads, opportunities, activities, tasks, dashboard stats
 - **Products Module Dashboard Redesign**: Modern UI with colorful KPI cards and two-column layout
   - **5 Colorful Gradient KPI Cards**: Total Products (blue), Active Listings (green), Revenue Last 30 Days (slate), Top Category (amber), Discontinued (orange)
   - **Two-Column Layout**: 75% product listings with tabs, 25% performance sidebar
