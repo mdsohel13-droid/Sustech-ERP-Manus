@@ -55,12 +55,26 @@ The Accounting module (formerly "Income & Expense") provides comprehensive finan
 - **Journal Entries & Transactions**: Filterable table with date, description, category, amount, status
 - **Income vs Expense Comparison**: Side-by-side bar chart for recent months
 - **Transaction List**: Tabbed view (Income/Expense) with search and quick edit functionality
+- **Archived Entries Section**: Collapsible section showing archived entries with restore/permanent delete options
+
+**Data Entry & Management:**
+- **Create**: Floating Add button opens dialog for new income/expense entries with category, amount, date, payment method, reference number, and description fields
+- **Edit**: Modify existing entries via dropdown menu or View Details dialog
+- **View Details**: Full entry details modal showing all fields including timestamps
+- **Archive**: Soft delete entries to archive (reversible) via confirmation dialog
+- **Restore**: Restore archived entries back to active list
+- **Permanent Delete**: Hard delete from archive with confirmation dialog
+- **Delete**: Direct delete (non-archived entries) with confirmation
+
+**Database Schema:**
+- `income_expenditure` table with fields: id, date, type (income/expenditure), category, subcategory, amount, currency, description, referenceNumber, paymentMethod, createdBy, createdAt, updatedAt, isArchived, archivedAt
 
 **Database Integration:**
 - Pulls from `income_expenditure` table for transaction data
 - Integrates with `financial.getBalanceSheet` for asset/liability/equity totals
 - Uses `financial.getAllAR` for pending invoices count
 - Uses `financial.getAllAP` for accounts payable data
+- Archive/restore operations update isArchived and archivedAt fields
 
 **URL**: `/accounting`
 **Router**: `incomeExpenditure` (backend maintains compatibility)
