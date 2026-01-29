@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, Filter, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line, ComposedChart } from "recharts";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle, BookOpen, CreditCard, ArrowRightLeft } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, Line } from "recharts";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -33,6 +33,7 @@ export default function Accounting() {
   const [showArchived, setShowArchived] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; item: any; type: 'archive' | 'delete' | 'permanent' }>({ show: false, item: null, type: 'archive' });
   const [viewingEntry, setViewingEntry] = useState<any>(null);
+  const [journalDialogOpen, setJournalDialogOpen] = useState(false);
 
   const utils = trpc.useUtils();
   const { currency } = useCurrency();
@@ -44,6 +45,8 @@ export default function Accounting() {
   const { data: arData = [] } = trpc.financial.getAllAR.useQuery();
   const { data: apData = [] } = trpc.financial.getAllAP.useQuery();
   const { data: archivedEntries = [] } = trpc.incomeExpenditure.getArchived.useQuery();
+  const { data: journalEntries = [] } = trpc.financial.getAllJournalEntries.useQuery();
+  const { data: financialAccounts = [] } = trpc.financial.getAccounts.useQuery();
 
   const createMutation = trpc.incomeExpenditure.create.useMutation({
     onSuccess: () => {
@@ -117,6 +120,15 @@ export default function Accounting() {
     onError: (error) => toast.error(error.message),
   });
 
+  const createJournalMutation = trpc.financial.createJournalEntry.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllJournalEntries.invalidate();
+      toast.success("Journal entry created successfully");
+      setJournalDialogOpen(false);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -138,6 +150,21 @@ export default function Accounting() {
     } else {
       createMutation.mutate(data);
     }
+  };
+
+  const handleJournalSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    createJournalMutation.mutate({
+      entryNumber: formData.get("entryNumber") as string,
+      entryDate: formData.get("entryDate") as string,
+      description: formData.get("description") as string,
+      reference: formData.get("reference") as string || undefined,
+      debitAccountId: parseInt(formData.get("debitAccountId") as string),
+      creditAccountId: parseInt(formData.get("creditAccountId") as string),
+      amount: formData.get("amount") as string,
+    });
   };
 
   const incomeEntries = allEntries?.filter((e: any) => e.type === "income") || [];
@@ -223,12 +250,17 @@ export default function Accounting() {
 
   const netProfitMargin = totalIncome > 0 ? ((netPosition / totalIncome) * 100).toFixed(1) : "0";
 
+  const getAccountName = (accountId: number) => {
+    const account = financialAccounts.find((a: any) => a.id === accountId);
+    return account ? `${account.accountCode} - ${account.accountName}` : `Account #${accountId}`;
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Accounting Dashboard</h1>
-          <p className="text-muted-foreground">Comprehensive financial overview and analytics</p>
+          <h1 className="text-3xl font-bold tracking-tight">Accounting</h1>
+          <p className="text-muted-foreground">Comprehensive financial management and tracking</p>
         </div>
         <div className="flex items-center gap-2">
           <Input
@@ -323,280 +355,458 @@ export default function Accounting() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Chart of Accounts Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <div className="flex-1">
-                {chartOfAccountsData.map((item, index) => (
-                  <div key={item.name} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                      <span className="text-sm">{item.name}</span>
-                    </div>
-                    <span className="font-medium">{formatCurrency(item.value, currency)}</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-muted/50 p-1">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="income-expense" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Income & Expense
+          </TabsTrigger>
+          <TabsTrigger value="journal" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Journal Entries
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Chart of Accounts Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <div className="flex-1">
+                    {chartOfAccountsData.map((item, index) => (
+                      <div key={item.name} className="flex items-center justify-between py-2 border-b last:border-0">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                          <span className="text-sm">{item.name}</span>
+                        </div>
+                        <span className="font-medium">{formatCurrency(item.value, currency)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="w-48 h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartOfAccountsData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={70}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {chartOfAccountsData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
+                  <div className="w-48 h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={chartOfAccountsData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={70}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {chartOfAccountsData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Income & Expense (Last 12 Months)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <ComposedChart data={last12MonthsData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" fontSize={12} />
+                    <YAxis fontSize={12} />
                     <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
-                  </PieChart>
+                    <Legend />
+                    <Bar dataKey="income" fill="#22c55e" name="Income" />
+                    <Bar dataKey="expense" fill="#ef4444" name="Expense" />
+                    <Line type="monotone" dataKey="netProfit" stroke="#3b82f6" name="Net Profit" strokeWidth={2} />
+                  </ComposedChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Income & Expense (Last 12 Months)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <ComposedChart data={last12MonthsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
-                <Legend />
-                <Bar dataKey="income" fill="#22c55e" name="Income" />
-                <Bar dataKey="expense" fill="#ef4444" name="Expense" />
-                <Line type="monotone" dataKey="netProfit" stroke="#3b82f6" name="Net Profit" strokeWidth={2} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Income vs. Expense</CardTitle>
+                <p className="text-sm text-muted-foreground">Entering vs. Outgoing/exiting compensation</p>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded" />
+                    <span className="text-sm">Income</span>
+                    <span className="font-semibold">{formatCurrency(totalIncome, currency)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded" />
+                    <span className="text-sm">Expense</span>
+                    <span className="font-semibold">{formatCurrency(totalExpenditure, currency)}</span>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={last12MonthsData.slice(-6)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                    <Bar dataKey="income" fill="#22c55e" />
+                    <Bar dataKey="expense" fill="#ef4444" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Journal Entries & Transactions</CardTitle>
-          <div className="flex items-center gap-2">
-            <Select defaultValue="all">
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Income / Expense" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
-                <SelectItem value="expense">Expense</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {allCategories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>Recent Transactions</CardTitle>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setActiveTab("income-expense")}>
+                  View All
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[280px] overflow-y-auto">
+                  {allEntries.slice(0, 6).map((entry: any) => (
+                    <div key={entry.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            {entry.date ? format(new Date(entry.date), 'MMM dd') : '-'}
+                          </span>
+                          <span className="text-sm font-medium truncate max-w-[150px]">
+                            {entry.description || entry.category}
+                          </span>
+                        </div>
+                        <Badge variant="outline" className="text-xs mt-1">{entry.category}</Badge>
+                      </div>
+                      <span className={`font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                        {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="income-expense" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Income & Expense Entries</h2>
+            <Button onClick={() => { setEditingEntry(null); setDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Entry
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Account / Vendor</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Tax</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allEntries.slice(0, 10).map((entry: any) => (
-                <TableRow key={entry.id}>
-                  <TableCell>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{entry.description || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={entry.type === 'income' ? 'default' : 'destructive'}>
-                      {entry.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{entry.referenceNumber || '-'}</TableCell>
-                  <TableCell className={`text-right font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                    {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
-                  </TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-green-50 text-green-700">
-                      Verified
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => {
-                          setEditingEntry(entry);
-                          setEntryType(entry.type);
-                          setDialogOpen(true);
-                        }}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setViewingEntry(entry)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-amber-600"
-                          onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'archive' })}
-                        >
-                          <Archive className="h-4 w-4 mr-2" />
-                          Archive
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'delete' })}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Income vs. Expense</CardTitle>
-            <p className="text-sm text-muted-foreground">Entering vs. Outgoing/exiting compensation</p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4 mb-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>All Transactions</CardTitle>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded" />
-                <span className="text-sm">Income</span>
-                <span className="font-semibold">{formatCurrency(totalIncome, currency)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded" />
-                <span className="text-sm">Expense</span>
-                <span className="font-semibold">{formatCurrency(totalExpenditure, currency)}</span>
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={last12MonthsData.slice(-6)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
-                <Bar dataKey="income" fill="#22c55e" />
-                <Bar dataKey="expense" fill="#ef4444" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <CardTitle>Transactions</CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              <Tabs value={transactionTab} onValueChange={(v) => setTransactionTab(v as "income" | "expense")}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="income" className="text-xs px-3">Income</TabsTrigger>
-                  <TabsTrigger value="expense" className="text-xs px-3">Expense</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  className="pl-8 h-8 w-32"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between mb-4 text-sm">
-              <span className="text-muted-foreground">
-                {transactionTab === "income" ? "Income" : "Expense"}
-              </span>
-              <span className="font-semibold text-lg">
-                {formatCurrency(transactionTab === "income" ? totalIncome : totalExpenditure, currency)}
-              </span>
-            </div>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {filteredTransactions.slice(0, 8).map((entry: any) => (
-                <div key={entry.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        {entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}
-                      </span>
-                      <span className="text-sm font-medium truncate max-w-[150px]">
-                        {entry.description || entry.category}
-                      </span>
-                    </div>
-                    <Badge variant="outline" className="text-xs mt-1">{entry.category}</Badge>
-                  </div>
-                  <div className="text-right">
-                    <span className={`font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(Number(entry.amount || 0), currency)}
-                    </span>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="ml-2"
-                    onClick={() => {
-                      setEditingEntry(entry);
-                      setEntryType(entry.type);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
+                <Tabs value={transactionTab} onValueChange={(v) => setTransactionTab(v as "income" | "expense")}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="income" className="text-xs px-3">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Income ({incomeEntries.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="expense" className="text-xs px-3">
+                      <TrendingDown className="h-3 w-3 mr-1" />
+                      Expense ({expenditureEntries.length})
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    className="pl-8 h-8 w-40"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-              ))}
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-40 h-8">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {allCategories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-4 p-3 bg-muted/30 rounded-lg">
+                <span className="text-muted-foreground">
+                  Total {transactionTab === "income" ? "Income" : "Expense"}
+                </span>
+                <span className={`font-bold text-xl ${transactionTab === "income" ? "text-green-600" : "text-red-600"}`}>
+                  {formatCurrency(transactionTab === "income" ? totalIncome : totalExpenditure, currency)}
+                </span>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Payment Method</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.map((entry: any) => (
+                    <TableRow key={entry.id}>
+                      <TableCell>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{entry.description || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={entry.type === 'income' ? 'default' : 'destructive'}>
+                          {entry.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{entry.referenceNumber || '-'}</TableCell>
+                      <TableCell className="capitalize">{entry.paymentMethod?.replace('_', ' ') || '-'}</TableCell>
+                      <TableCell className={`text-right font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                        {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setViewingEntry(entry)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setEditingEntry(entry);
+                              setEntryType(entry.type);
+                              setDialogOpen(true);
+                            }}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-amber-600"
+                              onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'archive' })}
+                            >
+                              <Archive className="h-4 w-4 mr-2" />
+                              Archive
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'delete' })}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredTransactions.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No {transactionTab} entries found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {archivedEntries.length > 0 && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Archive className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>Archived Entries</CardTitle>
+                  <Badge variant="secondary">{archivedEntries.length}</Badge>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowArchived(!showArchived)}>
+                  {showArchived ? "Hide" : "Show"} Archived
+                </Button>
+              </CardHeader>
+              {showArchived && (
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Archived On</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {archivedEntries.map((entry: any) => (
+                        <TableRow key={entry.id} className="bg-muted/30">
+                          <TableCell>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{entry.description || '-'}</TableCell>
+                          <TableCell>{entry.category}</TableCell>
+                          <TableCell>
+                            <Badge variant={entry.type === 'income' ? 'default' : 'destructive'}>
+                              {entry.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className={`text-right font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                            {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {entry.archivedAt ? format(new Date(entry.archivedAt), 'MMM dd, yyyy') : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => restoreMutation.mutate({ id: entry.id })}
+                                disabled={restoreMutation.isPending}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                Restore
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'permanent' })}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              )}
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="journal" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Journal Entries</h2>
+              <p className="text-sm text-muted-foreground">Double-entry accounting records from the database</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Button onClick={() => setJournalDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Journal Entry
+            </Button>
+          </div>
+
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-blue-900">How Journal Entries Work</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Journal entries record financial transactions using double-entry accounting. Each entry has a debit account and a credit account with equal amounts. These entries can be:
+                  </p>
+                  <ul className="text-sm text-blue-700 mt-2 list-disc list-inside space-y-1">
+                    <li>Created manually for adjustments, accruals, and corrections</li>
+                    <li>Auto-generated from other modules (Sales, Purchases, Payments)</li>
+                    <li>Imported from external accounting systems</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <ArrowRightLeft className="h-5 w-5" />
+                Journal Entry Records
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{journalEntries.length} entries</Badge>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Entry #</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Debit Account</TableHead>
+                    <TableHead>Credit Account</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Reference</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {journalEntries.length > 0 ? (
+                    journalEntries.map((entry: any) => (
+                      <TableRow key={entry.id}>
+                        <TableCell className="font-mono text-sm">{entry.entryNumber}</TableCell>
+                        <TableCell>{entry.entryDate ? format(new Date(entry.entryDate), 'MMM dd, yyyy') : '-'}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{entry.description}</TableCell>
+                        <TableCell className="text-sm">{getAccountName(entry.debitAccountId)}</TableCell>
+                        <TableCell className="text-sm">{getAccountName(entry.creditAccountId)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(Number(entry.amount || 0), currency)}</TableCell>
+                        <TableCell>
+                          <Badge variant={entry.isPosted ? "default" : "secondary"}>
+                            {entry.isPosted ? "Posted" : "Draft"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{entry.reference || '-'}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>No journal entries yet</p>
+                        <p className="text-sm">Create your first journal entry to start tracking double-entry transactions</p>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => {
         setDialogOpen(open);
@@ -725,78 +935,109 @@ export default function Accounting() {
         </DialogContent>
       </Dialog>
 
-      {archivedEntries.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Archive className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Archived Entries</CardTitle>
-              <Badge variant="secondary">{archivedEntries.length}</Badge>
+      <Dialog open={journalDialogOpen} onOpenChange={setJournalDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create Journal Entry</DialogTitle>
+            <DialogDescription>
+              Record a double-entry accounting transaction
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleJournalSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="entryNumber">Entry Number *</Label>
+                  <Input 
+                    id="entryNumber" 
+                    name="entryNumber" 
+                    placeholder="JE-2026-001"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="entryDate">Date *</Label>
+                  <Input 
+                    id="entryDate" 
+                    name="entryDate" 
+                    type="date" 
+                    defaultValue={format(new Date(), 'yyyy-MM-dd')}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="debitAccountId">Debit Account *</Label>
+                  <Select name="debitAccountId" required>
+                    <SelectTrigger><SelectValue placeholder="Select debit account" /></SelectTrigger>
+                    <SelectContent>
+                      {financialAccounts.map((account: any) => (
+                        <SelectItem key={account.id} value={account.id.toString()}>
+                          {account.accountCode} - {account.accountName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="creditAccountId">Credit Account *</Label>
+                  <Select name="creditAccountId" required>
+                    <SelectTrigger><SelectValue placeholder="Select credit account" /></SelectTrigger>
+                    <SelectContent>
+                      {financialAccounts.map((account: any) => (
+                        <SelectItem key={account.id} value={account.id.toString()}>
+                          {account.accountCode} - {account.accountName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="amount">Amount *</Label>
+                  <Input 
+                    id="amount" 
+                    name="amount" 
+                    type="number" 
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="reference">Reference</Label>
+                  <Input 
+                    id="reference" 
+                    name="reference" 
+                    placeholder="e.g., INV-001, PO-001"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea 
+                  id="description" 
+                  name="description" 
+                  placeholder="Describe the journal entry..."
+                  rows={3}
+                  required
+                />
+              </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowArchived(!showArchived)}>
-              {showArchived ? "Hide" : "Show"} Archived
-            </Button>
-          </CardHeader>
-          {showArchived && (
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Archived On</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {archivedEntries.map((entry: any) => (
-                    <TableRow key={entry.id} className="bg-muted/30">
-                      <TableCell>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{entry.description || '-'}</TableCell>
-                      <TableCell>{entry.category}</TableCell>
-                      <TableCell>
-                        <Badge variant={entry.type === 'income' ? 'default' : 'destructive'}>
-                          {entry.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className={`text-right font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                        {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {entry.archivedAt ? format(new Date(entry.archivedAt), 'MMM dd, yyyy') : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => restoreMutation.mutate({ id: entry.id })}
-                            disabled={restoreMutation.isPending}
-                          >
-                            <RotateCcw className="h-4 w-4 mr-1" />
-                            Restore
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => setDeleteConfirm({ show: true, item: entry, type: 'permanent' })}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          )}
-        </Card>
-      )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setJournalDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createJournalMutation.isPending}>
+                {createJournalMutation.isPending ? "Creating..." : "Create Entry"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteConfirm.show} onOpenChange={(open) => !open && setDeleteConfirm({ show: false, item: null, type: 'archive' })}>
         <AlertDialogContent>

@@ -413,6 +413,10 @@ export const appRouter = router({
         return { success: true };
       }),
     
+    getAccounts: protectedProcedure.query(async () => {
+      return await db.getAllFinancialAccounts();
+    }),
+
     getAllJournalEntries: protectedProcedure.query(async () => {
       return await db.getAllJournalEntries();
     }),
