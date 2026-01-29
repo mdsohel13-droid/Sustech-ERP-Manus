@@ -8,6 +8,13 @@
       "when": 1769607915745,
       "tag": "0000_lazy_ultron",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769659923921,
+      "tag": "0001_new_gladiator",
+      "breakpoints": true
     }
   ]
 }

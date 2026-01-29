@@ -1,6 +1,6 @@
 {
-  "id": "e6dcd3dc-2640-4aab-b9c7-e0d4af80b24c",
-  "prevId": "51cd56c3-c841-491f-9cb4-154225e417cf",
+  "id": "be1b21fa-adfa-4196-a5f5-8ac098c9a7c8",
+  "prevId": "e6dcd3dc-2640-4aab-b9c7-e0d4af80b24c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4304,7 +4304,8 @@
           "type": "product_category",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "'other'"
         },
         "category_id": {
           "name": "category_id",

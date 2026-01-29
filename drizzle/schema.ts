@@ -346,7 +346,7 @@ export const salesProducts = pgTable("sales_products", {
   name: varchar("name", { length: 255 }).notNull(),
   sku: varchar("sku", { length: 100 }),
   barcode: varchar("barcode", { length: 100 }),
-  category: productCategoryEnum("category").notNull(),
+  category: productCategoryEnum("category").default("other"),
   categoryId: integer("category_id"),
   unitId: integer("unit_id"),
   brandId: integer("brand_id"),

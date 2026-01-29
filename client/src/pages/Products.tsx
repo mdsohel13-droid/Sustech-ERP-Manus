@@ -70,7 +70,6 @@ export default function Products() {
     name: "",
     sku: "",
     barcode: "",
-    category: "other" as "fan" | "ess" | "solar_pv" | "epc_project" | "testing" | "installation" | "other",
     categoryId: undefined as number | undefined,
     unitId: undefined as number | undefined,
     brandId: undefined as number | undefined,
@@ -261,7 +260,6 @@ export default function Products() {
       name: "",
       sku: "",
       barcode: "",
-      category: "other",
       categoryId: undefined,
       unitId: undefined,
       brandId: undefined,
@@ -282,7 +280,6 @@ export default function Products() {
       name: product.name || "",
       sku: product.sku || "",
       barcode: product.barcode || "",
-      category: product.category || "other",
       categoryId: product.categoryId,
       unitId: product.unitId,
       brandId: product.brandId,
@@ -317,7 +314,7 @@ export default function Products() {
     return products.filter((product: any) => {
       const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            product.sku?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+      const matchesCategory = selectedCategory === "All" || product.categoryId?.toString() === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [products, searchQuery, selectedCategory]);
@@ -330,17 +327,11 @@ export default function Products() {
     return { totalProducts, totalValue, lowStock, archivedCount: archivedProducts.length };
   }, [products, archivedProducts]);
   
-  // Category options for filter
-  const categoryOptions = ["All", "fan", "ess", "solar_pv", "epc_project", "testing", "installation", "other"];
-  const categoryLabels: Record<string, string> = {
-    "All": "All",
-    "fan": "Fan",
-    "ess": "ESS",
-    "solar_pv": "Solar PV",
-    "epc_project": "EPC Project",
-    "testing": "Testing",
-    "installation": "Installation",
-    "other": "Other"
+  // Helper to get category name from ID
+  const getCategoryName = (categoryId: number | null | undefined) => {
+    if (!categoryId) return "Uncategorized";
+    const cat = categories.find((c: any) => c.id === categoryId);
+    return cat?.name || "Uncategorized";
   };
   
   const renderProductForm = () => {
@@ -371,34 +362,19 @@ export default function Products() {
               <div>
                 <label className="text-sm font-medium">Category *</label>
                 <select
-                  value={productForm.category}
-                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value as any })}
+                  value={productForm.categoryId || ""}
+                  onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value ? parseInt(e.target.value) : undefined })}
                   className="mt-1 w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  <option value="fan">Fan</option>
-                  <option value="ess">ESS</option>
-                  <option value="solar_pv">Solar PV</option>
-                  <option value="epc_project">EPC Project</option>
-                  <option value="testing">Testing</option>
-                  <option value="installation">Installation</option>
-                  <option value="other">Other</option>
+                  <option value="">Select category</option>
+                  {categories.map((cat: any) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
                 </select>
+                {categories.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">Add categories in the Categories tab first</p>
+                )}
               </div>
-              {categories.length > 0 && (
-                <div>
-                  <label className="text-sm font-medium">Dynamic Category</label>
-                  <select
-                    value={productForm.categoryId || ""}
-                    onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value ? parseInt(e.target.value) : undefined })}
-                    className="mt-1 w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((cat: any) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
               {brands.length > 0 && (
                 <div>
                   <label className="text-sm font-medium">Brand</label>
@@ -628,8 +604,9 @@ export default function Products() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  {categoryOptions.map(cat => (
-                    <option key={cat} value={cat}>{categoryLabels[cat]}</option>
+                  <option value="All">All Categories</option>
+                  {categories.map((cat: any) => (
+                    <option key={cat.id} value={cat.id.toString()}>{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -689,7 +666,7 @@ export default function Products() {
                             </td>
                             <td className="p-4 text-sm text-muted-foreground">{product.sku || "-"}</td>
                             <td className="p-4">
-                              <span className="text-xs px-2 py-1 bg-muted rounded-full">{categoryLabels[product.category] || product.category}</span>
+                              <span className="text-xs px-2 py-1 bg-muted rounded-full">{getCategoryName(product.categoryId)}</span>
                             </td>
                             <td className="p-4 text-right text-muted-foreground">
                               {product.purchasePrice ? formatCurrency(parseFloat(product.purchasePrice), currency) : "-"}
@@ -744,7 +721,7 @@ export default function Products() {
                             {product.sellingPrice ? formatCurrency(parseFloat(product.sellingPrice), currency) : "-"}
                           </span>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
-                            {categoryLabels[product.category] || product.category}
+                            {getCategoryName(product.categoryId)}
                           </span>
                         </div>
                         <div className="flex gap-2 pt-2">
@@ -1028,7 +1005,7 @@ export default function Products() {
                           <td className="p-4 font-medium">{product.name}</td>
                           <td className="p-4 text-muted-foreground">{product.sku || "-"}</td>
                           <td className="p-4">
-                            <span className="text-xs px-2 py-1 bg-muted rounded-full">{categoryLabels[product.category] || product.category}</span>
+                            <span className="text-xs px-2 py-1 bg-muted rounded-full">{getCategoryName(product.categoryId)}</span>
                           </td>
                           <td className="p-4 text-muted-foreground">
                             {product.archivedAt ? new Date(product.archivedAt).toLocaleDateString() : "-"}
