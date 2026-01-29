@@ -58,7 +58,7 @@ export const moduleRoutes = {
   sales: '/sales',
   purchases: '/purchases',
   products: '/products',
-  customers: '/customers',
+  customers: '/crm',
   financial: '/financial',
   projects: '/projects',
   hr: '/hr',

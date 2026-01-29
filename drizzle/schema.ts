@@ -1389,3 +1389,147 @@ export const commissionPayouts = pgTable("commission_payouts", {
 
 export type CommissionPayout = typeof commissionPayouts.$inferSelect;
 export type InsertCommissionPayout = typeof commissionPayouts.$inferInsert;
+
+/**
+ * CRM Lead Status Enum
+ */
+export const crmLeadStatusEnum = pgEnum("crm_lead_status", [
+  "new",
+  "contacted",
+  "qualified",
+  "proposal_sent",
+  "negotiation",
+  "won",
+  "lost"
+]);
+
+/**
+ * CRM Lead Source Enum
+ */
+export const crmLeadSourceEnum = pgEnum("crm_lead_source", [
+  "website",
+  "referral",
+  "social_media",
+  "cold_call",
+  "email_campaign",
+  "trade_show",
+  "partner",
+  "other"
+]);
+
+/**
+ * CRM Opportunity Stage Enum
+ */
+export const crmOpportunityStageEnum = pgEnum("crm_opportunity_stage", [
+  "prospecting",
+  "qualification",
+  "proposal",
+  "negotiation",
+  "closed_won",
+  "closed_lost"
+]);
+
+/**
+ * CRM Activity Type Enum
+ */
+export const crmActivityTypeEnum = pgEnum("crm_activity_type", [
+  "call",
+  "email",
+  "meeting",
+  "task",
+  "note"
+]);
+
+/**
+ * CRM Leads Table
+ */
+export const crmLeads = pgTable("crm_leads", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  company: varchar("company", { length: 255 }),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  source: crmLeadSourceEnum("source").default("website"),
+  status: crmLeadStatusEnum("status").default("new").notNull(),
+  estimatedValue: decimal("estimatedValue", { precision: 15, scale: 2 }),
+  lastContactDate: timestamp("lastContactDate"),
+  nextFollowUp: timestamp("nextFollowUp"),
+  assignedTo: integer("assignedTo"),
+  notes: text("notes"),
+  isArchived: boolean("isArchived").default(false),
+  createdBy: integer("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type CrmLead = typeof crmLeads.$inferSelect;
+export type InsertCrmLead = typeof crmLeads.$inferInsert;
+
+/**
+ * CRM Opportunities Table
+ */
+export const crmOpportunities = pgTable("crm_opportunities", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  customerId: integer("customerId"),
+  leadId: integer("leadId"),
+  stage: crmOpportunityStageEnum("stage").default("prospecting").notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }),
+  probability: integer("probability").default(10),
+  expectedCloseDate: date("expectedCloseDate"),
+  actualCloseDate: date("actualCloseDate"),
+  ownerId: integer("ownerId"),
+  description: text("description"),
+  isArchived: boolean("isArchived").default(false),
+  createdBy: integer("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type CrmOpportunity = typeof crmOpportunities.$inferSelect;
+export type InsertCrmOpportunity = typeof crmOpportunities.$inferInsert;
+
+/**
+ * CRM Activities Table
+ */
+export const crmActivities = pgTable("crm_activities", {
+  id: serial("id").primaryKey(),
+  type: crmActivityTypeEnum("type").notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  description: text("description"),
+  leadId: integer("leadId"),
+  customerId: integer("customerId"),
+  opportunityId: integer("opportunityId"),
+  dueDate: timestamp("dueDate"),
+  completedAt: timestamp("completedAt"),
+  isCompleted: boolean("isCompleted").default(false),
+  assignedTo: integer("assignedTo"),
+  createdBy: integer("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CrmActivity = typeof crmActivities.$inferSelect;
+export type InsertCrmActivity = typeof crmActivities.$inferInsert;
+
+/**
+ * CRM Tasks Table
+ */
+export const crmTasks = pgTable("crm_tasks", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  dueDate: timestamp("dueDate"),
+  priority: varchar("priority", { length: 20 }).default("medium"),
+  status: varchar("status", { length: 50 }).default("pending"),
+  leadId: integer("leadId"),
+  customerId: integer("customerId"),
+  opportunityId: integer("opportunityId"),
+  assignedTo: integer("assignedTo"),
+  completedAt: timestamp("completedAt"),
+  createdBy: integer("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type CrmTask = typeof crmTasks.$inferSelect;
+export type InsertCrmTask = typeof crmTasks.$inferInsert;

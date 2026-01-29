@@ -16,6 +16,10 @@ import {
   projects, InsertProject,
   customers, InsertCustomer,
   customerInteractions, InsertCustomerInteraction,
+  crmLeads, InsertCrmLead,
+  crmOpportunities, InsertCrmOpportunity,
+  crmActivities, InsertCrmActivity,
+  crmTasks, InsertCrmTask,
   teamMembers, InsertTeamMember,
   attendance, InsertAttendance,
   leaveRequests, InsertLeaveRequest,
@@ -3312,4 +3316,223 @@ export async function getTopCategory() {
   return sorted[0] || { name: 'N/A', count: 0 };
 }
 
+// ============ CRM LEADS ============
+
+export async function getAllCrmLeads() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(crmLeads).where(eq(crmLeads.isArchived, false)).orderBy(desc(crmLeads.createdAt));
+}
+
+export async function getCrmLeadById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const results = await db.select().from(crmLeads).where(eq(crmLeads.id, id));
+  return results[0];
+}
+
+export async function createCrmLead(data: Omit<InsertCrmLead, 'id'>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(crmLeads).values(data).returning();
+  return result[0];
+}
+
+export async function updateCrmLead(id: number, data: Partial<InsertCrmLead>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(crmLeads).set({ ...data, updatedAt: new Date() }).where(eq(crmLeads.id, id)).returning();
+  return result[0];
+}
+
+export async function archiveCrmLead(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(crmLeads).set({ isArchived: true, updatedAt: new Date() }).where(eq(crmLeads.id, id));
+}
+
+export async function getArchivedCrmLeads() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(crmLeads).where(eq(crmLeads.isArchived, true)).orderBy(desc(crmLeads.createdAt));
+}
+
+export async function restoreCrmLead(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(crmLeads).set({ isArchived: false, updatedAt: new Date() }).where(eq(crmLeads.id, id));
+}
+
+// ============ CRM OPPORTUNITIES ============
+
+export async function getAllCrmOpportunities() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(crmOpportunities).where(eq(crmOpportunities.isArchived, false)).orderBy(desc(crmOpportunities.createdAt));
+}
+
+export async function getCrmOpportunityById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const results = await db.select().from(crmOpportunities).where(eq(crmOpportunities.id, id));
+  return results[0];
+}
+
+export async function createCrmOpportunity(data: Omit<InsertCrmOpportunity, 'id'>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(crmOpportunities).values(data).returning();
+  return result[0];
+}
+
+export async function updateCrmOpportunity(id: number, data: Partial<InsertCrmOpportunity>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(crmOpportunities).set({ ...data, updatedAt: new Date() }).where(eq(crmOpportunities.id, id)).returning();
+  return result[0];
+}
+
+export async function archiveCrmOpportunity(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(crmOpportunities).set({ isArchived: true, updatedAt: new Date() }).where(eq(crmOpportunities.id, id));
+}
+
+// ============ CRM ACTIVITIES ============
+
+export async function getAllCrmActivities(limit = 20) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(crmActivities).orderBy(desc(crmActivities.createdAt)).limit(limit);
+}
+
+export async function createCrmActivity(data: Omit<InsertCrmActivity, 'id'>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(crmActivities).values(data).returning();
+  return result[0];
+}
+
+// ============ CRM TASKS ============
+
+export async function getAllCrmTasks() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(crmTasks).where(ne(crmTasks.status, 'completed')).orderBy(asc(crmTasks.dueDate));
+}
+
+export async function getPendingCrmTasks() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(crmTasks).where(eq(crmTasks.status, 'pending')).orderBy(asc(crmTasks.dueDate));
+}
+
+export async function createCrmTask(data: Omit<InsertCrmTask, 'id'>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(crmTasks).values(data).returning();
+  return result[0];
+}
+
+export async function updateCrmTask(id: number, data: Partial<InsertCrmTask>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(crmTasks).set({ ...data, updatedAt: new Date() }).where(eq(crmTasks.id, id)).returning();
+  return result[0];
+}
+
+export async function completeCrmTask(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(crmTasks).set({ status: 'completed', completedAt: new Date(), updatedAt: new Date() }).where(eq(crmTasks.id, id));
+}
+
+// ============ CRM DASHBOARD STATS ============
+
+export async function getCrmDashboardStats() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const leads = await db.select().from(crmLeads).where(eq(crmLeads.isArchived, false));
+  const opportunities = await db.select().from(crmOpportunities).where(eq(crmOpportunities.isArchived, false));
+  const tasks = await db.select().from(crmTasks).where(eq(crmTasks.status, 'pending'));
+  
+  const now = new Date();
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisYear = new Date(now.getFullYear(), 0, 1);
+  
+  // Count leads by status
+  const newLeads = leads.filter(l => l.status === 'new').length;
+  const qualifiedLeads = leads.filter(l => l.status === 'qualified').length;
+  const proposalSent = leads.filter(l => l.status === 'proposal_sent').length;
+  const negotiation = leads.filter(l => l.status === 'negotiation').length;
+  const wonLeads = leads.filter(l => l.status === 'won').length;
+  
+  // Active opportunities (not closed)
+  const activeOpportunities = opportunities.filter(o => 
+    o.stage !== 'closed_won' && o.stage !== 'closed_lost'
+  ).length;
+  
+  // Deals won this month
+  const dealsWonThisMonth = opportunities.filter(o => {
+    if (o.stage !== 'closed_won' || !o.actualCloseDate) return false;
+    const closeDate = new Date(o.actualCloseDate);
+    return closeDate >= thisMonth;
+  }).length;
+  
+  // Total revenue YTD (from won opportunities)
+  const totalRevenueYTD = opportunities
+    .filter(o => {
+      if (o.stage !== 'closed_won' || !o.actualCloseDate) return false;
+      const closeDate = new Date(o.actualCloseDate);
+      return closeDate >= thisYear;
+    })
+    .reduce((sum, o) => sum + Number(o.amount || 0), 0);
+  
+  // Tasks due
+  const tasksDue = tasks.length;
+  
+  return {
+    totalLeads: leads.length,
+    activeOpportunities,
+    dealsWonThisMonth,
+    totalRevenueYTD,
+    tasksDue,
+    pipeline: {
+      newLeads,
+      qualified: qualifiedLeads,
+      proposalSent,
+      negotiation,
+      closedWon: wonLeads
+    }
+  };
+}
+
+export async function getCrmSalesPerformance() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const opportunities = await db.select().from(crmOpportunities).where(eq(crmOpportunities.isArchived, false));
+  
+  // Get last 6 months of closed won deals
+  const result = [];
+  const now = new Date();
+  
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    const monthName = monthDate.toLocaleString('default', { month: 'short' });
+    
+    const monthDeals = opportunities.filter(o => {
+      if (o.stage !== 'closed_won' || !o.actualCloseDate) return false;
+      const closeDate = new Date(o.actualCloseDate);
+      return closeDate >= monthDate && closeDate <= monthEnd;
+    });
+    
+    const revenue = monthDeals.reduce((sum, o) => sum + Number(o.amount || 0), 0);
+    result.push({ month: monthName, revenue, deals: monthDeals.length });
+  }
+  
+  return result;
+}
 

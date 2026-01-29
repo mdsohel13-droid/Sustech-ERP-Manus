@@ -636,7 +636,7 @@ export default function Home() {
             { name: "Sales", icon: ShoppingCart, path: "/sales", color: "bg-blue-100 text-blue-600" },
             { name: "Inventory", icon: Package, path: "/inventory", color: "bg-teal-100 text-teal-600" },
             { name: "Finance", icon: DollarSign, path: "/financial", color: "bg-green-100 text-green-600" },
-            { name: "CRM", icon: Users, path: "/customers", color: "bg-purple-100 text-purple-600" },
+            { name: "CRM", icon: Users, path: "/crm", color: "bg-purple-100 text-purple-600" },
             { name: "HR", icon: Briefcase, path: "/hr", color: "bg-pink-100 text-pink-600" },
             { name: "Projects", icon: Target, path: "/projects", color: "bg-orange-100 text-orange-600" },
             { name: "Tenders", icon: FileText, path: "/tender-quotation", color: "bg-indigo-100 text-indigo-600" },

@@ -9,7 +9,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
 import Financial from "./pages/Financial";
 import Projects from "./pages/Projects";
-import Customers from "./pages/Customers";
+import CRM from "./pages/CRM";
 import Team from "./pages/Team";
 import Ideas from "./pages/Ideas";
 import SalesEnhanced from "./pages/SalesEnhanced";
@@ -55,9 +55,9 @@ function Router() {
           <Projects />
         </DashboardLayout>
       </Route>
-      <Route path={"/customers"}>
+      <Route path={"/crm"}>
         <DashboardLayout>
-          <Customers />
+          <CRM />
         </DashboardLayout>
       </Route>
       <Route path={"/team"}>

@@ -175,7 +175,7 @@ export const hyperlinkAnalytics = new HyperlinkAnalyticsManager();
  */
 export const crossModuleRoutes: Record<string, Record<string, string>> = {
   Sales: {
-    customer: "/customers",
+    customer: "/crm",
     product: "/products",
     project: "/projects",
   },
@@ -183,13 +183,14 @@ export const crossModuleRoutes: Record<string, Record<string, string>> = {
     supplier: "/purchases",
     category: "/products",
   },
-  Customers: {
+  CRM: {
     sales: "/sales",
     projects: "/projects",
-    crm: "/crm",
+    company: "/crm",
+    contact: "/crm",
   },
   Purchases: {
-    vendor: "/customers",
+    vendor: "/crm",
     product: "/products",
     inventory: "/inventory",
   },
@@ -200,7 +201,7 @@ export const crossModuleRoutes: Record<string, Record<string, string>> = {
   },
   Financial: {
     invoice: "/financial",
-    vendor: "/customers",
+    vendor: "/crm",
     account: "/financial",
   },
   "Income & Expenditure": {
@@ -212,18 +213,13 @@ export const crossModuleRoutes: Record<string, Record<string, string>> = {
     category: "/financial",
   },
   "Tender/Quotation": {
-    vendor: "/customers",
+    vendor: "/crm",
     item: "/products",
   },
   Projects: {
-    customer: "/customers",
+    customer: "/crm",
     team: "/hr",
     financial: "/financial",
-  },
-  CRM: {
-    company: "/customers",
-    contact: "/customers",
-    sales: "/sales",
   },
   "Action Tracker": {
     assignee: "/hr",

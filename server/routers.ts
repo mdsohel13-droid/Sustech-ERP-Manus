@@ -2811,6 +2811,221 @@ Provide 2-3 actionable business insights.`;
       return await db.getTopCategory();
     }),
   }),
+
+  // CRM Module Routes
+  crm: router({
+    // Leads
+    getLeads: protectedProcedure.query(async () => {
+      return await db.getAllCrmLeads();
+    }),
+    
+    getLeadById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getCrmLeadById(input.id);
+      }),
+    
+    createLead: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        company: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        source: z.enum(["website", "referral", "social_media", "cold_call", "email_campaign", "trade_show", "partner", "other"]).optional(),
+        status: z.enum(["new", "contacted", "qualified", "proposal_sent", "negotiation", "won", "lost"]).optional(),
+        estimatedValue: z.string().optional(),
+        notes: z.string().optional(),
+        assignedTo: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.createCrmLead({ ...input, createdBy: ctx.user.id });
+      }),
+    
+    updateLead: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        company: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        source: z.enum(["website", "referral", "social_media", "cold_call", "email_campaign", "trade_show", "partner", "other"]).optional(),
+        status: z.enum(["new", "contacted", "qualified", "proposal_sent", "negotiation", "won", "lost"]).optional(),
+        estimatedValue: z.string().optional(),
+        notes: z.string().optional(),
+        lastContactDate: z.string().optional(),
+        nextFollowUp: z.string().optional(),
+        assignedTo: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, lastContactDate, nextFollowUp, ...data } = input;
+        return await db.updateCrmLead(id, {
+          ...data,
+          ...(lastContactDate ? { lastContactDate: new Date(lastContactDate) } : {}),
+          ...(nextFollowUp ? { nextFollowUp: new Date(nextFollowUp) } : {}),
+        });
+      }),
+    
+    archiveLead: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.archiveCrmLead(input.id);
+        return { success: true };
+      }),
+    
+    getArchivedLeads: protectedProcedure.query(async () => {
+      return await db.getArchivedCrmLeads();
+    }),
+    
+    restoreLead: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreCrmLead(input.id);
+        return { success: true };
+      }),
+
+    // Opportunities
+    getOpportunities: protectedProcedure.query(async () => {
+      return await db.getAllCrmOpportunities();
+    }),
+    
+    getOpportunityById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getCrmOpportunityById(input.id);
+      }),
+    
+    createOpportunity: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        customerId: z.number().optional(),
+        leadId: z.number().optional(),
+        stage: z.enum(["prospecting", "qualification", "proposal", "negotiation", "closed_won", "closed_lost"]).optional(),
+        amount: z.string().optional(),
+        probability: z.number().optional(),
+        expectedCloseDate: z.string().optional(),
+        ownerId: z.number().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.createCrmOpportunity({ ...input, createdBy: ctx.user.id });
+      }),
+    
+    updateOpportunity: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        customerId: z.number().optional(),
+        leadId: z.number().optional(),
+        stage: z.enum(["prospecting", "qualification", "proposal", "negotiation", "closed_won", "closed_lost"]).optional(),
+        amount: z.string().optional(),
+        probability: z.number().optional(),
+        expectedCloseDate: z.string().optional(),
+        actualCloseDate: z.string().optional(),
+        ownerId: z.number().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await db.updateCrmOpportunity(id, data);
+      }),
+    
+    archiveOpportunity: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.archiveCrmOpportunity(input.id);
+        return { success: true };
+      }),
+
+    // Activities
+    getActivities: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllCrmActivities(input?.limit || 20);
+      }),
+    
+    createActivity: protectedProcedure
+      .input(z.object({
+        type: z.enum(["call", "email", "meeting", "task", "note"]),
+        subject: z.string(),
+        description: z.string().optional(),
+        leadId: z.number().optional(),
+        customerId: z.number().optional(),
+        opportunityId: z.number().optional(),
+        dueDate: z.string().optional(),
+        assignedTo: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { dueDate, ...data } = input;
+        return await db.createCrmActivity({
+          ...data,
+          ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
+          createdBy: ctx.user.id,
+        });
+      }),
+
+    // Tasks
+    getTasks: protectedProcedure.query(async () => {
+      return await db.getAllCrmTasks();
+    }),
+    
+    getPendingTasks: protectedProcedure.query(async () => {
+      return await db.getPendingCrmTasks();
+    }),
+    
+    createTask: protectedProcedure
+      .input(z.object({
+        title: z.string(),
+        description: z.string().optional(),
+        dueDate: z.string().optional(),
+        priority: z.string().optional(),
+        leadId: z.number().optional(),
+        customerId: z.number().optional(),
+        opportunityId: z.number().optional(),
+        assignedTo: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { dueDate, ...data } = input;
+        return await db.createCrmTask({
+          ...data,
+          ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
+          createdBy: ctx.user.id,
+        });
+      }),
+    
+    updateTask: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        dueDate: z.string().optional(),
+        priority: z.string().optional(),
+        status: z.string().optional(),
+        assignedTo: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, dueDate, ...data } = input;
+        return await db.updateCrmTask(id, {
+          ...data,
+          ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
+        });
+      }),
+    
+    completeTask: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.completeCrmTask(input.id);
+        return { success: true };
+      }),
+
+    // Dashboard Stats
+    getDashboardStats: protectedProcedure.query(async () => {
+      return await db.getCrmDashboardStats();
+    }),
+    
+    getSalesPerformance: protectedProcedure.query(async () => {
+      return await db.getCrmSalesPerformance();
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

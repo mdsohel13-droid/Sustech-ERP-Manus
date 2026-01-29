@@ -169,7 +169,7 @@ export function createModuleBreadcrumb(
 export const MODULE_BREADCRUMBS: Record<string, BreadcrumbItem> = {
   sales: { label: "Sales", path: "/sales" },
   products: { label: "Products", path: "/products" },
-  customers: { label: "Customers", path: "/customers" },
+  customers: { label: "CRM", path: "/crm" },
   purchases: { label: "Purchases", path: "/purchases" },
   inventory: { label: "Inventory", path: "/inventory" },
   financial: { label: "Financial", path: "/financial" },
