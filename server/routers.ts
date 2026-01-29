@@ -349,6 +349,37 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getSalesSummary(input.monthYear);
       }),
+
+    // Finance Dashboard
+    getDashboardStats: protectedProcedure
+      .input(z.object({ period: z.enum(['mtd', 'ytd']).optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getFinanceDashboardStats(input?.period || 'ytd');
+      }),
+    
+    getMonthlyTrend: protectedProcedure
+      .input(z.object({ months: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getFinanceMonthlyTrend(input?.months || 12);
+      }),
+    
+    getAgingReport: protectedProcedure
+      .input(z.object({ type: z.enum(['receivable', 'payable']).optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAgingReport(input?.type || 'receivable');
+      }),
+    
+    getCashFlowData: protectedProcedure
+      .input(z.object({ months: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getCashFlowData(input?.months || 6);
+      }),
+    
+    getIncomeStatement: protectedProcedure
+      .input(z.object({ period: z.enum(['mtd', 'ytd']).optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getIncomeStatement(input?.period || 'ytd');
+      }),
   }),
 
   // ============ Project Module ============

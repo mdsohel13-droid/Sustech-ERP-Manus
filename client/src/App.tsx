@@ -25,6 +25,7 @@ import Products from "./pages/Products";
 import Contacts from "./pages/Contacts";
 import Inventory from "./pages/Inventory";
 import Procurement from "./pages/Procurement";
+import Finance from "./pages/Finance";
 import AccessDenied from "./pages/AccessDenied";
 import { HyperlinkAnalyticsDashboard } from "./pages/HyperlinkAnalyticsDashboard";
 import AIAssistant from "./pages/AIAssistant";
@@ -49,6 +50,11 @@ function Router() {
             <Financial />
           </ProtectedRoute>
         </DashboardLayout>
+      </Route>
+      <Route path={"/finance"}>
+        <ProtectedRoute module="financial">
+          <Finance />
+        </ProtectedRoute>
       </Route>
       <Route path={"/projects"}>
         <DashboardLayout>

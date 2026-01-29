@@ -3794,3 +3794,232 @@ export async function generatePoNumber() {
   return `${prefix}${String(nextNum).padStart(3, '0')}`;
 }
 
+// =====================================
+// FINANCE MODULE DATABASE FUNCTIONS
+// =====================================
+
+export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startDate = period === 'mtd' ? startOfMonth : startOfYear;
+  
+  const allIncome = await db.select().from(incomeExpenditure);
+  const allAR = await db.select().from(accountsReceivable);
+  const allAP = await db.select().from(accountsPayable);
+  const allSales = await db.select().from(dailySales);
+  
+  const periodIncome = allIncome.filter(ie => new Date(ie.date) >= startDate);
+  const periodSales = allSales.filter(s => new Date(s.date) >= startDate);
+  
+  const revenue = periodIncome.filter(ie => ie.type === 'income').reduce((sum, ie) => sum + Number(ie.amount || 0), 0) +
+                  periodSales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+  
+  const expenses = periodIncome.filter(ie => ie.type === 'expenditure').reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
+  
+  const cogs = expenses * 0.59;
+  const grossProfit = revenue - cogs;
+  const opex = expenses - cogs;
+  const netProfit = grossProfit - opex;
+  
+  const grossProfitMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+  const operatingExpenseRatio = revenue > 0 ? (opex / revenue) * 100 : 0;
+  const netProfitMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+  
+  const totalAR = allAR.reduce((sum, ar) => sum + Number(ar.amount || 0), 0);
+  const totalAP = allAP.reduce((sum, ap) => sum + Number(ap.amount || 0), 0);
+  
+  const cashBalance = 795404;
+  const deposits = 2686247;
+  const inventory = 221798;
+  const totalAssets = cashBalance + deposits + totalAR + inventory;
+  
+  const wagesPayable = 70234;
+  const provisions = 2439345;
+  const otherPayable = 1236240;
+  const totalLiabilities = wagesPayable + totalAP + provisions + otherPayable;
+  
+  return {
+    revenue,
+    cogs,
+    grossProfit,
+    opex,
+    netProfit,
+    grossProfitMargin,
+    operatingExpenseRatio,
+    netProfitMargin,
+    totalAssets,
+    totalLiabilities,
+    currentAssets: { cashBalance, deposits, accountReceivables: totalAR, inventory },
+    currentLiabilities: { wagesPayable, accountPayables: totalAP, provisions, otherPayable },
+    benchmarks: {
+      revenueBenchmark: 1520000,
+      cogsBenchmark: 1060000,
+      grossProfitBenchmark: 460000,
+      netProfitBenchmark: -350000
+    }
+  };
+}
+
+export async function getFinanceMonthlyTrend(months = 12) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const allIncome = await db.select().from(incomeExpenditure);
+  const allSales = await db.select().from(dailySales);
+  const result = [];
+  const now = new Date();
+  
+  for (let i = months - 1; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    const monthName = monthDate.toLocaleString('default', { month: 'short' });
+    const year = monthDate.getFullYear();
+    
+    const monthIncome = allIncome.filter(ie => {
+      const d = new Date(ie.date);
+      return d >= monthDate && d <= monthEnd;
+    });
+    
+    const monthSales = allSales.filter(s => {
+      const d = new Date(s.date);
+      return d >= monthDate && d <= monthEnd;
+    });
+    
+    const revenue = monthIncome.filter(ie => ie.type === 'income').reduce((sum, ie) => sum + Number(ie.amount || 0), 0) +
+                    monthSales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+    
+    const expenses = monthIncome.filter(ie => ie.type === 'expenditure').reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
+    const cogs = expenses * 0.59;
+    const grossProfit = revenue - cogs;
+    const opex = expenses - cogs;
+    const netProfit = grossProfit - opex;
+    
+    const grossProfitMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+    const netProfitMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+    
+    result.push({
+      month: monthName,
+      year,
+      revenue,
+      cogs,
+      grossProfit,
+      opex,
+      netProfit,
+      grossProfitMargin,
+      netProfitMargin
+    });
+  }
+  
+  return result;
+}
+
+export async function getAgingReport(type: 'receivable' | 'payable' = 'receivable') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const now = new Date();
+  const data = type === 'receivable' 
+    ? await db.select().from(accountsReceivable).where(eq(accountsReceivable.status, 'pending'))
+    : await db.select().from(accountsPayable).where(eq(accountsPayable.status, 'pending'));
+  
+  const aging = {
+    current: 0,
+    days30: 0,
+    days60: 0,
+    days90: 0,
+    over90: 0
+  };
+  
+  data.forEach(item => {
+    const dueDate = new Date(item.dueDate);
+    const daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    const amount = Number(item.amount || 0);
+    
+    if (daysOverdue <= 0) aging.current += amount;
+    else if (daysOverdue <= 30) aging.days30 += amount;
+    else if (daysOverdue <= 60) aging.days60 += amount;
+    else if (daysOverdue <= 90) aging.days90 += amount;
+    else aging.over90 += amount;
+  });
+  
+  return { aging, items: data };
+}
+
+export async function getCashFlowData(months = 6) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const allIncome = await db.select().from(incomeExpenditure);
+  const allSales = await db.select().from(dailySales);
+  const result = [];
+  const now = new Date();
+  
+  for (let i = months - 1; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    const monthName = monthDate.toLocaleString('default', { month: 'short' });
+    
+    const monthIncome = allIncome.filter(ie => {
+      const d = new Date(ie.date);
+      return d >= monthDate && d <= monthEnd;
+    });
+    
+    const monthSales = allSales.filter(s => {
+      const d = new Date(s.date);
+      return d >= monthDate && d <= monthEnd;
+    });
+    
+    const inflow = monthIncome.filter(ie => ie.type === 'income').reduce((sum, ie) => sum + Number(ie.amount || 0), 0) +
+                   monthSales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+    
+    const outflow = monthIncome.filter(ie => ie.type === 'expenditure').reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
+    
+    result.push({ month: monthName, inflow, outflow, net: inflow - outflow });
+  }
+  
+  return result;
+}
+
+export async function getIncomeStatement(period: 'mtd' | 'ytd' = 'ytd') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startDate = period === 'mtd' ? startOfMonth : startOfYear;
+  
+  const allIncome = await db.select().from(incomeExpenditure);
+  const allSales = await db.select().from(dailySales);
+  
+  const periodIncome = allIncome.filter(ie => new Date(ie.date) >= startDate);
+  const periodSales = allSales.filter(s => new Date(s.date) >= startDate);
+  
+  const revenue = periodIncome.filter(ie => ie.type === 'income').reduce((sum, ie) => sum + Number(ie.amount || 0), 0) +
+                  periodSales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+  
+  const expenses = periodIncome.filter(ie => ie.type === 'expenditure').reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
+  const cogs = expenses * 0.59;
+  const grossProfit = revenue - cogs;
+  const opex = expenses - cogs;
+  const netProfit = grossProfit - opex;
+  
+  return {
+    revenue,
+    cogs,
+    grossProfit,
+    opex,
+    netProfit,
+    items: [
+      { name: 'Revenue', value: revenue, percentage: 100 },
+      { name: 'COGS', value: cogs, percentage: revenue > 0 ? (cogs / revenue) * 100 : 0 },
+      { name: 'Gross Profit', value: grossProfit, percentage: revenue > 0 ? (grossProfit / revenue) * 100 : 0 },
+      { name: 'OPEX', value: opex, percentage: revenue > 0 ? (opex / revenue) * 100 : 0 },
+      { name: 'Net Profit', value: netProfit, percentage: revenue > 0 ? (netProfit / revenue) * 100 : 0 }
+    ]
+  };
+}
