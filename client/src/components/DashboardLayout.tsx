@@ -67,7 +67,7 @@ const ALL_MENU_ITEMS = [
   { icon: Receipt, label: "Procurement", path: "/procurement", module: "procurement", group: "operations" },
   { icon: Warehouse, label: "Inventory", path: "/inventory", module: "inventory", group: "operations" },
   { icon: DollarSign, label: "Finance", path: "/finance", module: "financial", group: "finance" },
-  { icon: Receipt, label: "Income & Expense", path: "/income-expenditure", module: "income_expenditure", group: "finance" },
+  { icon: Receipt, label: "Accounting", path: "/accounting", module: "accounting", group: "finance" },
   { icon: Briefcase, label: "Projects", path: "/projects", module: "projects", group: "business" },
   { icon: Target, label: "Action Tracker", path: "/action-tracker", module: "action_tracker", group: "business" },
   { icon: FileText, label: "Tender/Quotation", path: "/tender-quotation", module: "tender_quotation", group: "business" },

@@ -202,10 +202,10 @@ export default function Financial() {
             <AlertCircle className="h-4 w-4 mr-2" />
             {sendSMSMutation.isPending ? "Sending SMS..." : "Send SMS Reminders"}
           </Button>
-          <Link href="/income-expenditure">
+          <Link href="/accounting">
             <Button>
               <FileText className="h-4 w-4 mr-2" />
-              Income & Expenditure
+              Accounting
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </Link>

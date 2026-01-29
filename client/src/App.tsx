@@ -16,7 +16,7 @@ import SalesEnhanced from "./pages/SalesEnhanced";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
 import AdminSettings from "./pages/AdminSettings";
-import IncomeExpenditure from "./pages/IncomeExpenditure";
+import Accounting from "./pages/Accounting";
 import ActionTracker from "@/pages/ActionTracker";
 import HumanResource from "@/pages/HumanResource";
 import TenderQuotation from "./pages/TenderQuotationEnhanced";
@@ -100,9 +100,9 @@ function Router() {
           <AdminSettings />
         </DashboardLayout>
       </Route>
-      <Route path={"/income-expenditure"}>
+      <Route path={"/accounting"}>
         <DashboardLayout>
-          <IncomeExpenditure />
+          <Accounting />
         </DashboardLayout>
       </Route>
       <Route path={"/action-tracker"}>

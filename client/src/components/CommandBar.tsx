@@ -81,7 +81,7 @@ export function CommandBar({ open, onClose }: CommandBarProps) {
     { id: "nav-procurement", label: "Procurement", icon: Receipt, action: () => setLocation("/procurement"), category: "navigation", keywords: ["procurement", "purchases", "buy", "vendor", "supply"] },
     { id: "nav-inventory", label: "Inventory", icon: Warehouse, action: () => setLocation("/inventory"), category: "navigation", keywords: ["inventory", "stock", "warehouse"] },
     { id: "nav-accounts", label: "Accounts", icon: DollarSign, action: () => setLocation("/financial"), category: "navigation", keywords: ["accounts", "finance", "money"] },
-    { id: "nav-expenses", label: "Expenses", icon: Receipt, action: () => setLocation("/income-expenditure"), category: "navigation", keywords: ["expenses", "costs", "spending"] },
+    { id: "nav-expenses", label: "Accounting", icon: Receipt, action: () => setLocation("/accounting"), category: "navigation", keywords: ["expenses", "costs", "spending", "accounting"] },
     { id: "nav-projects", label: "Projects", icon: Briefcase, action: () => setLocation("/projects"), category: "navigation", keywords: ["projects", "work", "tasks"] },
     { id: "nav-action-tracker", label: "Action Tracker", icon: Target, action: () => setLocation("/action-tracker"), category: "navigation", keywords: ["actions", "tracker", "tasks"] },
     { id: "nav-hrm", label: "Human Resources", icon: Users, action: () => setLocation("/hr"), category: "navigation", keywords: ["hr", "hrm", "employees", "staff"] },
@@ -96,7 +96,7 @@ export function CommandBar({ open, onClose }: CommandBarProps) {
     { id: "action-new-sale", label: "Create New Sale", description: "Start a new sales transaction", icon: Plus, action: () => { setLocation("/sales"); alert("New sale form - coming soon"); }, category: "action", keywords: ["new", "create", "sale", "invoice"] },
     { id: "action-add-product", label: "Add Product", description: "Add a new product to inventory", icon: Plus, action: () => { setLocation("/products"); alert("Add product form - coming soon"); }, category: "action", keywords: ["new", "add", "product", "item"] },
     { id: "action-new-customer", label: "New Customer", description: "Register a new customer", icon: Plus, action: () => { setLocation("/customers"); alert("New customer form - coming soon"); }, category: "action", keywords: ["new", "customer", "client", "contact"] },
-    { id: "action-record-expense", label: "Record Expense", description: "Log a new expense", icon: Plus, action: () => { setLocation("/income-expenditure"); }, category: "action", keywords: ["expense", "cost", "record", "log"] },
+    { id: "action-record-expense", label: "Record Expense", description: "Log a new expense", icon: Plus, action: () => { setLocation("/accounting"); }, category: "action", keywords: ["expense", "cost", "record", "log"] },
     { id: "action-new-project", label: "New Project", description: "Create a new project", icon: Plus, action: () => { setLocation("/projects"); }, category: "action", keywords: ["new", "project", "create"] },
     { id: "action-new-tender", label: "New Tender/Quote", description: "Create a new tender or quotation", icon: Plus, action: () => { setLocation("/tender-quotation"); }, category: "action", keywords: ["tender", "quote", "quotation", "bid"] },
   ], [setLocation]);
