@@ -51,6 +51,8 @@ export default function Products() {
   const [showWarrantyDialog, setShowWarrantyDialog] = useState(false);
   const [showWarehouseDialog, setShowWarehouseDialog] = useState(false);
   const [showStockAdjustDialog, setShowStockAdjustDialog] = useState(false);
+  const [showProductDetailDialog, setShowProductDetailDialog] = useState(false);
+  const [selectedProductDetail, setSelectedProductDetail] = useState<any>(null);
   
   // Edit states
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -387,9 +389,40 @@ export default function Products() {
   const stats = useMemo(() => {
     const totalProducts = products.length;
     const totalValue = products.reduce((sum: number, p: any) => sum + (parseFloat(p.sellingPrice || "0") * 1), 0);
-    const lowStock = products.filter((p: any) => p.alertQuantity && p.alertQuantity > 0).length;
-    return { totalProducts, totalValue, lowStock, archivedCount: archivedProducts.length };
-  }, [products, archivedProducts]);
+    
+    // Calculate inventory stats from productsWithInventory
+    let totalStockValue = 0;
+    let lowStockCount = 0;
+    let outOfStockCount = 0;
+    let totalStockUnits = 0;
+    
+    products.forEach((product: any) => {
+      const invData = productsWithInventory.find((p: any) => p.id === product.id) as any;
+      const stock = invData?.totalStock ? parseFloat(String(invData.totalStock)) : 0;
+      const purchasePrice = parseFloat(product.purchasePrice || "0");
+      
+      totalStockUnits += stock;
+      totalStockValue += stock * purchasePrice;
+      
+      if (product.alertQuantity && stock > 0 && stock <= product.alertQuantity) {
+        lowStockCount++;
+      }
+      if (stock === 0) {
+        outOfStockCount++;
+      }
+    });
+    
+    return { 
+      totalProducts, 
+      totalValue, 
+      lowStockCount,
+      outOfStockCount,
+      totalStockUnits,
+      totalStockValue,
+      archivedCount: archivedProducts.length,
+      warehouseCount: warehouses.length
+    };
+  }, [products, archivedProducts, productsWithInventory, warehouses]);
   
   // Helper to get category name from ID
   const getCategoryName = (categoryId: number | null | undefined) => {
@@ -583,8 +616,8 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats Cards - Row 1: Main KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -598,6 +631,80 @@ export default function Products() {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Stock</p>
+                  <p className="text-2xl font-bold">{stats.totalStockUnits.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">units</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <Box className="w-5 h-5 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Stock Value</p>
+                  <p className="text-2xl font-bold">{formatCurrency(stats.totalStockValue, currency)}</p>
+                  <p className="text-xs text-muted-foreground">at cost</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={stats.lowStockCount > 0 ? "border-yellow-300 bg-yellow-50/30" : ""}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Low Stock</p>
+                  <p className={`text-2xl font-bold ${stats.lowStockCount > 0 ? "text-yellow-600" : ""}`}>{stats.lowStockCount}</p>
+                  <p className="text-xs text-muted-foreground">items</p>
+                </div>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.lowStockCount > 0 ? "bg-yellow-100" : "bg-muted"}`}>
+                  <AlertTriangle className={`w-5 h-5 ${stats.lowStockCount > 0 ? "text-yellow-600" : "text-muted-foreground"}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={stats.outOfStockCount > 0 ? "border-red-300 bg-red-50/30" : ""}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Out of Stock</p>
+                  <p className={`text-2xl font-bold ${stats.outOfStockCount > 0 ? "text-red-600" : ""}`}>{stats.outOfStockCount}</p>
+                  <p className="text-xs text-muted-foreground">items</p>
+                </div>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.outOfStockCount > 0 ? "bg-red-100" : "bg-muted"}`}>
+                  <Package className={`w-5 h-5 ${stats.outOfStockCount > 0 ? "text-red-600" : "text-muted-foreground"}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Warehouses</p>
+                  <p className="text-2xl font-bold">{stats.warehouseCount}</p>
+                  <p className="text-xs text-muted-foreground">locations</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <Warehouse className="w-5 h-5 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Stats Cards - Row 2: Configuration */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -620,6 +727,19 @@ export default function Products() {
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                   <Award className="w-5 h-5 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Units</p>
+                  <p className="text-2xl font-bold">{units.length}</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
+                  <Ruler className="w-5 h-5 text-teal-600" />
                 </div>
               </div>
             </CardContent>
@@ -735,7 +855,15 @@ export default function Products() {
                                   <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
                                     <Package className="w-5 h-5 text-muted-foreground" />
                                   </div>
-                                  <span className="font-medium text-sm">{product.name}</span>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedProductDetail(product);
+                                      setShowProductDetailDialog(true);
+                                    }}
+                                    className="font-medium text-sm text-primary hover:underline text-left"
+                                  >
+                                    {product.name}
+                                  </button>
                                 </div>
                               </td>
                               <td className="p-4 text-sm text-muted-foreground">{product.sku || "-"}</td>
@@ -809,7 +937,15 @@ export default function Products() {
                       </div>
                       <div className="space-y-2">
                         <div>
-                          <p className="font-medium text-sm line-clamp-1">{product.name}</p>
+                          <button
+                            onClick={() => {
+                              setSelectedProductDetail(product);
+                              setShowProductDetailDialog(true);
+                            }}
+                            className="font-medium text-sm line-clamp-1 text-primary hover:underline text-left"
+                          >
+                            {product.name}
+                          </button>
                           <p className="text-xs text-muted-foreground">{product.sku || "No SKU"}</p>
                         </div>
                         <div className="flex items-center justify-between">
@@ -1585,6 +1721,166 @@ export default function Products() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Product Detail Dialog */}
+        <Dialog open={showProductDetailDialog} onOpenChange={setShowProductDetailDialog}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Package className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{selectedProductDetail?.name}</h2>
+                  <p className="text-sm text-muted-foreground font-normal">{selectedProductDetail?.sku || "No SKU"}</p>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            {selectedProductDetail && (
+              <div className="space-y-6">
+                {/* Quick Stats */}
+                {(() => {
+                  const invData = productsWithInventory.find((p: any) => p.id === selectedProductDetail.id) as any;
+                  const totalStock = invData?.totalStock ? parseFloat(String(invData.totalStock)) : 0;
+                  const stockByLocation = String(invData?.stockByLocation || "");
+                  const purchasePrice = parseFloat(selectedProductDetail.purchasePrice || "0");
+                  const sellingPrice = parseFloat(selectedProductDetail.sellingPrice || "0");
+                  const profitMargin = sellingPrice > 0 ? ((sellingPrice - purchasePrice) / sellingPrice * 100) : 0;
+                  const isLowStock = selectedProductDetail.alertQuantity && totalStock <= selectedProductDetail.alertQuantity;
+                  
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className={`p-4 rounded-lg ${isLowStock ? "bg-red-50 border border-red-200" : "bg-muted/50"}`}>
+                          <p className="text-xs text-muted-foreground">Stock Level</p>
+                          <p className={`text-2xl font-bold ${isLowStock ? "text-red-600" : ""}`}>{totalStock}</p>
+                          {isLowStock && <p className="text-xs text-red-600">Low Stock Alert</p>}
+                        </div>
+                        <div className="p-4 rounded-lg bg-muted/50">
+                          <p className="text-xs text-muted-foreground">Purchase Price</p>
+                          <p className="text-2xl font-bold">{formatCurrency(purchasePrice, currency)}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-muted/50">
+                          <p className="text-xs text-muted-foreground">Selling Price</p>
+                          <p className="text-2xl font-bold">{formatCurrency(sellingPrice, currency)}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                          <p className="text-xs text-muted-foreground">Profit Margin</p>
+                          <p className="text-2xl font-bold text-green-600">{profitMargin.toFixed(1)}%</p>
+                        </div>
+                      </div>
+                      
+                      {/* Stock Locations */}
+                      {stockByLocation && (
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                            <Warehouse className="w-4 h-4" /> Stock Locations
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {stockByLocation.split(", ").map((loc: string, idx: number) => (
+                              <span key={idx} className="text-xs px-3 py-1.5 bg-muted rounded-full">
+                                {loc}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+                
+                {/* Product Details Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2">Basic Information</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Category</span>
+                          <span className="font-medium">{getCategoryName(selectedProductDetail.categoryId)}</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Brand</span>
+                          <span className="font-medium">{brands.find((b: any) => b.id === selectedProductDetail.brandId)?.name || "-"}</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Unit</span>
+                          <span className="font-medium">{units.find((u: any) => u.id === selectedProductDetail.unitId)?.name || selectedProductDetail.unit || "-"}</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Barcode</span>
+                          <span className="font-medium font-mono">{selectedProductDetail.barcode || "-"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2">Additional Details</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Warranty</span>
+                          <span className="font-medium">{warranties.find((w: any) => w.id === selectedProductDetail.warrantyId)?.name || "-"}</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Tax Rate</span>
+                          <span className="font-medium">{selectedProductDetail.taxRate ? `${selectedProductDetail.taxRate}%` : "-"}</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Alert Quantity</span>
+                          <span className="font-medium">{selectedProductDetail.alertQuantity || "-"}</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b">
+                          <span className="text-muted-foreground">Status</span>
+                          <span className={`font-medium ${selectedProductDetail.status === "active" ? "text-green-600" : "text-orange-600"}`}>
+                            {selectedProductDetail.status === "active" ? "Active" : "Archived"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Description */}
+                {selectedProductDetail.description && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Description</h4>
+                    <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      {selectedProductDetail.description}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Actions */}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setShowProductDetailDialog(false)}>
+                    Close
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedProductForStock(selectedProductDetail);
+                      setStockAdjustForm({ warehouseId: undefined, quantityChange: 0, transactionType: "adjustment", notes: "" });
+                      setShowProductDetailDialog(false);
+                      setShowStockAdjustDialog(true);
+                    }}
+                  >
+                    <ArrowUpDown className="w-4 h-4 mr-1" />
+                    Adjust Stock
+                  </Button>
+                  <Button onClick={() => {
+                    openEditProduct(selectedProductDetail);
+                    setShowProductDetailDialog(false);
+                  }}>
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit Product
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
