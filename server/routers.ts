@@ -2595,7 +2595,17 @@ Provide 2-3 actionable business insights.`;
         alertQuantity: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
-        await db.createProductFull(input as any);
+        // Sanitize empty strings to undefined for optional fields
+        const sanitized = {
+          ...input,
+          sku: input.sku || undefined,
+          barcode: input.barcode || undefined,
+          description: input.description || undefined,
+          purchasePrice: input.purchasePrice || undefined,
+          sellingPrice: input.sellingPrice || undefined,
+          taxRate: input.taxRate || undefined,
+        };
+        await db.createProductFull(sanitized as any);
         return { success: true };
       }),
 
@@ -2619,7 +2629,17 @@ Provide 2-3 actionable business insights.`;
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        await db.updateProductFull(id, data as any);
+        // Sanitize empty strings to undefined for optional fields
+        const sanitized = {
+          ...data,
+          sku: data.sku || undefined,
+          barcode: data.barcode || undefined,
+          description: data.description || undefined,
+          purchasePrice: data.purchasePrice || undefined,
+          sellingPrice: data.sellingPrice || undefined,
+          taxRate: data.taxRate || undefined,
+        };
+        await db.updateProductFull(id, sanitized as any);
         return { success: true };
       }),
 
