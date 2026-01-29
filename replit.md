@@ -26,17 +26,24 @@ drizzle/              # Database schema and migrations
 ```
 
 ## Recent Changes (Jan 29, 2026)
-- **Sales Module Redesign**: Complete overhaul of Sales dashboard with modern design
-  - Colorful gradient KPI cards: Total Sales, Open Opportunities, Sales This Month, Revenue This Quarter
-  - Sales Funnel visualization with 6 stages (Hot Leads, Qualification, Needs Analysis, Proposal, Negotiation, Closure)
-  - Sales Performance area chart and Sales Pipeline bar chart
-  - Status cards: Revenue Forecast, Deals Closing Soon, Top Salesperson, Overdue Invoices
-  - Activities table displaying recent sales conversions
-  - Top Products widget with revenue rankings
-  - **Products Module Integration**: Record Daily Sale dialog now uses catalog products from Products module
+- **Sales Module Redesign v2**: Complete layout restructure with 35% dashboard / 65% data entry split
+  - **Compact Dashboard Section (35%)**:
+    - 4 colorful gradient KPI cards: Total Sales, Open Opportunities, Sales This Month, Revenue This Quarter
+    - Mini charts row: Sales Performance area chart, Sales Pipeline bar chart
+    - Compact status indicators: Top Salesperson, Deals Closing, Forecast, Overdue
+  - **Data Entry & Tracking Section (65%)**: Tabs for Daily Sales, Weekly/Monthly Targets, Salespeople, Archive, Analytics
+  - **Product Detail Modal Fix**: Now shows actual sale information (product name, price, salesperson, customer) instead of "Test Product"
+    - Modal data built from sale record, not database lookup
+    - Modal properly clears state on close
+  - **Enhanced Salesperson Tracking Tab**:
+    - Performance summary cards: Active Salespeople, Total Team Sales, Avg Per Person, Top Performer
+    - Performance table with: Total Sales, Transactions, Avg Deal Size, Target Progress bar
+    - Target progress uses real data from monthlyTargets (falls back to team average if no individual target)
+    - Sales by Product analysis with category derivation from product names
+    - Performance Leaderboard ranking salespeople by revenue
+  - **Products Module Integration**: Record Daily Sale dialog uses catalog products with real-time inventory visibility
   - Added Date field and Notes field to Record Daily Sale dialog
-  - Shows available stock below Quantity field with real-time inventory levels
-  - Queries: `trpc.products.getActiveProducts`, `trpc.products.getProductsWithInventory`
+  - Uses currency context for consistent formatting across all amounts
 - **Inventory Module Upgrade**: Complete overhaul of Inventory page to use real database
   - Replaced sample/static data with real database queries via tRPC
   - Stock Levels tab shows real inventory data by product and warehouse

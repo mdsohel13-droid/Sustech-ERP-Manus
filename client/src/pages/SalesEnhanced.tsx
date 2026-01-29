@@ -44,12 +44,37 @@ export default function SalesEnhanced() {
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [saleDate, setSaleDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedSaleProduct, setSelectedSaleProduct] = useState<any>(null);
   
-  // Fetch product details when selectedProductId changes
-  const { data: selectedProduct } = trpc.salesEnhanced.getProductById.useQuery(
+  // Fetch product details when selectedProductId changes (for Products module products)
+  const { data: dbProduct } = trpc.salesEnhanced.getProductById.useQuery(
     { productId: selectedProductId || 0 },
     { enabled: selectedProductId !== null && selectedProductId > 0 }
   );
+  
+  // Clear selected sale product when modal closes
+  const handleModalClose = (open: boolean) => {
+    setProductModalOpen(open);
+    if (!open) {
+      setSelectedSaleProduct(null);
+      setSelectedProductId(null);
+    }
+  };
+  
+  // Build product info for modal - use sale record data or database product
+  const selectedProduct = selectedSaleProduct ? {
+    id: selectedSaleProduct.productId,
+    name: selectedSaleProduct.productName,
+    category: "sales",
+    description: `Sale recorded on ${format(new Date(selectedSaleProduct.date), "dd MMM yyyy")}`,
+    specs: {
+      "Unit Price": `৳${parseFloat(selectedSaleProduct.unitPrice).toLocaleString()}`,
+      "Quantity Sold": String(selectedSaleProduct.quantity),
+      "Total Amount": `৳${parseFloat(selectedSaleProduct.totalAmount).toLocaleString()}`,
+      "Salesperson": selectedSaleProduct.salespersonName || "Unknown",
+      "Customer": selectedSaleProduct.customerName || "Walk-in",
+    }
+  } : dbProduct;
 
   // Fetch data
   const { data: dailySales, isLoading: loadingDaily } = trpc.salesEnhanced.getDailySales.useQuery({
@@ -345,16 +370,16 @@ export default function SalesEnhanced() {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+    <div className="p-4 max-w-[1600px] mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Sales</h1>
-          <p className="text-muted-foreground">Track sales performance and revenue</p>
+          <p className="text-muted-foreground text-sm">Track sales performance and revenue</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[140px] h-8 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -365,295 +390,93 @@ export default function SalesEnhanced() {
               <SelectItem value="this_year">This Year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handleExportDaily}>
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={handleExportDaily}>
+            <Download className="h-4 w-4 mr-1" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* Top KPI Row - Colorful Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="w-4 h-4 opacity-75" />
-            <p className="text-sm opacity-90">Total Sales</p>
-          </div>
-          <p className="text-3xl font-bold">{formatCurrency(dashboardStats.totalSales, currency)}</p>
-        </div>
-        <div className="bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl p-4 text-white shadow-lg">
-          <p className="text-sm opacity-90">Open Opportunities</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <p className="text-3xl font-bold">{dashboardStats.openOpportunities}</p>
-            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">15%</span>
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
-          <p className="text-sm opacity-90">Sales This Month</p>
-          <p className="text-3xl font-bold mt-1">{formatCurrency(dashboardStats.salesThisMonth, currency)}</p>
-        </div>
-        <div className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl p-4 text-white shadow-lg">
-          <p className="text-sm opacity-90">Revenue This Quarter</p>
-          <p className="text-3xl font-bold mt-1">{formatCurrency(dashboardStats.revenueThisQuarter, currency)}</p>
-          <div className="mt-1">
-            <ResponsiveContainer width="100%" height={30}>
-              <AreaChart data={[{v:20},{v:35},{v:25},{v:45},{v:30},{v:50}]}>
-                <Area type="monotone" dataKey="v" stroke="#fff" fill="rgba(255,255,255,0.3)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Sales Funnel + Sales Performance Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Sales Funnel */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Sales Funnel</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {salesFunnelData.map((stage, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{ backgroundColor: stage.color }}
-                  >
-                    {stage.count}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{stage.stage}</span>
-                      {stage.value > 0 && <span className="text-xs text-muted-foreground">${stage.value.toLocaleString()}</span>}
-                    </div>
-                    <div className="h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
-                      <div 
-                        className="h-full rounded-full" 
-                        style={{ width: `${(stage.count / 72) * 100}%`, backgroundColor: stage.color }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+      {/* ============ DASHBOARD INFOGRAPHICS - 35% ============ */}
+      <div className="space-y-3">
+        {/* Top KPI Row - Compact Colorful Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-3 text-white shadow-md">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <DollarSign className="w-3 h-3 opacity-75" />
+              <p className="text-xs opacity-90">Total Sales</p>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-2xl font-bold">{formatCurrency(dashboardStats.totalSales, currency)}</p>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-3 text-white shadow-md">
+            <p className="text-xs opacity-90">Open Opportunities</p>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <p className="text-2xl font-bold">{dashboardStats.openOpportunities}</p>
+              <span className="text-[10px] bg-white/20 px-1 py-0.5 rounded">15%</span>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-3 text-white shadow-md">
+            <p className="text-xs opacity-90">Sales This Month</p>
+            <p className="text-2xl font-bold mt-0.5">{formatCurrency(dashboardStats.salesThisMonth, currency)}</p>
+          </div>
+          <div className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-lg p-3 text-white shadow-md">
+            <p className="text-xs opacity-90">Revenue This Quarter</p>
+            <p className="text-2xl font-bold mt-0.5">{formatCurrency(dashboardStats.revenueThisQuarter, currency)}</p>
+          </div>
+        </div>
 
-        {/* Sales Performance */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-medium">Sales Performance</CardTitle>
-            <select className="text-xs border rounded px-2 py-1 bg-background">
-              <option>Last 6 months</option>
-              <option>Last 12 months</option>
-            </select>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
+        {/* Mini Charts Row + Status Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          {/* Compact Sales Performance Chart */}
+          <Card className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium">Sales Performance</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={100}>
               <AreaChart data={salesPerformanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="revenue" stroke="#6366f1" fill="rgba(99, 102, 241, 0.1)" strokeWidth={2} />
-                <Area type="monotone" dataKey="trend" stroke="#22c55e" fill="rgba(34, 197, 94, 0.1)" strokeWidth={2} />
+                <Area type="monotone" dataKey="revenue" stroke="#6366f1" fill="rgba(99, 102, 241, 0.2)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
-            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                Revenue
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                Market trend
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </Card>
 
-      {/* Status Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="pt-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-4 h-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Revenue Forecast</p>
-                <p className="text-xl font-bold text-blue-600">{formatCurrency(dashboardStats.totalSales * 1.2, currency)}</p>
-                <p className="text-xs text-green-600 mt-0.5">High potential</p>
-              </div>
+          {/* Compact Sales Pipeline Chart */}
+          <Card className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium">Sales Pipeline</h3>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="pt-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-4 h-4 text-green-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Deals Closing Soon</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-bold text-green-600">16</p>
-                  <span className="text-sm text-muted-foreground">{formatCurrency(92800, currency)}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">16 deals closing in next 7 days</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-4 border-l-purple-500">
-          <CardContent className="pt-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Top Salesperson</p>
-                <p className="text-sm font-medium">{dashboardStats.topSalesperson?.name || "N/A"}</p>
-                <p className="text-lg font-bold text-purple-600">{formatCurrency(dashboardStats.topSalesperson?.revenue || 0, currency)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-4 border-l-orange-500">
-          <CardContent className="pt-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-4 h-4 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Overdue Invoices</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-bold text-orange-600">8</p>
-                  <span className="text-sm text-muted-foreground">{formatCurrency(16200, currency)}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">0 invoices overdue</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Activities + Sales Pipeline Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Activities */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-medium">Activities</CardTitle>
-              <div className="flex gap-2 text-xs">
-                <Button variant="ghost" size="sm" className="h-6 px-2">All</Button>
-                <Button variant="ghost" size="sm" className="h-6 px-2">Tasks</Button>
-                <Button variant="ghost" size="sm" className="h-6 px-2">Calls</Button>
-                <Button variant="ghost" size="sm" className="h-6 px-2">Meetings</Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
-              <tbody className="divide-y">
-                {activitiesData.slice(0, 5).map((activity: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-muted/30">
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                          {activity.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                        </div>
-                        <div>
-                          <p className="font-medium">{activity.name}</p>
-                          <p className="text-xs text-muted-foreground">{activity.type}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3 text-right">
-                      <p className="font-semibold">{formatCurrency(activity.amount, currency)}</p>
-                    </td>
-                    <td className="p-3">
-                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Complete</Badge>
-                    </td>
-                  </tr>
-                ))}
-                {activitiesData.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="p-4 text-center text-muted-foreground">No recent activities</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            <div className="p-3 border-t">
-              <Button variant="ghost" size="sm" className="text-xs text-blue-600 w-full">View all</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sales Pipeline */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-medium">Sales Pipeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={100}>
               <BarChart data={salesPipelineData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </Card>
+
+          {/* Key Status Indicators */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-purple-500">
+              <p className="text-[10px] text-muted-foreground">Top Salesperson</p>
+              <p className="text-xs font-medium truncate">{dashboardStats.topSalesperson?.name || "N/A"}</p>
+              <p className="text-sm font-bold text-purple-600">{formatCurrency(dashboardStats.topSalesperson?.revenue || 0, currency)}</p>
+            </div>
+            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-green-500">
+              <p className="text-[10px] text-muted-foreground">Deals Closing</p>
+              <p className="text-xs font-medium">16 deals</p>
+              <p className="text-sm font-bold text-green-600">{formatCurrency(92800, currency)}</p>
+            </div>
+            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-blue-500">
+              <p className="text-[10px] text-muted-foreground">Forecast</p>
+              <p className="text-sm font-bold text-blue-600">{formatCurrency(dashboardStats.totalSales * 1.2, currency)}</p>
+            </div>
+            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-orange-500">
+              <p className="text-[10px] text-muted-foreground">Overdue</p>
+              <p className="text-xs font-medium">8 invoices</p>
+              <p className="text-sm font-bold text-orange-600">{formatCurrency(16200, currency)}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Top Products */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base font-medium">Top Products</CardTitle>
-          <Button variant="ghost" size="sm" className="text-xs text-blue-600">View all</Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">#</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Product</th>
-                <th className="text-right p-3 text-xs font-medium text-muted-foreground">Revenue</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {dashboardStats.topProducts.map((product: any, idx: number) => (
-                <tr key={idx} className="hover:bg-muted/30">
-                  <td className="p-3 text-muted-foreground">{idx + 1}</td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                        <Package className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <span className="font-medium">{product.name}</span>
-                    </div>
-                  </td>
-                  <td className="p-3 text-right font-semibold">{formatCurrency(product.revenue, currency)}</td>
-                </tr>
-              ))}
-              {dashboardStats.topProducts.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="p-4 text-center text-muted-foreground">No sales data yet</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-
+      {/* ============ DATA ENTRY & TRACKING - 65% ============ */}
       {/* Main Content Tabs */}
       <Tabs defaultValue="daily" className="space-y-6">
         <TabsList className="grid w-full grid-cols-7">
@@ -725,9 +548,9 @@ export default function SalesEnhanced() {
                   setEditDialogOpen(true);
                 }}
                 onArchive={(id: number) => archiveDailySale.mutate({ id })}
-                onProductClick={(productId: number | string) => {
-                  const numProductId = typeof productId === 'string' ? parseInt(productId) : productId;
-                  setSelectedProductId(numProductId);
+                onProductClick={(sale: any) => {
+                  setSelectedSaleProduct(sale);
+                  setSelectedProductId(sale.productId);
                   setProductModalOpen(true);
                 }}
               />
@@ -918,55 +741,185 @@ export default function SalesEnhanced() {
         </TabsContent>
 
         {/* Salespeople Tab */}
-        <TabsContent value="salespeople" className="space-y-6">
-          <Card className="editorial-card">
-            <CardHeader>
+        <TabsContent value="salespeople" className="space-y-4">
+          {/* Salesperson Performance Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg p-3 text-white shadow-md">
+              <p className="text-xs opacity-90">Active Salespeople</p>
+              <p className="text-2xl font-bold">{salespeople?.filter((p: any) => p.status === 'active').length || 0}</p>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg p-3 text-white shadow-md">
+              <p className="text-xs opacity-90">Total Team Sales</p>
+              <p className="text-2xl font-bold">{formatCurrency(dashboardStats.totalSales, currency)}</p>
+            </div>
+            <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg p-3 text-white shadow-md">
+              <p className="text-xs opacity-90">Avg. Per Person</p>
+              <p className="text-2xl font-bold">{formatCurrency(salespeople?.length ? dashboardStats.totalSales / salespeople.length : 0, currency)}</p>
+            </div>
+            <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-lg p-3 text-white shadow-md">
+              <p className="text-xs opacity-90">Top Performer</p>
+              <p className="text-lg font-bold truncate">{dashboardStats.topSalesperson?.name || "N/A"}</p>
+            </div>
+          </div>
+
+          {/* Salesperson Performance Table with Target Analysis */}
+          <Card>
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Salespeople Management</CardTitle>
-                  <CardDescription>Active salespeople available for sales tracking</CardDescription>
+                  <CardTitle className="text-base">Salesperson Performance & Target Analysis</CardTitle>
+                  <CardDescription className="text-xs">Track individual performance against targets by person and product category</CardDescription>
                 </div>
-                <Button variant="outline" onClick={() => window.location.href = '/hr'}>
-                  Manage in HR Module
+                <Button variant="outline" size="sm" onClick={() => window.location.href = '/hr'}>
+                  Manage in HR
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
               {salespeople && salespeople.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-center">Total Sales</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salespeople.map((person: any) => {
-                      const totalSales = dailySales
-                        ?.filter((s: any) => s.salespersonId === person.id)
-                        .reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount || 0), 0) || 0;
-                      return (
-                        <TableRow key={person.id}>
-                          <TableCell className="font-medium">{person.name}</TableCell>
-                          <TableCell>{person.email || '-'}</TableCell>
-                          <TableCell>
-                            <Badge variant={person.status === 'active' ? 'default' : 'secondary'}>
-                              {person.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center font-semibold">৳{totalSales.toLocaleString()}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="space-y-4">
+                  {/* Performance Table */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Salesperson</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Total Sales</TableHead>
+                        <TableHead className="text-right">Transactions</TableHead>
+                        <TableHead className="text-right">Avg. Deal Size</TableHead>
+                        <TableHead className="text-center">Target Progress</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salespeople.map((person: any) => {
+                        const personSales = dailySales?.filter((s: any) => s.salespersonId === person.id) || [];
+                        const totalSales = personSales.reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount || 0), 0);
+                        const transactionCount = personSales.length;
+                        const avgDealSize = transactionCount > 0 ? totalSales / transactionCount : 0;
+                        
+                        // Get target from monthlyTargets for this salesperson
+                        const personTarget = monthlyTargets?.find((t: any) => t.salespersonId === person.id);
+                        const weeklyPersonTarget = weeklyTargets?.find((t: any) => t.salespersonId === person.id);
+                        const hasTarget = personTarget || weeklyPersonTarget;
+                        const monthlyTargetValue = personTarget ? parseFloat(personTarget.targetAmount) : (weeklyPersonTarget ? parseFloat(weeklyPersonTarget.targetAmount) * 4 : 0);
+                        const targetProgress = hasTarget && monthlyTargetValue > 0 ? Math.min((totalSales / monthlyTargetValue) * 100, 100) : -1;
+                        
+                        return (
+                          <TableRow key={person.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                  {person.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-medium">{person.name}</p>
+                                  <p className="text-xs text-muted-foreground">{person.email || '-'}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={person.status === 'active' ? 'default' : 'secondary'} className={person.status === 'active' ? 'bg-green-100 text-green-700' : ''}>
+                                {person.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">{formatCurrency(totalSales, currency)}</TableCell>
+                            <TableCell className="text-right">{transactionCount}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(avgDealSize, currency)}</TableCell>
+                            <TableCell>
+                              {targetProgress >= 0 ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full ${targetProgress >= 100 ? 'bg-green-500' : targetProgress >= 70 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                      style={{ width: `${targetProgress}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs font-medium w-10">{targetProgress.toFixed(0)}%</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground italic">No target set</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+
+                  {/* Sales by Product Analysis */}
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium mb-3">Sales by Product</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {(() => {
+                        // Derive category from productName patterns
+                        const getCategoryFromProduct = (productName: string): string => {
+                          const name = productName?.toLowerCase() || "";
+                          if (name.includes("fan") || name.includes("atomberg")) return "Fans";
+                          if (name.includes("solar") || name.includes("pv") || name.includes("panel")) return "Solar";
+                          if (name.includes("ess") || name.includes("battery") || name.includes("growatt")) return "Energy Storage";
+                          if (name.includes("epc") || name.includes("project")) return "EPC Projects";
+                          if (name.includes("testing") || name.includes("inspection")) return "Testing";
+                          if (name.includes("installation")) return "Installation";
+                          return "Other";
+                        };
+                        
+                        const categorySales: Record<string, { total: number; count: number }> = {};
+                        dailySales?.forEach((sale: any) => {
+                          const category = getCategoryFromProduct(sale.productName);
+                          if (!categorySales[category]) {
+                            categorySales[category] = { total: 0, count: 0 };
+                          }
+                          categorySales[category].total += parseFloat(sale.totalAmount || 0);
+                          categorySales[category].count += 1;
+                        });
+                        
+                        const categories = Object.entries(categorySales).sort((a, b) => b[1].total - a[1].total);
+                        const colors = ["bg-blue-100 border-blue-500", "bg-green-100 border-green-500", "bg-purple-100 border-purple-500", "bg-amber-100 border-amber-500"];
+                        
+                        return categories.length > 0 ? categories.slice(0, 4).map(([category, data], idx) => (
+                          <div key={category} className={`border rounded-lg p-3 border-l-4 ${colors[idx % colors.length]}`}>
+                            <p className="text-xs text-muted-foreground">{category}</p>
+                            <p className="text-lg font-bold">{formatCurrency(data.total, currency)}</p>
+                            <p className="text-xs text-muted-foreground">{data.count} transactions</p>
+                          </div>
+                        )) : (
+                          <div className="col-span-4 text-center py-4 text-muted-foreground">No product data available</div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Top Performers Leaderboard */}
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium mb-3">Performance Leaderboard</h4>
+                    <div className="space-y-2">
+                      {salespeople
+                        .map((person: any) => {
+                          const personSales = dailySales?.filter((s: any) => s.salespersonId === person.id) || [];
+                          const totalSales = personSales.reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount || 0), 0);
+                          return { ...person, totalSales };
+                        })
+                        .sort((a: any, b: any) => b.totalSales - a.totalSales)
+                        .slice(0, 5)
+                        .map((person: any, idx: number) => (
+                          <div key={person.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-amber-400 text-amber-900' : idx === 1 ? 'bg-gray-300 text-gray-700' : idx === 2 ? 'bg-orange-400 text-orange-900' : 'bg-muted text-muted-foreground'}`}>
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{person.name}</p>
+                            </div>
+                            <p className="text-sm font-bold">{formatCurrency(person.totalSales, currency)}</p>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-center mb-4">No salespeople added yet.</p>
-                  <Button onClick={() => window.location.href = '/hr'}>Go to HR Module</Button>
+                <div className="flex flex-col items-center justify-center py-8">
+                  <Users className="h-10 w-10 text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-center mb-3 text-sm">No salespeople added yet.</p>
+                  <Button size="sm" onClick={() => window.location.href = '/hr'}>Go to HR Module</Button>
                 </div>
               )}
             </CardContent>
@@ -1165,8 +1118,8 @@ export default function SalesEnhanced() {
 
       {/* Product Detail Modal */}
       <ProductDetailModal
-        open={productModalOpen && selectedProductId !== null}
-        onOpenChange={setProductModalOpen}
+        open={productModalOpen && (selectedProductId !== null || selectedSaleProduct !== null)}
+        onOpenChange={handleModalClose}
         product={selectedProduct || null}
       />
     </div>
@@ -1563,7 +1516,7 @@ function DailySalesTable({ sales, isLoading, onEdit, onArchive, onProductClick }
         {sales.map((sale: any) => (
           <TableRow key={sale.id}>
             <TableCell>{format(new Date(sale.date), "dd MMM yyyy")}</TableCell>
-            <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline" onClick={() => onProductClick(sale.productId)}>{sale.productName}</TableCell>
+            <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline" onClick={() => onProductClick(sale)}>{sale.productName}</TableCell>
             <TableCell>{sale.salespersonName}</TableCell>
             <TableCell className="font-medium cursor-pointer hover:text-blue-600 hover:underline">{sale.customerName || "-"}</TableCell>
             <TableCell className="text-right">{sale.quantity}</TableCell>
