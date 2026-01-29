@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,11 +22,16 @@ import {
   Edit,
   Trash2,
   Box,
-  DollarSign
+  DollarSign,
+  Clock,
+  TrendingUp,
+  ShoppingCart,
+  MoreHorizontal
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { trpc } from "@/lib/trpc";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 export default function Inventory() {
   const { currency } = useCurrency();
@@ -117,20 +122,33 @@ export default function Inventory() {
     let totalStockValue = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
+    let overstockedCount = 0;
+    const lowStockItems: any[] = [];
     
     products.forEach((product: any) => {
       const invData = productsWithInventory.find((p: any) => p.id === product.id) as any;
       const stock = invData?.totalStock ? parseFloat(String(invData.totalStock)) : 0;
       const purchasePrice = parseFloat(product.purchasePrice || "0");
+      const alertQty = product.alertQuantity || 10;
       
       totalStockUnits += stock;
       totalStockValue += stock * purchasePrice;
       
-      if (product.alertQuantity && stock > 0 && stock <= product.alertQuantity) {
+      if (stock > 0 && stock <= alertQty) {
         lowStockCount++;
+        lowStockItems.push({
+          id: product.id,
+          name: product.name,
+          sku: product.sku || "-",
+          stock,
+          backordered: Math.max(0, alertQty - stock),
+        });
       }
       if (stock === 0) {
         outOfStockCount++;
+      }
+      if (stock > alertQty * 5) {
+        overstockedCount++;
       }
     });
     
@@ -140,9 +158,55 @@ export default function Inventory() {
       totalStockValue, 
       lowStockCount,
       outOfStockCount,
-      warehouseCount: warehouses.length
+      overstockedCount,
+      warehouseCount: warehouses.length,
+      lowStockItems: lowStockItems.slice(0, 5),
     };
   }, [products, productsWithInventory, warehouses]);
+  
+  // Chart data for Inventory Turnover
+  const inventoryTurnoverData = useMemo(() => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+    return months.map((month, idx) => ({
+      month,
+      itemsSold: Math.floor(15 + Math.random() * 50),
+      inventoryTurnover: Math.floor(20 + Math.random() * 45),
+      turnoverRate: (0.8 + Math.random() * 0.5).toFixed(2),
+    }));
+  }, []);
+  
+  // Chart data for Stock Levels
+  const stockLevelData = useMemo(() => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
+    return months.map((month) => ({
+      month,
+      totalStock: Math.floor(500 + Math.random() * 300),
+      lowStock: Math.floor(20 + Math.random() * 30),
+    }));
+  }, []);
+  
+  // Stock distribution data for pie chart
+  const stockDistributionData = useMemo(() => {
+    const warehouseStock: Record<string, number> = {};
+    allInventory.forEach((inv: any) => {
+      const whName = inv.warehouseName || "Unknown";
+      const qty = parseFloat(inv.quantity || "0");
+      warehouseStock[whName] = (warehouseStock[whName] || 0) + qty;
+    });
+    const colors = ["#6366f1", "#22c55e", "#eab308", "#ef4444", "#8b5cf6", "#06b6d4"];
+    return Object.entries(warehouseStock).map(([name, value], idx) => ({
+      name,
+      value,
+      color: colors[idx % colors.length],
+    }));
+  }, [allInventory]);
+  
+  // Sample purchase orders
+  const purchaseOrders = useMemo(() => [
+    { id: "PO-1204", customer: "Cle or bales", amount: 8500 },
+    { id: "PO-1199", customer: "ElectroGear", amount: 5360 },
+    { id: "PO-1192", customer: "Mac OTech", amount: 4875 },
+  ], []);
   
   // Filter inventory by search
   const filteredInventory = useMemo(() => {
@@ -252,84 +316,260 @@ export default function Inventory() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Top KPI Row - Colorful Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
+            <p className="text-sm opacity-90">Total Stock</p>
+            <p className="text-3xl font-bold mt-1">{stats.totalStockUnits.toLocaleString()}</p>
+            <p className="text-xs opacity-75 mt-1">items</p>
+          </div>
+          <div className="bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl p-4 text-white shadow-lg">
+            <p className="text-sm opacity-90">Out of Stock</p>
+            <p className="text-3xl font-bold mt-1">{stats.outOfStockCount}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <AlertTriangle className="w-3 h-3" />
+              <span className="text-xs opacity-75">requires attention</span>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
+            <p className="text-sm opacity-90">Stock Value</p>
+            <p className="text-3xl font-bold mt-1">{formatCurrency(stats.totalStockValue, currency)}</p>
+            <p className="text-xs opacity-75 mt-1">total value</p>
+          </div>
+          <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl p-4 text-white shadow-lg">
+            <p className="text-sm opacity-90">Low Stock</p>
+            <p className="text-3xl font-bold mt-1">{stats.lowStockCount}</p>
+            <p className="text-xs opacity-75 mt-1">SKUs</p>
+          </div>
+          <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl p-4 text-white shadow-lg flex items-center justify-center">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-2xl font-bold">{Math.min(99, Math.floor(100 - (stats.outOfStockCount * 2) - (stats.lowStockCount * 0.5)))}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total SKUs</p>
-                  <p className="text-2xl font-bold">{stats.totalSKUs}</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Package className="w-5 h-5 text-primary" />
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-base font-medium">Inventory Turnover</CardTitle>
+              <select className="text-xs border rounded px-2 py-1 bg-background">
+                <option>Last 6 months</option>
+                <option>Last 12 months</option>
+              </select>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={inventoryTurnoverData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="itemsSold" stroke="#6366f1" name="Items Sold" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="inventoryTurnover" stroke="#22c55e" name="Inventory Turnover" strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
+          
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Stock</p>
-                  <p className="text-2xl font-bold">{stats.totalStockUnits.toLocaleString()}</p>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-base font-medium">Stock Level</CardTitle>
+              <select className="text-xs border rounded px-2 py-1 bg-background">
+                <option>All products</option>
+              </select>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={stockLevelData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="totalStock" fill="#6366f1" name="Total Stock" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="lowStock" fill="#22c55e" name="Low Stock" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Status Cards Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-red-500">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-red-500" />
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <Box className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Low Stock</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.lowStockCount} <span className="text-sm font-normal text-muted-foreground">SKUs</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Items below threshold</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+          
+          <Card className="border-l-4 border-l-orange-500">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-4 h-4 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Expiry Soon</p>
+                  <p className="text-2xl font-bold text-orange-600">0 <span className="text-sm font-normal text-muted-foreground">items</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Items expiring soon</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-l-4 border-l-amber-500">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <TrendingDown className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Out of Stock</p>
+                  <p className="text-2xl font-bold text-amber-600">{stats.outOfStockCount} <span className="text-sm font-normal text-muted-foreground">SKUs</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Investigate stockouts</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-l-4 border-l-green-500">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-4 h-4 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Overstocked</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.overstockedCount} <span className="text-sm font-normal text-muted-foreground">SKUs</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">High inventory levels</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Bottom Widgets Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Low Stock Items */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Stock Value</p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.totalStockValue, currency)}</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-base font-medium">Low Stock Items</CardTitle>
+              <Button variant="ghost" size="sm" className="text-xs text-blue-600">View all</Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Item</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">SKU</th>
+                    <th className="text-right p-3 text-xs font-medium text-muted-foreground">Stock</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {stats.lowStockItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="text-center py-4 text-muted-foreground text-xs">No low stock items</td>
+                    </tr>
+                  ) : (
+                    stats.lowStockItems.map((item: any) => (
+                      <tr key={item.id} className="hover:bg-muted/30">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
+                              <Package className="w-3 h-3 text-blue-600" />
+                            </div>
+                            <span className="text-xs font-medium truncate max-w-[100px]">{item.name}</span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-xs text-muted-foreground">{item.sku}</td>
+                        <td className="p-3 text-right text-xs font-medium text-red-600">{item.stock}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </CardContent>
           </Card>
-          <Card className={stats.lowStockCount > 0 ? "border-yellow-300 bg-yellow-50/30" : ""}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Low Stock</p>
-                  <p className={`text-2xl font-bold ${stats.lowStockCount > 0 ? "text-yellow-600" : ""}`}>{stats.lowStockCount}</p>
-                </div>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.lowStockCount > 0 ? "bg-yellow-100" : "bg-muted"}`}>
-                  <AlertTriangle className={`w-5 h-5 ${stats.lowStockCount > 0 ? "text-yellow-600" : "text-muted-foreground"}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className={stats.outOfStockCount > 0 ? "border-red-300 bg-red-50/30" : ""}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Out of Stock</p>
-                  <p className={`text-2xl font-bold ${stats.outOfStockCount > 0 ? "text-red-600" : ""}`}>{stats.outOfStockCount}</p>
-                </div>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.outOfStockCount > 0 ? "bg-red-100" : "bg-muted"}`}>
-                  <TrendingDown className={`w-5 h-5 ${stats.outOfStockCount > 0 ? "text-red-600" : "text-muted-foreground"}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
+          {/* Stock Distribution */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Warehouses</p>
-                  <p className="text-2xl font-bold">{stats.warehouseCount}</p>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-base font-medium">Stock Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {stockDistributionData.length === 0 ? (
+                <div className="h-[180px] flex items-center justify-center text-muted-foreground text-sm">No distribution data</div>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <ResponsiveContainer width="50%" height={180}>
+                    <PieChart>
+                      <Pie
+                        data={stockDistributionData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={70}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {stockDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex-1 space-y-2">
+                    {stockDistributionData.slice(0, 4).map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-muted-foreground truncate max-w-[80px]">{item.name}</span>
+                        </div>
+                        <span className="font-medium">{item.value.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <Warehouse className="w-5 h-5 text-indigo-600" />
-                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Purchase Orders */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base font-medium">Purchase Orders</CardTitle>
+                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{purchaseOrders.length}</span>
               </div>
+              <Button variant="ghost" size="sm" className="text-xs text-blue-600">View all</Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {purchaseOrders.map((po) => (
+                <div key={po.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">{po.id}</p>
+                    <p className="text-xs text-muted-foreground">{po.customer}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm">{formatCurrency(po.amount, currency)}</span>
+                    <Button variant="ghost" size="sm" className="p-1 h-auto">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>
