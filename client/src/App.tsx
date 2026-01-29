@@ -19,7 +19,7 @@ import AdminSettings from "./pages/AdminSettings";
 import IncomeExpenditure from "./pages/IncomeExpenditure";
 import ActionTracker from "@/pages/ActionTracker";
 import HumanResource from "@/pages/HumanResource";
-import TenderQuotation from "./pages/TenderQuotation";
+import TenderQuotation from "./pages/TenderQuotationEnhanced";
 import Reports from "./pages/Reports";
 import Products from "./pages/Products";
 import Contacts from "./pages/Contacts";
