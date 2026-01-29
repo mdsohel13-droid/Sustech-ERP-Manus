@@ -29,6 +29,13 @@
       "when": 1769711477680,
       "tag": "0003_black_the_order",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769712412731,
+      "tag": "0004_mature_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

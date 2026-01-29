@@ -3026,6 +3026,220 @@ Provide 2-3 actionable business insights.`;
       return await db.getCrmSalesPerformance();
     }),
   }),
+
+  // =====================================
+  // PROCUREMENT MODULE ROUTES
+  // =====================================
+  procurement: router({
+    // Vendors
+    getVendors: protectedProcedure.query(async () => {
+      return await db.getVendors();
+    }),
+    
+    getArchivedVendors: protectedProcedure.query(async () => {
+      return await db.getArchivedVendors();
+    }),
+    
+    getVendorById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getVendorById(input.id);
+      }),
+    
+    createVendor: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        code: z.string().optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        country: z.string().optional(),
+        contactPerson: z.string().optional(),
+        taxId: z.string().optional(),
+        paymentTerms: z.string().optional(),
+        notes: z.string().optional(),
+        status: z.enum(['active', 'inactive', 'blacklisted']).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.createVendor({ ...input, createdBy: ctx.user?.id });
+      }),
+    
+    updateVendor: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        code: z.string().optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        country: z.string().optional(),
+        contactPerson: z.string().optional(),
+        taxId: z.string().optional(),
+        paymentTerms: z.string().optional(),
+        notes: z.string().optional(),
+        status: z.enum(['active', 'inactive', 'blacklisted']).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await db.updateVendor(id, data);
+      }),
+    
+    archiveVendor: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.archiveVendor(input.id);
+        return { success: true };
+      }),
+    
+    restoreVendor: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreVendor(input.id);
+        return { success: true };
+      }),
+
+    // Purchase Orders
+    getPurchaseOrders: protectedProcedure.query(async () => {
+      return await db.getPurchaseOrders();
+    }),
+    
+    getArchivedPurchaseOrders: protectedProcedure.query(async () => {
+      return await db.getArchivedPurchaseOrders();
+    }),
+    
+    getPurchaseOrderById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getPurchaseOrderById(input.id);
+      }),
+    
+    generatePoNumber: protectedProcedure.query(async () => {
+      return await db.generatePoNumber();
+    }),
+    
+    createPurchaseOrder: protectedProcedure
+      .input(z.object({
+        poNumber: z.string().min(1),
+        vendorId: z.number(),
+        orderDate: z.string(),
+        expectedDeliveryDate: z.string().optional(),
+        category: z.enum(['electronics', 'raw_materials', 'office_supplies', 'equipment', 'services', 'other']).optional(),
+        subtotal: z.string().optional(),
+        taxAmount: z.string().optional(),
+        shippingCost: z.string().optional(),
+        discount: z.string().optional(),
+        totalAmount: z.string().optional(),
+        notes: z.string().optional(),
+        status: z.enum(['draft', 'sent', 'confirmed', 'in_transit', 'received', 'cancelled']).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.createPurchaseOrder({ ...input, createdBy: ctx.user?.id });
+      }),
+    
+    updatePurchaseOrder: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        vendorId: z.number().optional(),
+        orderDate: z.string().optional(),
+        expectedDeliveryDate: z.string().optional(),
+        receivedDate: z.string().optional(),
+        category: z.enum(['electronics', 'raw_materials', 'office_supplies', 'equipment', 'services', 'other']).optional(),
+        subtotal: z.string().optional(),
+        taxAmount: z.string().optional(),
+        shippingCost: z.string().optional(),
+        discount: z.string().optional(),
+        totalAmount: z.string().optional(),
+        notes: z.string().optional(),
+        status: z.enum(['draft', 'sent', 'confirmed', 'in_transit', 'received', 'cancelled']).optional(),
+        paymentStatus: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await db.updatePurchaseOrder(id, data);
+      }),
+    
+    archivePurchaseOrder: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.archivePurchaseOrder(input.id);
+        return { success: true };
+      }),
+    
+    restorePurchaseOrder: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restorePurchaseOrder(input.id);
+        return { success: true };
+      }),
+
+    // Purchase Order Items
+    getPurchaseOrderItems: protectedProcedure
+      .input(z.object({ purchaseOrderId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getPurchaseOrderItems(input.purchaseOrderId);
+      }),
+    
+    createPurchaseOrderItem: protectedProcedure
+      .input(z.object({
+        purchaseOrderId: z.number(),
+        productId: z.number().optional(),
+        productName: z.string().min(1),
+        description: z.string().optional(),
+        quantity: z.number().min(1),
+        unitPrice: z.string(),
+        taxRate: z.string().optional(),
+        taxAmount: z.string().optional(),
+        totalAmount: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.createPurchaseOrderItem(input);
+      }),
+    
+    updatePurchaseOrderItem: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        productName: z.string().optional(),
+        description: z.string().optional(),
+        quantity: z.number().optional(),
+        unitPrice: z.string().optional(),
+        taxRate: z.string().optional(),
+        taxAmount: z.string().optional(),
+        totalAmount: z.string().optional(),
+        receivedQuantity: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await db.updatePurchaseOrderItem(id, data);
+      }),
+    
+    deletePurchaseOrderItem: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deletePurchaseOrderItem(input.id);
+        return { success: true };
+      }),
+
+    // Dashboard & Analytics
+    getDashboardStats: protectedProcedure.query(async () => {
+      return await db.getProcurementDashboardStats();
+    }),
+    
+    getSpendTrend: protectedProcedure.query(async () => {
+      return await db.getProcurementSpendTrend();
+    }),
+    
+    getTopVendorsBySpend: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getTopVendorsBySpend(input?.limit || 5);
+      }),
+    
+    getByCategory: protectedProcedure.query(async () => {
+      return await db.getProcurementByCategory();
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

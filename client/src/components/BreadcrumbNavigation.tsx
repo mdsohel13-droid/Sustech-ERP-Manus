@@ -170,7 +170,7 @@ export const MODULE_BREADCRUMBS: Record<string, BreadcrumbItem> = {
   sales: { label: "Sales", path: "/sales" },
   products: { label: "Products", path: "/products" },
   customers: { label: "CRM", path: "/crm" },
-  purchases: { label: "Purchases", path: "/purchases" },
+  procurement: { label: "Procurement", path: "/procurement" },
   inventory: { label: "Inventory", path: "/inventory" },
   financial: { label: "Financial", path: "/financial" },
   "income-expenditure": { label: "Income & Expenditure", path: "/income-expenditure" },

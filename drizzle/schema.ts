@@ -1533,3 +1533,94 @@ export const crmTasks = pgTable("crm_tasks", {
 
 export type CrmTask = typeof crmTasks.$inferSelect;
 export type InsertCrmTask = typeof crmTasks.$inferInsert;
+
+/**
+ * Procurement Module - Enums
+ */
+export const purchaseOrderStatusEnum = pgEnum("purchase_order_status", ["draft", "sent", "confirmed", "in_transit", "received", "cancelled"]);
+export const vendorStatusEnum = pgEnum("vendor_status", ["active", "inactive", "blacklisted"]);
+export const purchaseCategoryEnum = pgEnum("purchase_category", ["electronics", "raw_materials", "office_supplies", "equipment", "services", "other"]);
+
+/**
+ * Vendors Table
+ */
+export const vendors = pgTable("vendors", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  contactPerson: varchar("contact_person", { length: 255 }),
+  taxId: varchar("tax_id", { length: 100 }),
+  paymentTerms: varchar("payment_terms", { length: 100 }),
+  rating: decimal("rating", { precision: 3, scale: 2 }),
+  status: vendorStatusEnum("status").default("active"),
+  notes: text("notes"),
+  totalOrders: integer("total_orders").default(0),
+  totalSpent: decimal("total_spent", { precision: 15, scale: 2 }).default("0"),
+  isArchived: boolean("is_archived").default(false),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Vendor = typeof vendors.$inferSelect;
+export type InsertVendor = typeof vendors.$inferInsert;
+
+/**
+ * Purchase Orders Table
+ */
+export const purchaseOrders = pgTable("purchase_orders", {
+  id: serial("id").primaryKey(),
+  poNumber: varchar("po_number", { length: 50 }).notNull().unique(),
+  vendorId: integer("vendor_id").notNull(),
+  orderDate: date("order_date").notNull(),
+  expectedDeliveryDate: date("expected_delivery_date"),
+  receivedDate: date("received_date"),
+  status: purchaseOrderStatusEnum("status").default("draft"),
+  category: purchaseCategoryEnum("category").default("other"),
+  subtotal: decimal("subtotal", { precision: 15, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  shippingCost: decimal("shipping_cost", { precision: 15, scale: 2 }).default("0"),
+  discount: decimal("discount", { precision: 15, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).default("0"),
+  paymentStatus: varchar("payment_status", { length: 50 }).default("unpaid"),
+  paymentMethod: varchar("payment_method", { length: 100 }),
+  notes: text("notes"),
+  internalNotes: text("internal_notes"),
+  attachments: text("attachments"),
+  isArchived: boolean("is_archived").default(false),
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
+
+/**
+ * Purchase Order Items Table
+ */
+export const purchaseOrderItems = pgTable("purchase_order_items", {
+  id: serial("id").primaryKey(),
+  purchaseOrderId: integer("purchase_order_id").notNull(),
+  productId: integer("product_id"),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  description: text("description"),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  receivedQuantity: integer("received_quantity").default(0),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
+export type InsertPurchaseOrderItem = typeof purchaseOrderItems.$inferInsert;

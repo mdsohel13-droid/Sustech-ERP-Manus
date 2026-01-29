@@ -64,7 +64,7 @@ const ALL_MENU_ITEMS = [
   { icon: ShoppingCart, label: "Sales", path: "/sales", module: "sales", group: "operations" },
   { icon: Package, label: "Products", path: "/products", module: "products", group: "operations" },
   { icon: Users, label: "CRM", path: "/crm", module: "crm", group: "operations" },
-  { icon: Receipt, label: "Purchases", path: "/purchases", module: "purchases", group: "operations" },
+  { icon: Receipt, label: "Procurement", path: "/procurement", module: "procurement", group: "operations" },
   { icon: Warehouse, label: "Inventory", path: "/inventory", module: "inventory", group: "operations" },
   { icon: DollarSign, label: "Financial", path: "/financial", module: "financial", group: "finance" },
   { icon: Receipt, label: "Income & Expense", path: "/income-expenditure", module: "income_expenditure", group: "finance" },

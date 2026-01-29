@@ -180,7 +180,7 @@ export const crossModuleRoutes: Record<string, Record<string, string>> = {
     project: "/projects",
   },
   Products: {
-    supplier: "/purchases",
+    supplier: "/procurement",
     category: "/products",
   },
   CRM: {
@@ -189,7 +189,7 @@ export const crossModuleRoutes: Record<string, Record<string, string>> = {
     company: "/crm",
     contact: "/crm",
   },
-  Purchases: {
+  Procurement: {
     vendor: "/crm",
     product: "/products",
     inventory: "/inventory",
@@ -197,7 +197,7 @@ export const crossModuleRoutes: Record<string, Record<string, string>> = {
   Inventory: {
     warehouse: "/inventory",
     product: "/products",
-    purchase: "/purchases",
+    purchase: "/procurement",
   },
   Financial: {
     invoice: "/financial",

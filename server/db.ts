@@ -65,6 +65,9 @@ import {
   warehouses, InsertWarehouse,
   productInventory, InsertProductInventory,
   inventoryTransactions, InsertInventoryTransaction,
+  vendors, InsertVendor,
+  purchaseOrders, InsertPurchaseOrder,
+  purchaseOrderItems, InsertPurchaseOrderItem,
 } from "../drizzle/schema";
 const ENV = { ownerOpenId: process.env.OWNER_OPEN_ID || '' };
 
@@ -3534,5 +3537,260 @@ export async function getCrmSalesPerformance() {
   }
   
   return result;
+}
+
+// =====================================
+// PROCUREMENT MODULE DATABASE FUNCTIONS
+// =====================================
+
+// Vendor Functions
+export async function getVendors(includeArchived = false) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  if (includeArchived) {
+    return db.select().from(vendors).orderBy(desc(vendors.createdAt));
+  }
+  return db.select().from(vendors).where(eq(vendors.isArchived, false)).orderBy(desc(vendors.createdAt));
+}
+
+export async function getArchivedVendors() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(vendors).where(eq(vendors.isArchived, true)).orderBy(desc(vendors.createdAt));
+}
+
+export async function getVendorById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(vendors).where(eq(vendors.id, id));
+  return result[0] || null;
+}
+
+export async function createVendor(vendor: InsertVendor) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(vendors).values(vendor).returning();
+  return result[0];
+}
+
+export async function updateVendor(id: number, vendor: Partial<InsertVendor>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(vendors).set({ ...vendor, updatedAt: new Date() }).where(eq(vendors.id, id)).returning();
+  return result[0];
+}
+
+export async function archiveVendor(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(vendors).set({ isArchived: true, updatedAt: new Date() }).where(eq(vendors.id, id));
+}
+
+export async function restoreVendor(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(vendors).set({ isArchived: false, updatedAt: new Date() }).where(eq(vendors.id, id));
+}
+
+// Purchase Order Functions
+export async function getPurchaseOrders(includeArchived = false) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  if (includeArchived) {
+    return db.select().from(purchaseOrders).orderBy(desc(purchaseOrders.createdAt));
+  }
+  return db.select().from(purchaseOrders).where(eq(purchaseOrders.isArchived, false)).orderBy(desc(purchaseOrders.createdAt));
+}
+
+export async function getArchivedPurchaseOrders() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(purchaseOrders).where(eq(purchaseOrders.isArchived, true)).orderBy(desc(purchaseOrders.createdAt));
+}
+
+export async function getPurchaseOrderById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, id));
+  return result[0] || null;
+}
+
+export async function createPurchaseOrder(po: InsertPurchaseOrder) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(purchaseOrders).values(po).returning();
+  return result[0];
+}
+
+export async function updatePurchaseOrder(id: number, po: Partial<InsertPurchaseOrder>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(purchaseOrders).set({ ...po, updatedAt: new Date() }).where(eq(purchaseOrders.id, id)).returning();
+  return result[0];
+}
+
+export async function archivePurchaseOrder(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(purchaseOrders).set({ isArchived: true, updatedAt: new Date() }).where(eq(purchaseOrders.id, id));
+}
+
+export async function restorePurchaseOrder(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(purchaseOrders).set({ isArchived: false, updatedAt: new Date() }).where(eq(purchaseOrders.id, id));
+}
+
+// Purchase Order Items
+export async function getPurchaseOrderItems(purchaseOrderId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.purchaseOrderId, purchaseOrderId));
+}
+
+export async function createPurchaseOrderItem(item: InsertPurchaseOrderItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(purchaseOrderItems).values(item).returning();
+  return result[0];
+}
+
+export async function updatePurchaseOrderItem(id: number, item: Partial<InsertPurchaseOrderItem>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(purchaseOrderItems).set(item).where(eq(purchaseOrderItems.id, id)).returning();
+  return result[0];
+}
+
+export async function deletePurchaseOrderItem(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(purchaseOrderItems).where(eq(purchaseOrderItems.id, id));
+}
+
+// Procurement Dashboard Stats
+export async function getProcurementDashboardStats() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const allPOs = await db.select().from(purchaseOrders).where(eq(purchaseOrders.isArchived, false));
+  const allVendors = await db.select().from(vendors).where(eq(vendors.isArchived, false));
+  
+  const now = new Date();
+  const thisYear = new Date(now.getFullYear(), 0, 1);
+  
+  const pendingApprovals = allPOs.filter(po => po.status === 'draft' || po.status === 'sent').length;
+  const confirmedPOs = allPOs.filter(po => po.status === 'confirmed').length;
+  const inTransitPOs = allPOs.filter(po => po.status === 'in_transit').length;
+  const overdueDeliveries = allPOs.filter(po => {
+    if (!po.expectedDeliveryDate || po.status === 'received' || po.status === 'cancelled') return false;
+    return new Date(po.expectedDeliveryDate) < now;
+  }).length;
+  
+  const totalSpendYTD = allPOs
+    .filter(po => new Date(po.orderDate) >= thisYear && po.status !== 'cancelled')
+    .reduce((sum, po) => sum + Number(po.totalAmount || 0), 0);
+  
+  const activeVendors = allVendors.filter(v => v.status === 'active').length;
+  
+  const draftCount = allPOs.filter(po => po.status === 'draft').length;
+  const sentCount = allPOs.filter(po => po.status === 'sent').length;
+  const confirmedCount = allPOs.filter(po => po.status === 'confirmed').length;
+  const inTransitCount = allPOs.filter(po => po.status === 'in_transit').length;
+  const receivedCount = allPOs.filter(po => po.status === 'received').length;
+  const cancelledCount = allPOs.filter(po => po.status === 'cancelled').length;
+  
+  return {
+    totalPurchaseOrders: allPOs.length,
+    pendingApprovals,
+    confirmedPOs,
+    inTransitPOs,
+    overdueDeliveries,
+    totalSpendYTD,
+    activeVendors,
+    statusCounts: { draft: draftCount, sent: sentCount, confirmed: confirmedCount, in_transit: inTransitCount, received: receivedCount, cancelled: cancelledCount }
+  };
+}
+
+export async function getProcurementSpendTrend() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const allPOs = await db.select().from(purchaseOrders).where(eq(purchaseOrders.isArchived, false));
+  const result = [];
+  const now = new Date();
+  
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    const monthName = monthDate.toLocaleString('default', { month: 'short' });
+    
+    const monthPOs = allPOs.filter(po => {
+      const orderDate = new Date(po.orderDate);
+      return orderDate >= monthDate && orderDate <= monthEnd && po.status !== 'cancelled';
+    });
+    
+    const spend = monthPOs.reduce((sum, po) => sum + Number(po.totalAmount || 0), 0);
+    result.push({ month: monthName, spend, orders: monthPOs.length });
+  }
+  
+  return result;
+}
+
+export async function getTopVendorsBySpend(limit = 5) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const allVendors = await db.select().from(vendors).where(eq(vendors.isArchived, false));
+  const allPOs = await db.select().from(purchaseOrders).where(eq(purchaseOrders.isArchived, false));
+  
+  const vendorSpend = allVendors.map(vendor => {
+    const vendorPOs = allPOs.filter(po => po.vendorId === vendor.id && po.status !== 'cancelled');
+    const totalSpend = vendorPOs.reduce((sum, po) => sum + Number(po.totalAmount || 0), 0);
+    const orderCount = vendorPOs.length;
+    return { ...vendor, totalSpend, orderCount };
+  });
+  
+  return vendorSpend.sort((a, b) => b.totalSpend - a.totalSpend).slice(0, limit);
+}
+
+export async function getProcurementByCategory() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const allPOs = await db.select().from(purchaseOrders).where(eq(purchaseOrders.isArchived, false));
+  
+  const categories = ['electronics', 'raw_materials', 'office_supplies', 'equipment', 'services', 'other'];
+  const result = categories.map(category => {
+    const categoryPOs = allPOs.filter(po => po.category === category && po.status !== 'cancelled');
+    const totalSpend = categoryPOs.reduce((sum, po) => sum + Number(po.totalAmount || 0), 0);
+    const orderCount = categoryPOs.length;
+    return { category, totalSpend, orderCount };
+  });
+  
+  return result.filter(c => c.orderCount > 0);
+}
+
+export async function generatePoNumber() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const year = new Date().getFullYear();
+  const prefix = `PO-${year}-`;
+  
+  const latestPO = await db.select().from(purchaseOrders)
+    .where(sql`${purchaseOrders.poNumber} LIKE ${prefix + '%'}`)
+    .orderBy(desc(purchaseOrders.poNumber))
+    .limit(1);
+  
+  let nextNum = 1;
+  if (latestPO.length > 0) {
+    const lastNum = parseInt(latestPO[0].poNumber.replace(prefix, '')) || 0;
+    nextNum = lastNum + 1;
+  }
+  
+  return `${prefix}${String(nextNum).padStart(3, '0')}`;
 }
 

@@ -78,7 +78,7 @@ export function CommandBar({ open, onClose }: CommandBarProps) {
     { id: "nav-sales", label: "Sell / POS", icon: ShoppingCart, action: () => setLocation("/sales"), category: "navigation", keywords: ["sales", "pos", "sell", "invoice"] },
     { id: "nav-products", label: "Products", icon: Package, action: () => setLocation("/products"), category: "navigation", keywords: ["products", "items", "inventory"] },
     { id: "nav-contacts", label: "CRM", icon: Users, action: () => setLocation("/crm"), category: "navigation", keywords: ["crm", "contacts", "customers", "clients", "leads"] },
-    { id: "nav-purchases", label: "Purchases", icon: Receipt, action: () => setLocation("/purchases"), category: "navigation", keywords: ["purchases", "buy", "vendor"] },
+    { id: "nav-procurement", label: "Procurement", icon: Receipt, action: () => setLocation("/procurement"), category: "navigation", keywords: ["procurement", "purchases", "buy", "vendor", "supply"] },
     { id: "nav-inventory", label: "Inventory", icon: Warehouse, action: () => setLocation("/inventory"), category: "navigation", keywords: ["inventory", "stock", "warehouse"] },
     { id: "nav-accounts", label: "Accounts", icon: DollarSign, action: () => setLocation("/financial"), category: "navigation", keywords: ["accounts", "finance", "money"] },
     { id: "nav-expenses", label: "Expenses", icon: Receipt, action: () => setLocation("/income-expenditure"), category: "navigation", keywords: ["expenses", "costs", "spending"] },

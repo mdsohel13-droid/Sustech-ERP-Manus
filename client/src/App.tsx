@@ -24,7 +24,7 @@ import Reports from "./pages/Reports";
 import Products from "./pages/Products";
 import Contacts from "./pages/Contacts";
 import Inventory from "./pages/Inventory";
-import Purchases from "./pages/Purchases";
+import Procurement from "./pages/Procurement";
 import AccessDenied from "./pages/AccessDenied";
 import { HyperlinkAnalyticsDashboard } from "./pages/HyperlinkAnalyticsDashboard";
 import AIAssistant from "./pages/AIAssistant";
@@ -128,8 +128,8 @@ function Router() {
       <Route path={"/inventory"}>
         <Inventory />
       </Route>
-      <Route path={"/purchases"}>
-        <Purchases />
+      <Route path={"/procurement"}>
+        <Procurement />
       </Route>
       <Route path={"/access-denied"}>
         <AccessDenied />
