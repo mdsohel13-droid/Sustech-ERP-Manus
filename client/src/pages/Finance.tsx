@@ -41,7 +41,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, ComposedChart, Cell, AreaChart, Area, PieChart, Pie, Legend
 } from "recharts";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/Toast";
 
 const COLORS = {
   revenue: '#3B82F6',
@@ -57,7 +57,7 @@ const AGING_COLORS = ['#22C55E', '#84CC16', '#EAB308', '#F97316', '#EF4444'];
 
 export default function Finance() {
   const { currency } = useCurrency();
-  const { toast } = useToast();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [period, setPeriod] = useState<'mtd' | 'ytd'>('ytd');
   const [benchmark, setBenchmark] = useState<'budget' | 'lastYear'>('lastYear');
@@ -78,7 +78,7 @@ export default function Finance() {
 
   const createAR = trpc.financial.createAR.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: "Accounts Receivable entry created" });
+      toast.success("Success", "Accounts Receivable entry created");
       utils.financial.getAllAR.invalidate();
       utils.financial.getDashboardStats.invalidate();
       utils.financial.getAgingReport.invalidate();
@@ -88,7 +88,7 @@ export default function Finance() {
 
   const createAP = trpc.financial.createAP.useMutation({
     onSuccess: () => {
-      toast({ title: "Success", description: "Accounts Payable entry created" });
+      toast.success("Success", "Accounts Payable entry created");
       utils.financial.getAllAP.invalidate();
       utils.financial.getDashboardStats.invalidate();
       utils.financial.getAgingReport.invalidate();
@@ -141,15 +141,18 @@ export default function Finance() {
   };
 
   const agingData = useMemo(() => {
-    if (!arAging) return [];
+    if (!arAging?.aging) return [];
     return [
-      { name: 'Current', ar: arAging.current || 0, ap: apAging?.current || 0, fill: AGING_COLORS[0] },
-      { name: '1-30 Days', ar: arAging.days1to30 || 0, ap: apAging?.days1to30 || 0, fill: AGING_COLORS[1] },
-      { name: '31-60 Days', ar: arAging.days31to60 || 0, ap: apAging?.days31to60 || 0, fill: AGING_COLORS[2] },
-      { name: '61-90 Days', ar: arAging.days61to90 || 0, ap: apAging?.days61to90 || 0, fill: AGING_COLORS[3] },
-      { name: '90+ Days', ar: arAging.over90 || 0, ap: apAging?.over90 || 0, fill: AGING_COLORS[4] },
+      { name: 'Current', ar: arAging.aging.current || 0, ap: apAging?.aging?.current || 0, fill: AGING_COLORS[0] },
+      { name: '1-30 Days', ar: arAging.aging.days30 || 0, ap: apAging?.aging?.days30 || 0, fill: AGING_COLORS[1] },
+      { name: '31-60 Days', ar: arAging.aging.days60 || 0, ap: apAging?.aging?.days60 || 0, fill: AGING_COLORS[2] },
+      { name: '61-90 Days', ar: arAging.aging.days90 || 0, ap: apAging?.aging?.days90 || 0, fill: AGING_COLORS[3] },
+      { name: '90+ Days', ar: arAging.aging.over90 || 0, ap: apAging?.aging?.over90 || 0, fill: AGING_COLORS[4] },
     ];
   }, [arAging, apAging]);
+  
+  const arTotal = arAging?.aging ? (arAging.aging.current + arAging.aging.days30 + arAging.aging.days60 + arAging.aging.days90 + arAging.aging.over90) : 0;
+  const apTotal = apAging?.aging ? (apAging.aging.current + apAging.aging.days30 + apAging.aging.days60 + apAging.aging.days90 + apAging.aging.over90) : 0;
 
   const forecastData = useMemo(() => {
     if (monthlyTrend.length < 3) return [];
@@ -186,10 +189,9 @@ export default function Finance() {
     createAR.mutate({
       customerName: formData.get('customerName') as string,
       amount: formData.get('amount') as string,
-      currency: currency,
       dueDate: formData.get('dueDate') as string,
-      invoiceNumber: formData.get('invoiceNumber') as string,
-      notes: formData.get('notes') as string,
+      invoiceNumber: formData.get('invoiceNumber') as string || undefined,
+      notes: formData.get('notes') as string || undefined,
     });
   };
 
@@ -199,10 +201,9 @@ export default function Finance() {
     createAP.mutate({
       vendorName: formData.get('vendorName') as string,
       amount: formData.get('amount') as string,
-      currency: currency,
       dueDate: formData.get('dueDate') as string,
-      invoiceNumber: formData.get('invoiceNumber') as string,
-      notes: formData.get('notes') as string,
+      invoiceNumber: formData.get('invoiceNumber') as string || undefined,
+      notes: formData.get('notes') as string || undefined,
     });
   };
 
@@ -863,7 +864,7 @@ export default function Finance() {
               <div>
                 <p className="text-sm text-muted-foreground">Total Receivables</p>
                 <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-                  {formatCurrency(arAging?.total || 0, currency)}
+                  {formatCurrency(arTotal, currency)}
                 </p>
                 <p className="text-xs text-muted-foreground">{arData.length} invoices pending</p>
               </div>
@@ -880,7 +881,7 @@ export default function Finance() {
               <div>
                 <p className="text-sm text-muted-foreground">Total Payables</p>
                 <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-                  {formatCurrency(apAging?.total || 0, currency)}
+                  {formatCurrency(apTotal, currency)}
                 </p>
                 <p className="text-xs text-muted-foreground">{apData.length} bills pending</p>
               </div>
@@ -936,13 +937,13 @@ export default function Finance() {
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(row.ar, currency)}</TableCell>
                     <TableCell className="text-right">
-                      {arAging?.total ? ((row.ar / arAging.total) * 100).toFixed(1) : 0}%
+                      {arTotal ? ((row.ar / arTotal) * 100).toFixed(1) : 0}%
                     </TableCell>
                   </TableRow>
                 ))}
                 <TableRow className="bg-muted/50 font-bold">
                   <TableCell>Total</TableCell>
-                  <TableCell className="text-right">{formatCurrency(arAging?.total || 0, currency)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(arTotal, currency)}</TableCell>
                   <TableCell className="text-right">100%</TableCell>
                 </TableRow>
               </TableBody>
@@ -975,13 +976,13 @@ export default function Finance() {
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(row.ap, currency)}</TableCell>
                     <TableCell className="text-right">
-                      {apAging?.total ? ((row.ap / apAging.total) * 100).toFixed(1) : 0}%
+                      {apTotal ? ((row.ap / apTotal) * 100).toFixed(1) : 0}%
                     </TableCell>
                   </TableRow>
                 ))}
                 <TableRow className="bg-muted/50 font-bold">
                   <TableCell>Total</TableCell>
-                  <TableCell className="text-right">{formatCurrency(apAging?.total || 0, currency)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(apTotal, currency)}</TableCell>
                   <TableCell className="text-right">100%</TableCell>
                 </TableRow>
               </TableBody>
@@ -1387,8 +1388,8 @@ export default function Finance() {
                   indicates {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)) > 1.5 ? 'healthy liquidity' : 'potential liquidity concerns'}.
                 </p>
                 <p>
-                  Accounts Receivable aging shows <span className={`font-medium ${(arAging?.over90 || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                    {formatCurrency(arAging?.over90 || 0, currency)}
+                  Accounts Receivable aging shows <span className={`font-medium ${(arAging?.aging?.over90 || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {formatCurrency(arAging?.aging?.over90 || 0, currency)}
                   </span> over 90 days.
                 </p>
               </CardContent>
