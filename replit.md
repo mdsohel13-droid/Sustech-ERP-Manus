@@ -29,12 +29,15 @@ drizzle/              # Database schema and migrations
 - **Tender/Quotation Module Redesign**: Complete UI overhaul with database integration
   - **4 Colorful KPI Cards**: Government Tenders, Private Quotations, Won/PO Received, Pending Follow-Up
   - **Tenders & Quotations Tabs**: Separate views for government tenders and private quotations
+  - **Archive Tab**: View and restore past, due, or lost tenders and quotations
+  - **Clickable Reference ID**: Click on Tender/Quotation ID to view details popup
   - **Filter Bar**: Status, Client, Timeline dropdowns with search functionality
   - **Data Table**: Reference ID, Description, Client, Submission Deadline, Status, Estimated Value, Actions
   - **Status Badges**: Color-coded badges (Not Started, Preparing, Submitted, Won, Loss, PO Received)
   - **CRUD Dialogs**: Add/Edit/View dialogs with proper form fields (Reference ID, Description, Client, Dates, Value, Status, Notes)
+  - **Archive/Restore**: Archive tenders/quotations and restore from archive
   - **Database Integration**: Uses tRPC queries (tenderQuotation.getAll, customers.getAll) for real-time data
-  - **Backend Integration**: Properly uses authenticated user context for createdBy field
+  - **Backend Integration**: Properly uses authenticated user context for createdBy field, restore endpoint for unarchiving
 - **Sales Module Redesign v2**: Complete layout restructure with 35% dashboard / 65% data entry split
   - **Compact Dashboard Section (35%)**:
     - 4 colorful gradient KPI cards: Total Sales, Open Opportunities, Sales This Month, Revenue This Quarter
