@@ -3121,26 +3121,54 @@ export async function getInventoryTransactions(productId?: number, warehouseId?:
   const db = await getDb();
   if (!db) return [];
   
-  let query = db.select().from(inventoryTransactions);
+  // Use raw SQL for proper join with product and warehouse names
+  let sql = `
+    SELECT 
+      it.id,
+      it.product_id as "productId",
+      it.warehouse_id as "warehouseId",
+      it.transaction_type as "transactionType",
+      it.quantity,
+      it.previous_quantity as "previousQuantity",
+      it.new_quantity as "newQuantity",
+      it.reference_type as "referenceType",
+      it.reference_id as "referenceId",
+      it.notes,
+      it.performed_by as "performedBy",
+      it.created_at as "createdAt",
+      p.name as "productName",
+      p.sku,
+      w.name as "warehouseName"
+    FROM inventory_transactions it
+    LEFT JOIN products p ON it.product_id = p.id
+    LEFT JOIN warehouses w ON it.warehouse_id = w.id
+  `;
   
-  if (productId && warehouseId) {
-    query = query.where(and(
-      eq(inventoryTransactions.productId, productId),
-      eq(inventoryTransactions.warehouseId, warehouseId)
-    )) as any;
-  } else if (productId) {
-    query = query.where(eq(inventoryTransactions.productId, productId)) as any;
-  } else if (warehouseId) {
-    query = query.where(eq(inventoryTransactions.warehouseId, warehouseId)) as any;
+  const conditions: string[] = [];
+  const params: any[] = [];
+  
+  if (productId) {
+    params.push(productId);
+    conditions.push(`it.product_id = $${params.length}`);
+  }
+  if (warehouseId) {
+    params.push(warehouseId);
+    conditions.push(`it.warehouse_id = $${params.length}`);
   }
   
-  query = query.orderBy(desc(inventoryTransactions.createdAt)) as any;
+  if (conditions.length > 0) {
+    sql += ` WHERE ${conditions.join(' AND ')}`;
+  }
+  
+  sql += ` ORDER BY it.created_at DESC`;
   
   if (limit) {
-    query = query.limit(limit) as any;
+    params.push(limit);
+    sql += ` LIMIT $${params.length}`;
   }
   
-  return await query;
+  const result = await db.execute({ sql, params });
+  return result.rows;
 }
 
 

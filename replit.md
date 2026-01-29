@@ -26,6 +26,14 @@ drizzle/              # Database schema and migrations
 ```
 
 ## Recent Changes (Jan 29, 2026)
+- **Inventory Module Upgrade**: Complete overhaul of Inventory page to use real database
+  - Replaced sample/static data with real database queries via tRPC
+  - Stock Levels tab shows real inventory data by product and warehouse
+  - Stock Movements tab displays real transaction history with product/warehouse names
+  - Warehouses tab with full CRUD operations (create, edit, delete)
+  - Stock Adjustment dialog supports Add, Remove, and Set Stock Level operations
+  - Proper transaction type mapping based on reason (count, damage, return, purchase, sale)
+  - Enhanced KPI dashboard with 6 cards: Total SKUs, Total Stock, Stock Value, Low Stock, Out of Stock, Warehouses
 - **Products & Inventory Integration**: Integrated inventory management into Products module
   - Added `warehouses` table for storage locations
   - Added `product_inventory` table for stock levels per product per warehouse
