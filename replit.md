@@ -79,6 +79,38 @@ The Accounting module (formerly "Income & Expense") provides comprehensive finan
 **URL**: `/accounting`
 **Router**: `incomeExpenditure` (backend maintains compatibility)
 
+## Projects Module Architecture
+The Projects module provides a comprehensive project pipeline management system with real-time tracking across all stages:
+
+**Dashboard Features:**
+- **Colorful Gradient KPI Cards**: Five stage cards (Leads/Inquiry, Proposal Submitted, Won/Contracted, Execution Phase, Testing/Handover) with gradient backgrounds (blue, amber, emerald, purple, slate)
+- **Pipeline Value Display**: Each KPI card shows the total value of projects in that stage (not count)
+- **Profit Margin Indicator**: Testing/Handover card displays projected profit margin percentage
+- **Stage Icons**: Each card includes a unique icon representing the pipeline stage
+- **Search Functionality**: Real-time filtering across project name, customer, and description
+
+**View Modes:**
+- **List View**: Sortable table with Project Name, Customer, Value, Status, Priority, Expected Close, Description, and Actions columns
+- **Kanban View**: Drag-and-drop project cards across pipeline stages with quick action buttons
+
+**Data Entry & Management:**
+- **Create**: New Project dropdown menu with form dialog for name, customer, value, priority, expected close date, and description
+- **Edit**: Click project name or Edit button to modify project details including stage
+- **Delete**: Delete button with confirmation dialog
+- **Financials**: Open project financials dialog for detailed financial tracking
+- **Attachments**: Upload attachments when editing existing projects
+
+**Database Schema:**
+- `projects` table with fields: id, name, customerName, stage, value, currency, description, startDate, expectedCloseDate, actualCloseDate, priority, assignedTo, createdBy, createdAt, updatedAt
+
+**Integration Points:**
+- Tender/Quotation module: Automatic project creation when tender status changes to "win" or "po_received"
+- Dashboard module: Project stats integrated into main dashboard KPIs
+- Financial reports: Project values contribute to pipeline value calculations
+
+**URL**: `/projects`
+**Router**: `projects`
+
 ## External Dependencies
 - **OAuth Provider**: `oauth.emergentagent.com` for authentication.
 - **PostgreSQL**: Primary database for all application data.
