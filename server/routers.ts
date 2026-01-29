@@ -2793,6 +2793,23 @@ Provide 2-3 actionable business insights.`;
       .query(async ({ input }) => {
         return await db.getInventoryTransactions(input.productId, input.warehouseId, input.limit);
       }),
+
+    // Product Dashboard Stats
+    getSalesTrends: protectedProcedure.query(async () => {
+      return await db.getProductSalesTrends();
+    }),
+
+    getRevenueStats: protectedProcedure.query(async () => {
+      return await db.getProductRevenueStats();
+    }),
+
+    getTopSellingProducts: protectedProcedure.query(async () => {
+      return await db.getTopSellingProducts(5);
+    }),
+
+    getTopCategory: protectedProcedure.query(async () => {
+      return await db.getTopCategory();
+    }),
   }),
 });
 

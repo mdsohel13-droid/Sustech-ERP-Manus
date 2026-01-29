@@ -3171,4 +3171,145 @@ export async function getInventoryTransactions(productId?: number, warehouseId?:
   return result.rows;
 }
 
+// Get product sales trends (last 30 days)
+export async function getProductSalesTrends() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const sales = await db.select()
+    .from(dailySales)
+    .where(gte(dailySales.date, thirtyDaysAgo.toISOString().split('T')[0]));
+  
+  // Group by day
+  const salesByDay: Record<string, number> = {};
+  sales.forEach((sale) => {
+    const day = sale.date ? new Date(sale.date).toISOString().split('T')[0] : '';
+    if (day) {
+      salesByDay[day] = (salesByDay[day] || 0) + Number(sale.totalAmount || 0);
+    }
+  });
+  
+  // Create 30-day array
+  const result = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const dayNum = date.getDate();
+    result.push({
+      day: dayNum.toString(),
+      date: dateStr,
+      revenue: salesByDay[dateStr] || 0,
+    });
+  }
+  
+  return result;
+}
+
+// Get product revenue stats for last 30 days
+export async function getProductRevenueStats() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const prevThirtyDays = new Date();
+  prevThirtyDays.setDate(prevThirtyDays.getDate() - 60);
+  
+  // Current 30 days
+  const currentSales = await db.select()
+    .from(dailySales)
+    .where(gte(dailySales.date, thirtyDaysAgo.toISOString().split('T')[0]));
+  
+  const currentRevenue = currentSales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+  const currentQuantity = currentSales.reduce((sum, s) => sum + Number(s.quantity || 0), 0);
+  
+  // Previous 30 days for comparison
+  const prevSales = await db.select()
+    .from(dailySales)
+    .where(
+      and(
+        gte(dailySales.date, prevThirtyDays.toISOString().split('T')[0]),
+        lt(dailySales.date, thirtyDaysAgo.toISOString().split('T')[0])
+      )
+    );
+  
+  const prevRevenue = prevSales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+  
+  // Calculate percentage change
+  const revenueChange = prevRevenue > 0 
+    ? Math.round(((currentRevenue - prevRevenue) / prevRevenue) * 100)
+    : 0;
+  
+  return {
+    revenue: currentRevenue,
+    revenueChange,
+    unitsSold: currentQuantity,
+    transactionCount: currentSales.length,
+  };
+}
+
+// Get top selling products
+export async function getTopSellingProducts(limit = 5) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const sales = await db.select()
+    .from(dailySales)
+    .where(gte(dailySales.date, thirtyDaysAgo.toISOString().split('T')[0]));
+  
+  // Aggregate by product
+  const productSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
+  sales.forEach((sale) => {
+    const name = sale.productName || 'Unknown';
+    if (!productSales[name]) {
+      productSales[name] = { name, quantity: 0, revenue: 0 };
+    }
+    productSales[name].quantity += Number(sale.quantity || 0);
+    productSales[name].revenue += Number(sale.totalAmount || 0);
+  });
+  
+  return Object.values(productSales)
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, limit)
+    .map((p, i) => ({
+      rank: i + 1,
+      name: p.name.length > 25 ? p.name.substring(0, 22) + '...' : p.name,
+      unitsSold: p.quantity,
+      revenue: p.revenue,
+    }));
+}
+
+// Get top category by product count
+export async function getTopCategory() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const allProducts = await db.select().from(salesProducts).where(eq(salesProducts.isActive, 1));
+  const allCategories = await db.select().from(productCategories);
+  
+  // Count products per category
+  const categoryCounts: Record<number, { name: string; count: number }> = {};
+  allProducts.forEach((product) => {
+    const catId = product.categoryId;
+    if (catId) {
+      if (!categoryCounts[catId]) {
+        const cat = allCategories.find(c => c.id === catId);
+        categoryCounts[catId] = { name: cat?.name || 'Unknown', count: 0 };
+      }
+      categoryCounts[catId].count++;
+    }
+  });
+  
+  // Find top category
+  const sorted = Object.values(categoryCounts).sort((a, b) => b.count - a.count);
+  return sorted[0] || { name: 'N/A', count: 0 };
+}
+
 
