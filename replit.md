@@ -111,6 +111,50 @@ The Projects module provides a comprehensive project pipeline management system 
 **URL**: `/projects`
 **Router**: `projects`
 
+## HRM (Human Resource Management) Module Architecture
+The HRM module provides comprehensive employee management, attendance tracking, leave management, and access control:
+
+**Dashboard Features:**
+- **Colorful Gradient KPI Cards**: Four cards with gradient backgrounds:
+  - Total Users (blue gradient) - System users count
+  - Admins (amber gradient) - Full access users count
+  - Pending Leaves (rose gradient) - Awaiting approval count
+  - Departments (purple gradient) - Active departments count
+- **Tabbed Interface with Icons**: Overview, Users & Access, Employees, Departments, Attendance, Leaves, Performance, Job Descriptions, Onboarding, Commission (admin), Confidential (admin), Role Guide
+- **Action Bar**: Filter buttons (Copies ERU, Recent Activity, Sorted Employees), department count indicator
+- **Bottom Navigation Bar**: Fixed position nav with quick access to all main tabs
+
+**Overview Tab Layout:**
+- **Employees by Department Card** (blue themed): Workforce distribution with action buttons (Manage Users, View Attendance)
+- **Pending Leave Requests Card** (amber themed): Requests awaiting approval with Approve Leave button
+- **Departments Card** (purple themed): Department list with employee counts
+- **Quick Actions**: Add User, Mark Attendance, Generate Report, Performance Review buttons
+
+**Tab Functionality:**
+- **Users & Access**: User management with role assignment and module permissions
+- **Employees**: Employee directory with add/edit/view/delete capabilities
+- **Departments**: Department CRUD operations
+- **Attendance**: Clock in/out, attendance history tracking
+- **Leaves**: Leave application, balances, pending approvals, leave history
+- **Performance**: Performance reviews, KPI tracking, target management
+- **Job Descriptions**: Position roles, responsibilities, qualifications
+- **Onboarding**: New employee onboarding tasks and templates
+- **Commission**: (Admin only) Commission rates and earnings tracking
+- **Confidential**: (Admin only) Sensitive employee data (salary, banking info)
+
+**Database Tables:**
+- `employees` - Employee records with job details
+- `departments` - Organizational structure
+- `attendance_records` - Daily attendance tracking
+- `leave_applications` - Leave requests and approvals
+- `performance_reviews` - Employee performance evaluations
+- `job_descriptions` - Position role definitions
+- `onboarding_tasks` - Employee onboarding task tracking
+- `onboarding_templates` - Reusable onboarding task templates
+
+**URL**: `/hr`
+**Router**: `hr`
+
 ## External Dependencies
 - **OAuth Provider**: `oauth.emergentagent.com` for authentication.
 - **PostgreSQL**: Primary database for all application data.
