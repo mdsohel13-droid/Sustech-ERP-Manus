@@ -21,6 +21,30 @@ Key architectural decisions and features include:
 - **Audit Logging**: All financial mutations are automatically logged, recording user, action, entity changes, timestamp, and origin.
 - **Transaction Safety**: Financial operations utilize PostgreSQL transactions to ensure atomicity (all-or-nothing changes).
 
+## Finance Module Architecture
+The Finance module is a comprehensive financial management system with full database integration:
+
+**Database Tables:**
+- `financial_accounts` - Chart of accounts for balance sheet tracking (assets, liabilities, equity)
+- `journal_entries` - Double-entry accounting journal for transactions
+- `accounts_receivable` - Customer receivables with aging tracking
+- `accounts_payable` - Vendor payables with aging tracking
+- `income_expenditure` - Revenue and expense tracking
+- `daily_sales` - Sales transactions integration
+
+**Features:**
+- **Overview Tab**: KPI dashboard with revenue, COGS, gross profit, net profit metrics
+- **Balance Sheet Tab**: Real-time assets, liabilities, equity display from financial_accounts
+- **Cash Flow Tab**: 6-month trend analysis with inflow/outflow tracking
+- **Aging Report Tab**: AR/AP aging buckets (Current, 1-30, 31-60, 61-90, 90+ days) with data entry
+- **Forecasting Tab**: Revenue projections using weighted moving average methodology
+
+**Integration Points:**
+- Pulls sales data from `daily_sales` and `income_expenditure` tables
+- Syncs with AR/AP modules for aging calculations
+- Integrates with Inventory module for stock value calculations
+- Connects to Products module for COGS calculations
+
 ## External Dependencies
 - **OAuth Provider**: `oauth.emergentagent.com` for authentication.
 - **PostgreSQL**: Primary database for all application data.

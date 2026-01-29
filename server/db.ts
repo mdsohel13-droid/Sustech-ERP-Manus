@@ -3809,13 +3809,14 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startDate = period === 'mtd' ? startOfMonth : startOfYear;
   
-  const [allIncome, allAR, allAP, allSales, allFinancialAccounts, allInventory] = await Promise.all([
+  const [allIncome, allAR, allAP, allSales, allFinancialAccounts, allInventory, allProducts] = await Promise.all([
     db.select().from(incomeExpenditure),
     db.select().from(accountsReceivable),
     db.select().from(accountsPayable),
     db.select().from(dailySales),
     db.select().from(financialAccounts).where(eq(financialAccounts.isActive, true)),
-    db.select().from(productInventory)
+    db.select().from(productInventory),
+    db.select().from(salesProducts).where(eq(salesProducts.isActive, true))
   ]);
   
   const periodIncome = allIncome.filter(ie => new Date(ie.date) >= startDate);
@@ -3826,9 +3827,11 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
   
   const expenses = periodIncome.filter(ie => ie.type === 'expenditure').reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
   
-  const cogs = expenses * 0.59;
+  const cogsAccount = allFinancialAccounts.find(a => a.accountSubtype === 'cost_of_goods_sold');
+  const cogsFromAccount = cogsAccount ? Number(cogsAccount.balance || 0) : 0;
+  const cogs = cogsFromAccount > 0 ? cogsFromAccount : (revenue > 0 ? revenue * 0.59 : expenses * 0.59);
   const grossProfit = revenue - cogs;
-  const opex = expenses - cogs;
+  const opex = expenses > cogs ? expenses - cogs : expenses;
   const netProfit = grossProfit - opex;
   
   const grossProfitMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
@@ -3845,7 +3848,11 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
   
   const cashBalance = getAccountBalance('cash');
   const deposits = getAccountBalance('deposits') + getAccountBalance('bank');
-  const inventoryValue = allInventory.reduce((sum, inv) => sum + Number(inv.quantity || 0) * 100, 0);
+  const inventoryValue = allInventory.reduce((sum, inv) => {
+    const product = allProducts.find(p => p.id === inv.productId);
+    const unitCost = product ? Number(product.purchasePrice || product.sellingPrice || 0) : 0;
+    return sum + Number(inv.quantity || 0) * unitCost;
+  }, 0);
   const inventory = inventoryValue || getAccountBalance('inventory');
   const totalAssets = cashBalance + deposits + totalAR + inventory;
   
@@ -3906,11 +3913,12 @@ export async function getBalanceSheetData() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const [accounts, allAR, allAP, allInventory] = await Promise.all([
+  const [accounts, allAR, allAP, allInventory, allProducts] = await Promise.all([
     db.select().from(financialAccounts).where(eq(financialAccounts.isActive, true)),
     db.select().from(accountsReceivable).where(eq(accountsReceivable.status, 'pending')),
     db.select().from(accountsPayable).where(eq(accountsPayable.status, 'pending')),
-    db.select().from(productInventory)
+    db.select().from(productInventory),
+    db.select().from(salesProducts).where(eq(salesProducts.isActive, true))
   ]);
   
   const getAccountsByType = (type: string) => accounts.filter(a => a.accountType === type);
@@ -3923,7 +3931,11 @@ export async function getBalanceSheetData() {
   const bankBalance = sumBySubtype('bank');
   const deposits = sumBySubtype('deposits');
   const arTotal = allAR.reduce((sum, ar) => sum + Number(ar.amount || 0), 0);
-  const inventoryValue = allInventory.reduce((sum, inv) => sum + Number(inv.quantity || 0) * 100, 0) || sumBySubtype('inventory');
+  const inventoryValue = allInventory.reduce((sum, inv) => {
+    const product = allProducts.find(p => p.id === inv.productId);
+    const unitCost = product ? Number(product.purchasePrice || product.sellingPrice || 0) : 0;
+    return sum + Number(inv.quantity || 0) * unitCost;
+  }, 0) || sumBySubtype('inventory');
   const fixedAssets = sumBySubtype('fixed_assets');
   
   const totalCurrentAssets = cashBalance + bankBalance + deposits + arTotal + inventoryValue;
