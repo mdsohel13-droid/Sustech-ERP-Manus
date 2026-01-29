@@ -1467,8 +1467,8 @@ export async function getAllTenderQuotations() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  // Return ALL items (both active and archived) - frontend handles filtering
   return await db.select().from(tenderQuotation)
-    .where(isNull(tenderQuotation.archivedAt))
     .orderBy(desc(tenderQuotation.createdAt));
 }
 
