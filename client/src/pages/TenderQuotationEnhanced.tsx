@@ -210,8 +210,7 @@ export default function TenderQuotationEnhanced() {
       onSubmit({
         ...formData,
         type: type === 'tender' ? 'government_tender' : 'private_quotation',
-        estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : null,
-        createdBy: 1,
+        estimatedValue: formData.estimatedValue || undefined,
       });
     };
 
