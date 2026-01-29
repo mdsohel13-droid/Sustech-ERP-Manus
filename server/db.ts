@@ -1079,7 +1079,14 @@ export async function getAllIncomeExpenditure() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db.select().from(incomeExpenditure).orderBy(desc(incomeExpenditure.date));
+  return await db.select().from(incomeExpenditure).where(eq(incomeExpenditure.isArchived, false)).orderBy(desc(incomeExpenditure.date));
+}
+
+export async function getArchivedIncomeExpenditure() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(incomeExpenditure).where(eq(incomeExpenditure.isArchived, true)).orderBy(desc(incomeExpenditure.archivedAt));
 }
 
 export async function getIncomeExpenditureByDateRange(startDate: string, endDate: string) {
@@ -1177,6 +1184,33 @@ export async function updateIncomeExpenditure(id: number, data: Partial<InsertIn
 }
 
 export async function deleteIncomeExpenditure(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(incomeExpenditure).where(eq(incomeExpenditure.id, id));
+}
+
+export async function archiveIncomeExpenditure(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(incomeExpenditure).set({ 
+    isArchived: true, 
+    archivedAt: new Date() 
+  }).where(eq(incomeExpenditure.id, id));
+}
+
+export async function restoreIncomeExpenditure(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(incomeExpenditure).set({ 
+    isArchived: false, 
+    archivedAt: null 
+  }).where(eq(incomeExpenditure.id, id));
+}
+
+export async function permanentlyDeleteIncomeExpenditure(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   

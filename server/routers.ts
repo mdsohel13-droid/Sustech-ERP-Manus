@@ -1733,6 +1733,31 @@ Provide 2-3 actionable business insights.`;
         await db.deleteIncomeExpenditure(input.id);
         return { success: true };
       }),
+
+    getArchived: protectedProcedure.query(async () => {
+      return await db.getArchivedIncomeExpenditure();
+    }),
+
+    archive: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.archiveIncomeExpenditure(input.id);
+        return { success: true };
+      }),
+
+    restore: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreIncomeExpenditure(input.id);
+        return { success: true };
+      }),
+
+    permanentlyDelete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.permanentlyDeleteIncomeExpenditure(input.id);
+        return { success: true };
+      }),
   }),
 
   // ============ Budget Module ============

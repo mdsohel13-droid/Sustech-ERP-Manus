@@ -618,6 +618,8 @@ export const incomeExpenditure = pgTable("income_expenditure", {
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  isArchived: boolean("isArchived").default(false).notNull(),
+  archivedAt: timestamp("archivedAt"),
 });
 
 export type IncomeExpenditure = typeof incomeExpenditure.$inferSelect;
