@@ -24,7 +24,10 @@ import {
   Ruler,
   Shield,
   Layers,
-  Award
+  Award,
+  Warehouse,
+  Box,
+  ArrowUpDown
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -46,6 +49,8 @@ export default function Products() {
   const [showUnitDialog, setShowUnitDialog] = useState(false);
   const [showBrandDialog, setShowBrandDialog] = useState(false);
   const [showWarrantyDialog, setShowWarrantyDialog] = useState(false);
+  const [showWarehouseDialog, setShowWarehouseDialog] = useState(false);
+  const [showStockAdjustDialog, setShowStockAdjustDialog] = useState(false);
   
   // Edit states
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -53,17 +58,22 @@ export default function Products() {
   const [editingUnit, setEditingUnit] = useState<any>(null);
   const [editingBrand, setEditingBrand] = useState<any>(null);
   const [editingWarranty, setEditingWarranty] = useState<any>(null);
+  const [editingWarehouse, setEditingWarehouse] = useState<any>(null);
+  const [selectedProductForStock, setSelectedProductForStock] = useState<any>(null);
   
   // Form step for product creation
   const [formStep, setFormStep] = useState(1);
   
   // Queries
   const { data: products = [], isLoading: loadingProducts } = trpc.products.getActiveProducts.useQuery();
+  const { data: productsWithInventory = [], isLoading: loadingInventory } = trpc.products.getProductsWithInventory.useQuery();
   const { data: archivedProducts = [], isLoading: loadingArchived } = trpc.products.getArchivedProducts.useQuery();
   const { data: categories = [], isLoading: loadingCategories } = trpc.products.getCategories.useQuery();
   const { data: units = [], isLoading: loadingUnits } = trpc.products.getUnits.useQuery();
   const { data: brands = [], isLoading: loadingBrands } = trpc.products.getBrands.useQuery();
   const { data: warranties = [], isLoading: loadingWarranties } = trpc.products.getWarranties.useQuery();
+  const { data: warehouses = [], isLoading: loadingWarehouses } = trpc.products.getWarehouses.useQuery();
+  const { data: allInventory = [], isLoading: loadingAllInventory } = trpc.products.getAllInventoryWithProducts.useQuery();
   
   // Product form state
   const [productForm, setProductForm] = useState({
@@ -93,6 +103,17 @@ export default function Products() {
   
   // Warranty form state
   const [warrantyForm, setWarrantyForm] = useState({ name: "", duration: 12, durationUnit: "months", description: "" });
+  
+  // Warehouse form state
+  const [warehouseForm, setWarehouseForm] = useState({ name: "", code: "", address: "", city: "", country: "", contactPerson: "", contactPhone: "" });
+  
+  // Stock adjustment form state
+  const [stockAdjustForm, setStockAdjustForm] = useState({
+    warehouseId: undefined as number | undefined,
+    quantityChange: 0,
+    transactionType: "adjustment" as string,
+    notes: "",
+  });
   
   // Mutations
   const createProduct = trpc.products.createProduct.useMutation({
@@ -250,6 +271,49 @@ export default function Products() {
     onSuccess: () => {
       utils.products.getWarranties.invalidate();
       toast.success("Warranty deleted successfully");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  
+  // Warehouse mutations
+  const createWarehouse = trpc.products.createWarehouse.useMutation({
+    onSuccess: () => {
+      utils.products.getWarehouses.invalidate();
+      toast.success("Warehouse created successfully");
+      setShowWarehouseDialog(false);
+      setWarehouseForm({ name: "", code: "", address: "", city: "", country: "", contactPerson: "", contactPhone: "" });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  
+  const updateWarehouse = trpc.products.updateWarehouse.useMutation({
+    onSuccess: () => {
+      utils.products.getWarehouses.invalidate();
+      toast.success("Warehouse updated successfully");
+      setShowWarehouseDialog(false);
+      setEditingWarehouse(null);
+      setWarehouseForm({ name: "", code: "", address: "", city: "", country: "", contactPerson: "", contactPhone: "" });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  
+  const deleteWarehouse = trpc.products.deleteWarehouse.useMutation({
+    onSuccess: () => {
+      utils.products.getWarehouses.invalidate();
+      toast.success("Warehouse deleted successfully");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  
+  // Stock adjustment mutation
+  const adjustStock = trpc.products.adjustStock.useMutation({
+    onSuccess: () => {
+      utils.products.getProductsWithInventory.invalidate();
+      utils.products.getAllInventoryWithProducts.invalidate();
+      toast.success("Stock adjusted successfully");
+      setShowStockAdjustDialog(false);
+      setSelectedProductForStock(null);
+      setStockAdjustForm({ warehouseId: undefined, quantityChange: 0, transactionType: "adjustment", notes: "" });
     },
     onError: (error) => toast.error(error.message),
   });
@@ -577,8 +641,10 @@ export default function Products() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="inventory">Inventory</TabsTrigger>
+            <TabsTrigger value="warehouses">Warehouses</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="units">Units</TabsTrigger>
             <TabsTrigger value="brands">Brands</TabsTrigger>
@@ -643,6 +709,8 @@ export default function Products() {
                         <th className="text-left p-4 text-sm font-medium">Product</th>
                         <th className="text-left p-4 text-sm font-medium">SKU</th>
                         <th className="text-left p-4 text-sm font-medium">Category</th>
+                        <th className="text-right p-4 text-sm font-medium">Stock</th>
+                        <th className="text-left p-4 text-sm font-medium">Location</th>
                         <th className="text-right p-4 text-sm font-medium">Purchase Price</th>
                         <th className="text-right p-4 text-sm font-medium">Selling Price</th>
                         <th className="text-center p-4 text-sm font-medium">Actions</th>
@@ -651,53 +719,81 @@ export default function Products() {
                     <tbody className="divide-y divide-border">
                       {filteredProducts.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center py-8 text-muted-foreground">No products found</td>
+                          <td colSpan={8} className="text-center py-8 text-muted-foreground">No products found</td>
                         </tr>
                       ) : (
-                        filteredProducts.map((product: any) => (
-                          <tr key={product.id} className="hover:bg-muted/30">
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                                  <Package className="w-5 h-5 text-muted-foreground" />
+                        filteredProducts.map((product: any) => {
+                          const inventoryData = productsWithInventory.find((p: any) => p.id === product.id) as any;
+                          const totalStock = inventoryData?.totalStock ? parseFloat(String(inventoryData.totalStock)) : 0;
+                          const stockByLocation = String(inventoryData?.stockByLocation || "");
+                          const isLowStock = product.alertQuantity && totalStock <= product.alertQuantity;
+                          
+                          return (
+                            <tr key={product.id} className="hover:bg-muted/30">
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+                                    <Package className="w-5 h-5 text-muted-foreground" />
+                                  </div>
+                                  <span className="font-medium text-sm">{product.name}</span>
                                 </div>
-                                <span className="font-medium text-sm">{product.name}</span>
-                              </div>
-                            </td>
-                            <td className="p-4 text-sm text-muted-foreground">{product.sku || "-"}</td>
-                            <td className="p-4">
-                              <span className="text-xs px-2 py-1 bg-muted rounded-full">{getCategoryName(product.categoryId)}</span>
-                            </td>
-                            <td className="p-4 text-right text-muted-foreground">
-                              {product.purchasePrice ? formatCurrency(parseFloat(product.purchasePrice), currency) : "-"}
-                            </td>
-                            <td className="p-4 text-right font-medium">
-                              {product.sellingPrice ? formatCurrency(parseFloat(product.sellingPrice), currency) : "-"}
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center justify-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => openEditProduct(product)}
-                                >
-                                  <Edit className="w-4 h-4 mr-1" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                                  onClick={() => archiveProduct.mutate({ id: product.id })}
-                                  disabled={archiveProduct.isPending}
-                                >
-                                  <Archive className="w-4 h-4 mr-1" />
-                                  Archive
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
+                              </td>
+                              <td className="p-4 text-sm text-muted-foreground">{product.sku || "-"}</td>
+                              <td className="p-4">
+                                <span className="text-xs px-2 py-1 bg-muted rounded-full">{getCategoryName(product.categoryId)}</span>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className={`font-medium ${isLowStock ? "text-red-600" : "text-foreground"}`}>
+                                  {totalStock}
+                                </span>
+                                {isLowStock && <AlertTriangle className="w-4 h-4 text-red-500 inline ml-1" />}
+                              </td>
+                              <td className="p-4 text-sm text-muted-foreground">
+                                {stockByLocation ? stockByLocation.split(", ").slice(0, 2).join(", ") : "-"}
+                              </td>
+                              <td className="p-4 text-right text-muted-foreground">
+                                {product.purchasePrice ? formatCurrency(parseFloat(product.purchasePrice), currency) : "-"}
+                              </td>
+                              <td className="p-4 text-right font-medium">
+                                {product.sellingPrice ? formatCurrency(parseFloat(product.sellingPrice), currency) : "-"}
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center justify-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedProductForStock(product);
+                                      setStockAdjustForm({ warehouseId: undefined, quantityChange: 0, transactionType: "adjustment", notes: "" });
+                                      setShowStockAdjustDialog(true);
+                                    }}
+                                  >
+                                    <ArrowUpDown className="w-4 h-4 mr-1" />
+                                    Stock
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => openEditProduct(product)}
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                    onClick={() => archiveProduct.mutate({ id: product.id })}
+                                    disabled={archiveProduct.isPending}
+                                  >
+                                    <Archive className="w-4 h-4 mr-1" />
+                                    Archive
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -976,6 +1072,159 @@ export default function Products() {
             </Card>
           </TabsContent>
 
+          {/* Inventory Tab */}
+          <TabsContent value="inventory" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Stock Levels by Product & Location</h3>
+            </div>
+            <Card>
+              <CardContent className="p-0">
+                {loadingAllInventory ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading inventory...</div>
+                ) : (
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-4 text-sm font-medium">Product</th>
+                        <th className="text-left p-4 text-sm font-medium">SKU</th>
+                        <th className="text-left p-4 text-sm font-medium">Warehouse</th>
+                        <th className="text-right p-4 text-sm font-medium">Quantity</th>
+                        <th className="text-right p-4 text-sm font-medium">Reserved</th>
+                        <th className="text-right p-4 text-sm font-medium">Available</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {allInventory.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                            No inventory records found. Add stock to products to see inventory here.
+                          </td>
+                        </tr>
+                      ) : (
+                        allInventory.map((inv: any) => (
+                          <tr key={inv.id} className="hover:bg-muted/30">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                                  <Box className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                                <span className="font-medium text-sm">{inv.productName}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-sm text-muted-foreground">{inv.sku || "-"}</td>
+                            <td className="p-4">
+                              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{inv.warehouseName}</span>
+                            </td>
+                            <td className="p-4 text-right font-medium">{parseFloat(inv.quantity || "0")}</td>
+                            <td className="p-4 text-right text-muted-foreground">{parseFloat(inv.reservedQuantity || "0")}</td>
+                            <td className="p-4 text-right font-medium text-green-600">
+                              {parseFloat(inv.quantity || "0") - parseFloat(inv.reservedQuantity || "0")}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Warehouses Tab */}
+          <TabsContent value="warehouses" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Manage Warehouses/Locations</h3>
+              <Button onClick={() => { setEditingWarehouse(null); setWarehouseForm({ name: "", code: "", address: "", city: "", country: "", contactPerson: "", contactPhone: "" }); setShowWarehouseDialog(true); }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Warehouse
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="p-0">
+                {loadingWarehouses ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading warehouses...</div>
+                ) : (
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-4 text-sm font-medium">Name</th>
+                        <th className="text-left p-4 text-sm font-medium">Code</th>
+                        <th className="text-left p-4 text-sm font-medium">Location</th>
+                        <th className="text-left p-4 text-sm font-medium">Contact</th>
+                        <th className="text-center p-4 text-sm font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {warehouses.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No warehouses found. Add a warehouse to start tracking inventory.
+                          </td>
+                        </tr>
+                      ) : (
+                        warehouses.map((wh: any) => (
+                          <tr key={wh.id} className="hover:bg-muted/30">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                  <Warehouse className="w-4 h-4 text-purple-600" />
+                                </div>
+                                <span className="font-medium text-sm">{wh.name}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-sm text-muted-foreground">{wh.code || "-"}</td>
+                            <td className="p-4 text-sm text-muted-foreground">
+                              {[wh.city, wh.country].filter(Boolean).join(", ") || "-"}
+                            </td>
+                            <td className="p-4 text-sm text-muted-foreground">
+                              {wh.contactPerson || "-"}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingWarehouse(wh);
+                                    setWarehouseForm({
+                                      name: wh.name || "",
+                                      code: wh.code || "",
+                                      address: wh.address || "",
+                                      city: wh.city || "",
+                                      country: wh.country || "",
+                                      contactPerson: wh.contactPerson || "",
+                                      contactPhone: wh.contactPhone || "",
+                                    });
+                                    setShowWarehouseDialog(true);
+                                  }}
+                                >
+                                  <Edit className="w-4 h-4 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => {
+                                    if (confirm("Are you sure you want to delete this warehouse?")) {
+                                      deleteWarehouse.mutate({ id: wh.id });
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Archive Tab */}
           <TabsContent value="archive" className="space-y-4">
             <Card>
@@ -1202,6 +1451,137 @@ export default function Products() {
                 <Button variant="outline" onClick={() => setShowWarrantyDialog(false)}>Cancel</Button>
                 <Button onClick={() => editingWarranty ? updateWarranty.mutate({ id: editingWarranty.id, ...warrantyForm }) : createWarranty.mutate(warrantyForm)}>
                   {editingWarranty ? "Update" : "Create"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Warehouse Dialog */}
+        <Dialog open={showWarehouseDialog} onOpenChange={setShowWarehouseDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{editingWarehouse ? "Edit Warehouse" : "Add Warehouse"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Name *</label>
+                <Input value={warehouseForm.name} onChange={(e) => setWarehouseForm({ ...warehouseForm, name: e.target.value })} className="mt-1" placeholder="e.g., Main Warehouse" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Code</label>
+                <Input value={warehouseForm.code} onChange={(e) => setWarehouseForm({ ...warehouseForm, code: e.target.value })} className="mt-1" placeholder="e.g., WH-001" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Address</label>
+                <Input value={warehouseForm.address} onChange={(e) => setWarehouseForm({ ...warehouseForm, address: e.target.value })} className="mt-1" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">City</label>
+                  <Input value={warehouseForm.city} onChange={(e) => setWarehouseForm({ ...warehouseForm, city: e.target.value })} className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Country</label>
+                  <Input value={warehouseForm.country} onChange={(e) => setWarehouseForm({ ...warehouseForm, country: e.target.value })} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Contact Person</label>
+                  <Input value={warehouseForm.contactPerson} onChange={(e) => setWarehouseForm({ ...warehouseForm, contactPerson: e.target.value })} className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Contact Phone</label>
+                  <Input value={warehouseForm.contactPhone} onChange={(e) => setWarehouseForm({ ...warehouseForm, contactPhone: e.target.value })} className="mt-1" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowWarehouseDialog(false)}>Cancel</Button>
+                <Button onClick={() => editingWarehouse ? updateWarehouse.mutate({ id: editingWarehouse.id, ...warehouseForm }) : createWarehouse.mutate(warehouseForm)}>
+                  {editingWarehouse ? "Update" : "Create"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Stock Adjustment Dialog */}
+        <Dialog open={showStockAdjustDialog} onOpenChange={setShowStockAdjustDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Adjust Stock - {selectedProductForStock?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Warehouse *</label>
+                <select 
+                  value={stockAdjustForm.warehouseId || ""} 
+                  onChange={(e) => setStockAdjustForm({ ...stockAdjustForm, warehouseId: parseInt(e.target.value) || undefined })} 
+                  className="mt-1 w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                >
+                  <option value="">Select Warehouse</option>
+                  {warehouses.map((w: any) => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Transaction Type *</label>
+                <select 
+                  value={stockAdjustForm.transactionType} 
+                  onChange={(e) => setStockAdjustForm({ ...stockAdjustForm, transactionType: e.target.value })} 
+                  className="mt-1 w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                >
+                  <option value="opening_stock">Opening Stock</option>
+                  <option value="purchase">Purchase (Add)</option>
+                  <option value="sale">Sale (Remove)</option>
+                  <option value="adjustment">Adjustment</option>
+                  <option value="transfer_in">Transfer In</option>
+                  <option value="transfer_out">Transfer Out</option>
+                  <option value="return">Return</option>
+                  <option value="damage">Damage</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Quantity Change *</label>
+                <Input 
+                  type="number" 
+                  value={stockAdjustForm.quantityChange} 
+                  onChange={(e) => setStockAdjustForm({ ...stockAdjustForm, quantityChange: parseFloat(e.target.value) || 0 })} 
+                  className="mt-1" 
+                  placeholder="Use positive to add, negative to remove"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Use positive numbers to add stock, negative to remove</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Notes</label>
+                <textarea 
+                  value={stockAdjustForm.notes} 
+                  onChange={(e) => setStockAdjustForm({ ...stockAdjustForm, notes: e.target.value })} 
+                  className="mt-1 w-full h-20 px-3 py-2 rounded-md border border-input bg-background text-sm resize-none" 
+                  placeholder="Reason for adjustment..."
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowStockAdjustDialog(false)}>Cancel</Button>
+                <Button 
+                  onClick={() => {
+                    if (!stockAdjustForm.warehouseId || !selectedProductForStock) {
+                      toast.error("Please select a warehouse");
+                      return;
+                    }
+                    adjustStock.mutate({
+                      productId: selectedProductForStock.id,
+                      warehouseId: stockAdjustForm.warehouseId,
+                      quantityChange: stockAdjustForm.quantityChange,
+                      transactionType: stockAdjustForm.transactionType as any,
+                      notes: stockAdjustForm.notes || undefined,
+                    });
+                  }}
+                  disabled={adjustStock.isPending}
+                >
+                  {adjustStock.isPending ? "Adjusting..." : "Adjust Stock"}
                 </Button>
               </div>
             </div>

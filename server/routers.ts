@@ -2656,6 +2656,131 @@ Provide 2-3 actionable business insights.`;
         await db.restoreProduct(input.id);
         return { success: true };
       }),
+
+    // ============ INVENTORY MANAGEMENT ============
+    
+    // Warehouses
+    getWarehouses: protectedProcedure.query(async () => {
+      return await db.getWarehouses();
+    }),
+
+    getAllWarehouses: protectedProcedure.query(async () => {
+      return await db.getAllWarehouses();
+    }),
+
+    createWarehouse: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        code: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        country: z.string().optional(),
+        contactPerson: z.string().optional(),
+        contactPhone: z.string().optional(),
+        isDefault: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createWarehouse(input as any);
+        return { success: true };
+      }),
+
+    updateWarehouse: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        code: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        country: z.string().optional(),
+        contactPerson: z.string().optional(),
+        contactPhone: z.string().optional(),
+        isDefault: z.number().optional(),
+        isActive: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateWarehouse(id, data as any);
+        return { success: true };
+      }),
+
+    deleteWarehouse: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteWarehouse(input.id);
+        return { success: true };
+      }),
+
+    // Inventory
+    getProductsWithInventory: protectedProcedure.query(async () => {
+      return await db.getProductsWithInventory();
+    }),
+
+    getProductInventory: protectedProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getProductInventory(input.productId);
+      }),
+
+    getInventoryByWarehouse: protectedProcedure
+      .input(z.object({ warehouseId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getInventoryByWarehouse(input.warehouseId);
+      }),
+
+    getAllInventoryWithProducts: protectedProcedure.query(async () => {
+      return await db.getAllInventoryWithProducts();
+    }),
+
+    updateInventory: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        warehouseId: z.number(),
+        quantity: z.string(),
+        minStockLevel: z.string().optional(),
+        maxStockLevel: z.string().optional(),
+        reorderPoint: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.createOrUpdateInventory({
+          productId: input.productId,
+          warehouseId: input.warehouseId,
+          quantity: input.quantity,
+          minStockLevel: input.minStockLevel || undefined,
+          maxStockLevel: input.maxStockLevel || undefined,
+          reorderPoint: input.reorderPoint || undefined,
+        } as any);
+        return { success: true };
+      }),
+
+    adjustStock: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        warehouseId: z.number(),
+        quantityChange: z.number(),
+        transactionType: z.enum(["purchase", "sale", "adjustment", "transfer_in", "transfer_out", "return", "damage", "opening_stock"]),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateInventoryQuantity(
+          input.productId,
+          input.warehouseId,
+          input.quantityChange,
+          input.transactionType,
+          ctx.user?.id,
+          input.notes
+        );
+        return { success: true };
+      }),
+
+    getInventoryTransactions: protectedProcedure
+      .input(z.object({
+        productId: z.number().optional(),
+        warehouseId: z.number().optional(),
+        limit: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getInventoryTransactions(input.productId, input.warehouseId, input.limit);
+      }),
   }),
 });
 

@@ -58,6 +58,9 @@ import {
   productWarranties, InsertProductWarranty,
   sellingPriceGroups, InsertSellingPriceGroup,
   productVariations, InsertProductVariation,
+  warehouses, InsertWarehouse,
+  productInventory, InsertProductInventory,
+  inventoryTransactions, InsertInventoryTransaction,
 } from "../drizzle/schema";
 const ENV = { ownerOpenId: process.env.OWNER_OPEN_ID || '' };
 
@@ -2937,6 +2940,207 @@ export async function updateProductFull(id: number, data: Partial<InsertSalesPro
     .where(eq(salesProducts.id, id))
     .returning();
   return result[0];
+}
+
+// ============ INVENTORY MANAGEMENT ============
+
+// Warehouses
+export async function getWarehouses() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(warehouses).where(eq(warehouses.isActive, 1)).orderBy(warehouses.name);
+}
+
+export async function getAllWarehouses() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(warehouses).orderBy(warehouses.name);
+}
+
+export async function getWarehouse(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(warehouses).where(eq(warehouses.id, id));
+  return result[0] || null;
+}
+
+export async function createWarehouse(data: InsertWarehouse) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(warehouses).values(data).returning();
+  return result[0];
+}
+
+export async function updateWarehouse(id: number, data: Partial<InsertWarehouse>) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.update(warehouses)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(warehouses.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteWarehouse(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(warehouses).where(eq(warehouses.id, id));
+}
+
+// Product Inventory
+export async function getProductInventory(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productInventory).where(eq(productInventory.productId, productId));
+}
+
+export async function getInventoryByWarehouse(warehouseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(productInventory).where(eq(productInventory.warehouseId, warehouseId));
+}
+
+export async function getProductInventoryItem(productId: number, warehouseId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(productInventory)
+    .where(and(eq(productInventory.productId, productId), eq(productInventory.warehouseId, warehouseId)));
+  return result[0] || null;
+}
+
+export async function createOrUpdateInventory(data: InsertProductInventory) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Check if inventory exists for this product-warehouse combo
+  const existing = await getProductInventoryItem(data.productId, data.warehouseId);
+  
+  if (existing) {
+    const result = await db.update(productInventory)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(productInventory.id, existing.id))
+      .returning();
+    return result[0];
+  } else {
+    const result = await db.insert(productInventory).values(data).returning();
+    return result[0];
+  }
+}
+
+export async function updateInventoryQuantity(productId: number, warehouseId: number, quantityChange: number, transactionType: string, userId?: number, notes?: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get current inventory
+  let inventory = await getProductInventoryItem(productId, warehouseId);
+  const previousQty = inventory ? parseFloat(inventory.quantity || "0") : 0;
+  const newQty = previousQty + quantityChange;
+  
+  // Create or update inventory record
+  if (inventory) {
+    await db.update(productInventory)
+      .set({ quantity: newQty.toString(), updatedAt: new Date() })
+      .where(eq(productInventory.id, inventory.id));
+  } else {
+    await db.insert(productInventory).values({
+      productId,
+      warehouseId,
+      quantity: newQty.toString(),
+    });
+  }
+  
+  // Record transaction
+  await db.insert(inventoryTransactions).values({
+    productId,
+    warehouseId,
+    transactionType: transactionType as any,
+    quantity: Math.abs(quantityChange).toString(),
+    previousQuantity: previousQty.toString(),
+    newQuantity: newQty.toString(),
+    performedBy: userId,
+    notes,
+  });
+  
+  return { previousQty, newQty };
+}
+
+export async function getAllInventoryWithProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.execute(sql`
+    SELECT 
+      pi.id,
+      pi.product_id as "productId",
+      pi.warehouse_id as "warehouseId",
+      pi.quantity,
+      pi.reserved_quantity as "reservedQuantity",
+      pi.min_stock_level as "minStockLevel",
+      pi.max_stock_level as "maxStockLevel",
+      pi.reorder_point as "reorderPoint",
+      sp.name as "productName",
+      sp.sku,
+      w.name as "warehouseName"
+    FROM product_inventory pi
+    JOIN sales_products sp ON pi.product_id = sp.id
+    JOIN warehouses w ON pi.warehouse_id = w.id
+    WHERE sp.archived_at IS NULL
+    ORDER BY sp.name, w.name
+  `);
+  
+  return result.rows;
+}
+
+export async function getProductsWithInventory() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.execute(sql`
+    SELECT 
+      sp.*,
+      COALESCE(SUM(CAST(pi.quantity AS DECIMAL)), 0) as "totalStock",
+      COALESCE(SUM(CAST(pi.reserved_quantity AS DECIMAL)), 0) as "totalReserved",
+      (
+        SELECT STRING_AGG(w.name || ':' || COALESCE(pi2.quantity, '0'), ', ')
+        FROM warehouses w
+        LEFT JOIN product_inventory pi2 ON pi2.warehouse_id = w.id AND pi2.product_id = sp.id
+        WHERE w.is_active = 1
+      ) as "stockByLocation"
+    FROM sales_products sp
+    LEFT JOIN product_inventory pi ON pi.product_id = sp.id
+    WHERE sp.archived_at IS NULL
+    GROUP BY sp.id
+    ORDER BY sp.name
+  `);
+  
+  return result.rows;
+}
+
+// Inventory Transactions
+export async function getInventoryTransactions(productId?: number, warehouseId?: number, limit?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select().from(inventoryTransactions);
+  
+  if (productId && warehouseId) {
+    query = query.where(and(
+      eq(inventoryTransactions.productId, productId),
+      eq(inventoryTransactions.warehouseId, warehouseId)
+    )) as any;
+  } else if (productId) {
+    query = query.where(eq(inventoryTransactions.productId, productId)) as any;
+  } else if (warehouseId) {
+    query = query.where(eq(inventoryTransactions.warehouseId, warehouseId)) as any;
+  }
+  
+  query = query.orderBy(desc(inventoryTransactions.createdAt)) as any;
+  
+  if (limit) {
+    query = query.limit(limit) as any;
+  }
+  
+  return await query;
 }
 
 

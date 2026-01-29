@@ -368,6 +368,82 @@ export type SalesProduct = typeof salesProducts.$inferSelect;
 export type InsertSalesProduct = typeof salesProducts.$inferInsert;
 
 /**
+ * Warehouses / Locations table
+ */
+export const warehouses = pgTable("warehouses", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  contactPerson: varchar("contact_person", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  isDefault: integer("is_default").default(0),
+  isActive: integer("is_active").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Warehouse = typeof warehouses.$inferSelect;
+export type InsertWarehouse = typeof warehouses.$inferInsert;
+
+/**
+ * Product Inventory - Stock levels per product per warehouse
+ */
+export const productInventory = pgTable("product_inventory", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 2 }).notNull().default("0"),
+  reservedQuantity: decimal("reserved_quantity", { precision: 15, scale: 2 }).default("0"),
+  minStockLevel: decimal("min_stock_level", { precision: 15, scale: 2 }),
+  maxStockLevel: decimal("max_stock_level", { precision: 15, scale: 2 }),
+  reorderPoint: decimal("reorder_point", { precision: 15, scale: 2 }),
+  lastStockCheck: timestamp("last_stock_check"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ProductInventory = typeof productInventory.$inferSelect;
+export type InsertProductInventory = typeof productInventory.$inferInsert;
+
+/**
+ * Inventory transaction type enum
+ */
+export const inventoryTransactionTypeEnum = pgEnum("inventory_transaction_type", [
+  "purchase",
+  "sale",
+  "adjustment",
+  "transfer_in",
+  "transfer_out",
+  "return",
+  "damage",
+  "opening_stock",
+]);
+
+/**
+ * Inventory Transactions - Stock movement history
+ */
+export const inventoryTransactions = pgTable("inventory_transactions", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  transactionType: inventoryTransactionTypeEnum("transaction_type").notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 2 }).notNull(),
+  previousQuantity: decimal("previous_quantity", { precision: 15, scale: 2 }),
+  newQuantity: decimal("new_quantity", { precision: 15, scale: 2 }),
+  referenceType: varchar("reference_type", { length: 50 }),
+  referenceId: integer("reference_id"),
+  notes: text("notes"),
+  performedBy: integer("performed_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
+export type InsertInventoryTransaction = typeof inventoryTransactions.$inferInsert;
+
+/**
  * Sales tracking table
  */
 export const salesTracking = pgTable("sales_tracking", {

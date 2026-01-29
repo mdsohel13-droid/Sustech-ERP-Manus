@@ -25,6 +25,18 @@ drizzle/              # Database schema and migrations
   schema.ts           # Drizzle schema definitions
 ```
 
+## Recent Changes (Jan 29, 2026)
+- **Products & Inventory Integration**: Integrated inventory management into Products module
+  - Added `warehouses` table for storage locations
+  - Added `product_inventory` table for stock levels per product per warehouse
+  - Added `inventory_transactions` table for stock movement history
+  - Enhanced Products table with Stock and Location columns
+  - Added Inventory tab showing stock levels by product and warehouse
+  - Added Warehouses tab for managing storage locations
+  - Added Stock Adjustment dialog for recording stock changes (purchases, sales, adjustments, transfers, etc.)
+- Products module now uses only dynamic categories (static category enum deprecated)
+- Fixed product creation with proper handling of optional fields
+
 ## Recent Changes (Jan 28, 2026)
 - Converted database from MySQL to PostgreSQL
 - Updated Drizzle ORM driver from mysql2 to pg
@@ -35,7 +47,7 @@ drizzle/              # Database schema and migrations
 - **Added Zod API validation** for all financial mutations (amounts, quantities, discounts)
 
 ## Database
-- 58 tables including: accounts_payable, accounts_receivable, customers, daily_sales, employees, projects, quotation_items, etc.
+- 67 tables including: accounts_payable, accounts_receivable, customers, daily_sales, employees, projects, quotation_items, warehouses, product_inventory, inventory_transactions, etc.
 - Schema defined in `drizzle/schema.ts`
 - Use `npm run db:push` to sync schema changes
 
