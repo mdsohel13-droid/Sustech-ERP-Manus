@@ -9,6 +9,7 @@ import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import * as db from "./db";
 import { generateQuotationPDF, generateInvoicePDF } from "./_core/pdfGenerator";
+import * as scm from "./scm";
 
 // Password strength validation
 function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
@@ -3710,6 +3711,192 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
       .mutation(async ({ input }) => {
         const { employeeId, ...data } = input;
         return await db.updateEmployeeTracker(employeeId, data);
+      }),
+  }),
+
+  // SCM (Supply Chain Management) Module
+  scm: router({
+    // ATP (Available-to-Promise) endpoints
+    calculateATP: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        warehouseId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await scm.calculateATP(input.productId, input.warehouseId);
+      }),
+
+    getCurrentStock: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        warehouseId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await scm.getCurrentStock(input.productId, input.warehouseId);
+      }),
+
+    reserveStock: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        warehouseId: z.number(),
+        salesOrderId: z.number(),
+        salesOrderItemId: z.number(),
+        quantity: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scm.reserveStock(
+          input.productId,
+          input.warehouseId,
+          input.salesOrderId,
+          input.salesOrderItemId,
+          input.quantity,
+          ctx.user?.id
+        );
+      }),
+
+    releaseReservation: protectedProcedure
+      .input(z.object({
+        reservationId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scm.releaseReservation(input.reservationId, ctx.user?.id);
+      }),
+
+    consumeReservation: protectedProcedure
+      .input(z.object({
+        reservationId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        return await scm.consumeReservation(input.reservationId);
+      }),
+
+    // Replenishment & EOQ endpoints
+    checkReplenishment: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        warehouseId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await scm.checkReplenishment(input.productId, input.warehouseId);
+      }),
+
+    checkAllReplenishments: protectedProcedure
+      .input(z.object({
+        warehouseId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await scm.checkAllReplenishments(input?.warehouseId);
+      }),
+
+    createReplenishmentRequest: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        warehouseId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scm.createReplenishmentRequest(
+          input.productId,
+          input.warehouseId,
+          ctx.user?.id
+        );
+      }),
+
+    approveReplenishmentRequest: managerProcedure
+      .input(z.object({
+        requestId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scm.approveReplenishmentRequest(input.requestId, ctx.user!.id);
+      }),
+
+    convertToPurchaseOrder: managerProcedure
+      .input(z.object({
+        requestId: z.number(),
+        vendorId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scm.convertToPurchaseOrder(
+          input.requestId,
+          input.vendorId,
+          ctx.user!.id
+        );
+      }),
+
+    // Project Costing & WBS endpoints
+    createWbs: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+        wbsCode: z.string(),
+        name: z.string(),
+        description: z.string().optional(),
+        parentWbsId: z.number().optional(),
+        budgetAmount: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scm.createWbs(
+          input.projectId,
+          input.wbsCode,
+          input.name,
+          input.description,
+          input.parentWbsId,
+          input.budgetAmount,
+          ctx.user?.id
+        );
+      }),
+
+    getWbsTree: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await scm.getWbsTree(input.projectId);
+      }),
+
+    getProjectCostSummary: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await scm.getProjectCostSummary(input.projectId);
+      }),
+
+    consumeMaterialForProject: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+        productId: z.number(),
+        warehouseId: z.number(),
+        quantity: z.number(),
+        wbsId: z.number().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scm.consumeMaterialForProject(
+          input.projectId,
+          input.productId,
+          input.warehouseId,
+          input.quantity,
+          input.wbsId,
+          ctx.user?.id,
+          input.notes
+        );
+      }),
+
+    getProjectMaterialHistory: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+        wbsId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await scm.getProjectMaterialHistory(input.projectId, input.wbsId);
+      }),
+
+    updateWbsBudget: protectedProcedure
+      .input(z.object({
+        wbsId: z.number(),
+        newBudget: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        return await scm.updateWbsBudget(input.wbsId, input.newBudget);
       }),
   }),
 });
