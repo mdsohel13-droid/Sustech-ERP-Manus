@@ -1,0 +1,63 @@
+**ACT AS:** Senior ERP Architect and Full-Stack Developer with 35+ years of experience in Supply Chain Systems.
+
+**CONTEXT:**
+I have an existing ERP codebase in this Replit project. We are now adding a high-performance "SCM" (Supply Chain Management) module. This module must not be a standalone silo; it must integrate deeply with existing Logic (Auth, Base Settings).
+
+**GOAL:**
+Create a "Modern SCM" module that integrates Sales, Product, Procurement, Inventory, Accounting, and Projects.
+**Design Philosophy:** "Slim Figure, Powerful Usage." Avoid data redundancy. Use an Event-Driven architecture (e.g., A sale triggers an inventory reservation immediately).
+
+---
+
+### PHASE 1: DATABASE SCHEMA & LOGIC (The Backbone)
+
+Please analyze the current database structure. Then, create/extend the following models using the existing ORM/Database technology:
+
+1.  **Product/Item Master (The Golden Thread):**
+    * Attributes: SKU, Dynamic Attributes (JSON for Size/Color), Valuation Method (FIFO/Avg), Type (Stockable/Service/Consumable).
+    * Crucial Links: `linked_expense_account`, `linked_income_account`.
+
+2.  **Inventory Ledger (Perpetual Inventory):**
+    * Do not just store "Quantity." Store moves.
+    * Columns: `item_id`, `warehouse_id`, `qty_change`, `valuation_rate`, `batch_no`, `project_id` (nullable), `reference_doc` (Polymorphic: Sales Order/PO/Project).
+    * Computed Field: Current Stock = Sum of `qty_change`.
+
+3.  **Procurement (3-Way Match Ready):**
+    * `PurchaseOrder`: Status flow [Draft -> Approval -> Issued -> Received -> Closed].
+    * `PurchaseReceipt (GRN)`: Must link to PO. Updates Inventory Ledger.
+    * `VendorBill`: Must link to PO and GRN for validation.
+
+4.  **Sales & Demand:**
+    * `SalesOrder`: Must support "ATP" (Available to Promise). It reserves stock but doesn't deduct it until delivery.
+
+---
+
+### PHASE 2: CORE BUSINESS LOGIC (The Brains)
+
+Implement the following backend service functions/methods:
+
+1.  **calculate_atp(item_id):**
+    * Logic: (Current Stock - Reserved Qty + Incoming POs). Return the specific date stock will be available.
+
+2.  **auto_replenishment_check(item_id):**
+    * Implement the EOQ (Economic Order Quantity) formula logic: `sqrt((2 * demand * order_cost) / holding_cost)`.
+    * If Stock < Min_Level, trigger a `create_draft_po` function.
+
+3.  **project_costing(project_id, item_id, qty):**
+    * When inventory is consumed for a Project, move stock out of Warehouse -> Into "Project WIP" and book the cost to the specific Project WBS.
+
+---
+
+### PHASE 3: USER INTERFACE (The Experience)
+
+Create a "Command Center" Dashboard view for the SCM module:
+1.  **Metrics:** Top cards showing "Inventory Value" (Real-time sum of ledger) and "Pending Approvals."
+2.  **Visual Status:** Use color-coded badges/progress bars for PO and SO lifecycles (e.g., Blue for 'Issued', Green for 'Received').
+3.  **Smart Tables:** Allow inline editing for Purchase Request quantities.
+
+---
+
+**EXECUTION INSTRUCTION:**
+1.  First, scan the existing files to understand the current tech stack (Language, DB, Framework).
+2.  Propose the **Folder Structure** for this new SCM module so it fits the existing pattern.
+3.  Write the **Database Models** first. Stop and ask for my confirmation before writing the logic.

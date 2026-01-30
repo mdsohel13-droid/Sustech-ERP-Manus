@@ -29,6 +29,13 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
   const [linkARDialogOpen, setLinkARDialogOpen] = useState(false);
   const [linkAPDialogOpen, setLinkAPDialogOpen] = useState(false);
 
+  const [txnType, setTxnType] = useState("");
+  const [txnCurrency, setTxnCurrency] = useState("BDT");
+  const [typeCategory, setTypeCategory] = useState<"income" | "expense">("expense");
+  const [typeColor, setTypeColor] = useState("gray");
+  const [arCurrency, setArCurrency] = useState("BDT");
+  const [apCurrency, setApCurrency] = useState("BDT");
+
   const utils = trpc.useUtils();
   const { data: transactions } = trpc.projects.getTransactions.useQuery({ projectId }, { enabled: open });
   const { data: summary } = trpc.projects.getFinancialSummary.useQuery({ projectId }, { enabled: open });
@@ -131,9 +138,9 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
     const data = {
       projectId,
       transactionDate: formData.get("transactionDate") as string,
-      transactionType: formData.get("transactionType") as string,
+      transactionType: txnType,
       amount: formData.get("amount") as string,
-      currency: formData.get("currency") as string,
+      currency: txnCurrency,
       description: formData.get("description") as string,
       category: formData.get("category") as string,
       invoiceNumber: formData.get("invoiceNumber") as string,
@@ -146,15 +153,28 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
     }
   };
 
+  const openTransactionDialog = (transaction?: any) => {
+    if (transaction) {
+      setEditingTransaction(transaction);
+      setTxnType(transaction.transactionType || "");
+      setTxnCurrency(transaction.currency || "BDT");
+    } else {
+      setEditingTransaction(null);
+      setTxnType("");
+      setTxnCurrency("BDT");
+    }
+    setTransactionDialogOpen(true);
+  };
+
   const handleTypeSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = {
       name: formData.get("name") as string,
       code: formData.get("code") as string,
-      category: formData.get("category") as "income" | "expense",
+      category: typeCategory,
       description: formData.get("description") as string,
-      color: formData.get("color") as string,
+      color: typeColor,
     };
 
     if (editingType) {
@@ -162,6 +182,18 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
     } else {
       createTypeMutation.mutate(data);
     }
+  };
+
+  const openEditType = (type: any) => {
+    setEditingType(type);
+    setTypeCategory(type.category || "expense");
+    setTypeColor(type.color || "gray");
+  };
+
+  const clearEditType = () => {
+    setEditingType(null);
+    setTypeCategory("expense");
+    setTypeColor("gray");
   };
 
   const handleARSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -172,7 +204,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
       amount: formData.get("amount") as string,
       dueDate: formData.get("dueDate") as string,
       invoiceNumber: formData.get("invoiceNumber") as string,
-      notes: `Project: ${projectName} | Currency: ${formData.get("currency") || "BDT"}\n${formData.get("notes") || ""}`,
+      notes: `Project: ${projectName} | Currency: ${arCurrency}\n${formData.get("notes") || ""}`,
     });
   };
 
@@ -184,8 +216,18 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
       amount: formData.get("amount") as string,
       dueDate: formData.get("dueDate") as string,
       invoiceNumber: formData.get("invoiceNumber") as string,
-      notes: `Project: ${projectName} | Currency: ${formData.get("currency") || "BDT"}\n${formData.get("notes") || ""}`,
+      notes: `Project: ${projectName} | Currency: ${apCurrency}\n${formData.get("notes") || ""}`,
     });
+  };
+
+  const openARDialog = () => {
+    setArCurrency("BDT");
+    setLinkARDialogOpen(true);
+  };
+
+  const openAPDialog = () => {
+    setApCurrency("BDT");
+    setLinkAPDialogOpen(true);
   };
 
   const getTypeColor = (type: string) => {
@@ -587,8 +629,8 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="transactionType">Type</Label>
-                  <Select name="transactionType" defaultValue={editingTransaction?.transactionType || ""} required>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select value={txnType} onValueChange={setTxnType} required>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
                       {transactionTypes?.map(type => (
                         <SelectItem key={type.id} value={type.code}>{type.name}</SelectItem>
@@ -613,8 +655,8 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="currency">Currency</Label>
-                  <Select name="currency" defaultValue={editingTransaction?.currency || "BDT"} required>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select value={txnCurrency} onValueChange={setTxnCurrency} required>
+                    <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="BDT">BDT</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
