@@ -780,7 +780,7 @@ export default function Finance() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Aging Report</h2>
+          <h2 className="text-2xl font-bold">AR-AP</h2>
           <p className="text-muted-foreground">Accounts Receivable & Payable aging analysis</p>
         </div>
         <div className="flex gap-2">
@@ -1256,7 +1256,7 @@ export default function Finance() {
             onClick={() => setActiveTab('aging')}
           >
             <Clock className="w-4 h-4 mr-2" />
-            Aging Report
+            AR-AP
           </Button>
           <Button 
             variant={activeTab === 'forecasting' ? 'secondary' : 'ghost'} 
