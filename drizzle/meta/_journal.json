@@ -71,6 +71,13 @@
       "when": 1769793438793,
       "tag": "0009_real_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1769796658139,
+      "tag": "0010_worried_cyclops",
+      "breakpoints": true
     }
   ]
 }

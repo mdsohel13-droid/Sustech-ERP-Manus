@@ -1799,3 +1799,322 @@ export const employeeTracker = pgTable("employee_tracker", {
 
 export type EmployeeTracker = typeof employeeTracker.$inferSelect;
 export type InsertEmployeeTracker = typeof employeeTracker.$inferInsert;
+
+// ============ SCM MODULE - Supply Chain Management ============
+
+/**
+ * SCM Enums
+ */
+export const valuationMethodEnum = pgEnum("valuation_method", ["fifo", "average", "lifo"]);
+export const itemTypeEnum = pgEnum("item_type", ["stockable", "service", "consumable"]);
+export const salesOrderStatusEnum = pgEnum("sales_order_status", ["draft", "confirmed", "reserved", "partially_shipped", "shipped", "delivered", "cancelled"]);
+export const purchaseReceiptStatusEnum = pgEnum("purchase_receipt_status", ["draft", "posted", "cancelled"]);
+export const vendorBillStatusEnum = pgEnum("vendor_bill_status", ["draft", "pending_approval", "approved", "paid", "cancelled"]);
+export const matchStatusEnum = pgEnum("match_status", ["unmatched", "partial", "matched"]);
+export const reservationStatusEnum = pgEnum("reservation_status", ["active", "released", "consumed", "expired"]);
+export const scmLedgerDocTypeEnum = pgEnum("scm_ledger_doc_type", ["sales_order", "purchase_receipt", "adjustment", "transfer", "project_consumption", "opening_balance"]);
+
+/**
+ * SCM Product Extensions - Additional fields for salesProducts
+ * These will be added to the existing salesProducts table
+ */
+export const scmProductExtensions = pgTable("scm_product_extensions", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().unique(),
+  valuationMethod: valuationMethodEnum("valuation_method").default("average"),
+  itemType: itemTypeEnum("item_type").default("stockable"),
+  dynamicAttributes: text("dynamic_attributes"), // JSON for Size/Color variants
+  linkedExpenseAccountId: integer("linked_expense_account_id"),
+  linkedIncomeAccountId: integer("linked_income_account_id"),
+  leadTimeDays: integer("lead_time_days").default(0),
+  orderCost: decimal("order_cost", { precision: 15, scale: 2 }).default("0"), // For EOQ calculation
+  holdingCostPercent: decimal("holding_cost_percent", { precision: 5, scale: 2 }).default("0"), // Annual % of item value
+  annualDemand: decimal("annual_demand", { precision: 15, scale: 2 }).default("0"), // For EOQ calculation
+  safetyStock: decimal("safety_stock", { precision: 15, scale: 2 }).default("0"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ScmProductExtension = typeof scmProductExtensions.$inferSelect;
+export type InsertScmProductExtension = typeof scmProductExtensions.$inferInsert;
+
+/**
+ * SCM Inventory Ledger - Perpetual Inventory Tracking
+ * Every stock move is recorded as a ledger entry
+ * Current stock = SUM(qty_change) per item/warehouse
+ */
+export const scmInventoryLedger = pgTable("scm_inventory_ledger", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  qtyChange: decimal("qty_change", { precision: 15, scale: 4 }).notNull(), // +/- quantity
+  valuationRate: decimal("valuation_rate", { precision: 15, scale: 4 }).notNull(),
+  valuationAmount: decimal("valuation_amount", { precision: 15, scale: 2 }).notNull(),
+  batchNo: varchar("batch_no", { length: 100 }),
+  serialNo: varchar("serial_no", { length: 100 }),
+  projectId: integer("project_id"), // For project costing - WBS allocation
+  referenceDocType: scmLedgerDocTypeEnum("reference_doc_type").notNull(),
+  referenceDocId: integer("reference_doc_id"),
+  notes: text("notes"),
+  performedBy: integer("performed_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type ScmInventoryLedger = typeof scmInventoryLedger.$inferSelect;
+export type InsertScmInventoryLedger = typeof scmInventoryLedger.$inferInsert;
+
+/**
+ * Sales Orders - ATP (Available to Promise) Ready
+ */
+export const salesOrders = pgTable("sales_orders", {
+  id: serial("id").primaryKey(),
+  soNumber: varchar("so_number", { length: 50 }).notNull().unique(),
+  customerId: integer("customer_id"),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  projectId: integer("project_id"), // Link to project for project sales
+  orderDate: date("order_date").notNull(),
+  expectedDeliveryDate: date("expected_delivery_date"),
+  actualDeliveryDate: date("actual_delivery_date"),
+  status: salesOrderStatusEnum("status").default("draft"),
+  subtotal: decimal("subtotal", { precision: 15, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  discount: decimal("discount", { precision: 15, scale: 2 }).default("0"),
+  shippingCost: decimal("shipping_cost", { precision: 15, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).default("0"),
+  currency: varchar("currency", { length: 3 }).default("BDT"),
+  paymentTerms: varchar("payment_terms", { length: 100 }),
+  shippingAddress: text("shipping_address"),
+  billingAddress: text("billing_address"),
+  notes: text("notes"),
+  internalNotes: text("internal_notes"),
+  warehouseId: integer("warehouse_id"), // Default fulfillment warehouse
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  createdBy: integer("created_by"),
+  isArchived: boolean("is_archived").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SalesOrder = typeof salesOrders.$inferSelect;
+export type InsertSalesOrder = typeof salesOrders.$inferInsert;
+
+/**
+ * Sales Order Items - Line items with ATP tracking
+ */
+export const salesOrderItems = pgTable("sales_order_items", {
+  id: serial("id").primaryKey(),
+  salesOrderId: integer("sales_order_id").notNull(),
+  productId: integer("product_id").notNull(),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  description: text("description"),
+  quantity: decimal("quantity", { precision: 15, scale: 4 }).notNull(),
+  reservedQty: decimal("reserved_qty", { precision: 15, scale: 4 }).default("0"),
+  shippedQty: decimal("shipped_qty", { precision: 15, scale: 4 }).default("0"),
+  unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
+  discount: decimal("discount", { precision: 15, scale: 2 }).default("0"),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  lineTotal: decimal("line_total", { precision: 15, scale: 2 }).notNull(),
+  warehouseId: integer("warehouse_id"), // Override warehouse per line
+  atpDate: date("atp_date"), // Calculated available-to-promise date
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SalesOrderItem = typeof salesOrderItems.$inferSelect;
+export type InsertSalesOrderItem = typeof salesOrderItems.$inferInsert;
+
+/**
+ * Purchase Receipts (GRN - Goods Received Note)
+ * Links to Purchase Order for 3-Way Matching
+ */
+export const purchaseReceipts = pgTable("purchase_receipts", {
+  id: serial("id").primaryKey(),
+  grnNumber: varchar("grn_number", { length: 50 }).notNull().unique(),
+  purchaseOrderId: integer("purchase_order_id").notNull(),
+  vendorId: integer("vendor_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  receivedDate: date("received_date").notNull(),
+  status: purchaseReceiptStatusEnum("status").default("draft"),
+  notes: text("notes"),
+  receivedBy: integer("received_by"),
+  postedAt: timestamp("posted_at"),
+  postedBy: integer("posted_by"),
+  isArchived: boolean("is_archived").default(false),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type PurchaseReceipt = typeof purchaseReceipts.$inferSelect;
+export type InsertPurchaseReceipt = typeof purchaseReceipts.$inferInsert;
+
+/**
+ * Purchase Receipt Items - Line items received
+ */
+export const purchaseReceiptItems = pgTable("purchase_receipt_items", {
+  id: serial("id").primaryKey(),
+  purchaseReceiptId: integer("purchase_receipt_id").notNull(),
+  purchaseOrderItemId: integer("purchase_order_item_id"),
+  productId: integer("product_id").notNull(),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  qtyOrdered: decimal("qty_ordered", { precision: 15, scale: 4 }).notNull(),
+  qtyReceived: decimal("qty_received", { precision: 15, scale: 4 }).notNull(),
+  qtyRejected: decimal("qty_rejected", { precision: 15, scale: 4 }).default("0"),
+  valuationRate: decimal("valuation_rate", { precision: 15, scale: 4 }).notNull(),
+  valuationAmount: decimal("valuation_amount", { precision: 15, scale: 2 }).notNull(),
+  batchNo: varchar("batch_no", { length: 100 }),
+  serialNo: varchar("serial_no", { length: 100 }),
+  expiryDate: date("expiry_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type PurchaseReceiptItem = typeof purchaseReceiptItems.$inferSelect;
+export type InsertPurchaseReceiptItem = typeof purchaseReceiptItems.$inferInsert;
+
+/**
+ * Vendor Bills - For 3-Way Matching (PO -> GRN -> Bill)
+ */
+export const vendorBills = pgTable("vendor_bills", {
+  id: serial("id").primaryKey(),
+  billNumber: varchar("bill_number", { length: 100 }).notNull(),
+  vendorId: integer("vendor_id").notNull(),
+  purchaseOrderId: integer("purchase_order_id"),
+  purchaseReceiptId: integer("purchase_receipt_id"),
+  billDate: date("bill_date").notNull(),
+  dueDate: date("due_date").notNull(),
+  status: vendorBillStatusEnum("status").default("draft"),
+  matchStatus: matchStatusEnum("match_status").default("unmatched"),
+  subtotal: decimal("subtotal", { precision: 15, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  discount: decimal("discount", { precision: 15, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).default("0"),
+  currency: varchar("currency", { length: 3 }).default("BDT"),
+  paidAmount: decimal("paid_amount", { precision: 15, scale: 2 }).default("0"),
+  paymentDate: date("payment_date"),
+  paymentReference: varchar("payment_reference", { length: 100 }),
+  notes: text("notes"),
+  attachments: text("attachments"), // JSON array of file URLs
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  isArchived: boolean("is_archived").default(false),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type VendorBill = typeof vendorBills.$inferSelect;
+export type InsertVendorBill = typeof vendorBills.$inferInsert;
+
+/**
+ * Vendor Bill Items - Line items on the bill
+ */
+export const vendorBillItems = pgTable("vendor_bill_items", {
+  id: serial("id").primaryKey(),
+  vendorBillId: integer("vendor_bill_id").notNull(),
+  purchaseReceiptItemId: integer("purchase_receipt_item_id"),
+  productId: integer("product_id"),
+  description: varchar("description", { length: 500 }).notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 4 }).notNull(),
+  unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  lineTotal: decimal("line_total", { precision: 15, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type VendorBillItem = typeof vendorBillItems.$inferSelect;
+export type InsertVendorBillItem = typeof vendorBillItems.$inferInsert;
+
+/**
+ * Stock Reservations - For ATP (Available to Promise)
+ * Reserves stock for Sales Orders without deducting until shipment
+ */
+export const stockReservations = pgTable("stock_reservations", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  salesOrderId: integer("sales_order_id").notNull(),
+  salesOrderItemId: integer("sales_order_item_id").notNull(),
+  reservedQty: decimal("reserved_qty", { precision: 15, scale: 4 }).notNull(),
+  status: reservationStatusEnum("status").default("active"),
+  reservedAt: timestamp("reserved_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  releasedAt: timestamp("released_at"),
+  releasedBy: integer("released_by"),
+  consumedAt: timestamp("consumed_at"),
+  notes: text("notes"),
+  createdBy: integer("created_by"),
+});
+
+export type StockReservation = typeof stockReservations.$inferSelect;
+export type InsertStockReservation = typeof stockReservations.$inferInsert;
+
+/**
+ * SCM Replenishment Requests - Auto-generated when stock falls below reorder point
+ */
+export const replenishmentRequests = pgTable("replenishment_requests", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  currentStock: decimal("current_stock", { precision: 15, scale: 4 }).notNull(),
+  reorderPoint: decimal("reorder_point", { precision: 15, scale: 4 }).notNull(),
+  suggestedQty: decimal("suggested_qty", { precision: 15, scale: 4 }).notNull(), // EOQ calculated
+  eoqCalculation: text("eoq_calculation"), // JSON with calculation details
+  status: varchar("status", { length: 50 }).default("pending"), // pending, approved, rejected, converted_to_po
+  purchaseOrderId: integer("purchase_order_id"), // If converted to PO
+  notes: text("notes"),
+  createdBy: integer("created_by"),
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ReplenishmentRequest = typeof replenishmentRequests.$inferSelect;
+export type InsertReplenishmentRequest = typeof replenishmentRequests.$inferInsert;
+
+/**
+ * Project WBS (Work Breakdown Structure) - For Project Costing
+ */
+export const projectWbs = pgTable("project_wbs", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  wbsCode: varchar("wbs_code", { length: 50 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  parentWbsId: integer("parent_wbs_id"), // For hierarchical WBS
+  budgetAmount: decimal("budget_amount", { precision: 15, scale: 2 }).default("0"),
+  actualCost: decimal("actual_cost", { precision: 15, scale: 2 }).default("0"),
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ProjectWbs = typeof projectWbs.$inferSelect;
+export type InsertProjectWbs = typeof projectWbs.$inferInsert;
+
+/**
+ * Project Material Consumption - Track inventory consumed for projects
+ */
+export const projectMaterialConsumption = pgTable("project_material_consumption", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  wbsId: integer("wbs_id"),
+  productId: integer("product_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 4 }).notNull(),
+  valuationRate: decimal("valuation_rate", { precision: 15, scale: 4 }).notNull(),
+  totalCost: decimal("total_cost", { precision: 15, scale: 2 }).notNull(),
+  ledgerEntryId: integer("ledger_entry_id"), // Link to scmInventoryLedger
+  consumptionDate: date("consumption_date").notNull(),
+  notes: text("notes"),
+  performedBy: integer("performed_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type ProjectMaterialConsumption = typeof projectMaterialConsumption.$inferSelect;
+export type InsertProjectMaterialConsumption = typeof projectMaterialConsumption.$inferInsert;
