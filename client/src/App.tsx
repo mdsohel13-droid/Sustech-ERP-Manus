@@ -29,6 +29,7 @@ import Finance from "./pages/Finance";
 import AccessDenied from "./pages/AccessDenied";
 import { HyperlinkAnalyticsDashboard } from "./pages/HyperlinkAnalyticsDashboard";
 import AIAssistant from "./pages/AIAssistant";
+import AISettings from "./pages/AISettings";
 import Analytics from "./pages/Analytics";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ToastProvider } from "./components/Toast";
@@ -150,6 +151,13 @@ function Router() {
       <Route path={"/ai-assistant"}>
         <DashboardLayout>
           <AIAssistant />
+        </DashboardLayout>
+      </Route>
+      <Route path={"/ai-settings"}>
+        <DashboardLayout>
+          <ProtectedRoute module="admin">
+            <AISettings />
+          </ProtectedRoute>
         </DashboardLayout>
       </Route>
       <Route path={"/analytics"}>

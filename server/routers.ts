@@ -3363,11 +3363,68 @@ Provide 2-3 actionable business insights.`;
         context: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // Get active AI provider from settings
+        const allSettings = await db.getAIIntegrationSettings();
+        const activeProvider = allSettings.find((s: any) => 
+          s.isActive && ['openai', 'anthropic', 'google', 'azure', 'custom'].includes(s.provider)
+        );
+
+        // Default to Replit AI Integrations (fallback)
+        let apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+        let baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+        let model = "gpt-4o-mini";
+        let maxTokens = 1024;
+        let temperature = 0.7;
+        let customSystemPrompt = "";
+
+        if (activeProvider) {
+          // Safely parse settings with try/catch
+          let settings: any = {};
+          try {
+            settings = activeProvider.settings ? JSON.parse(activeProvider.settings) : {};
+          } catch (e) {
+            console.error("Failed to parse AI provider settings:", e);
+          }
+          
+          const apiKeyName = settings.apiKeyName || 'OPENAI_API_KEY';
+          
+          // Use custom API key if configured, otherwise keep Replit fallback
+          if (process.env[apiKeyName]) {
+            apiKey = process.env[apiKeyName];
+          }
+          
+          // Use custom endpoint if configured
+          if (activeProvider.apiEndpoint) {
+            baseURL = activeProvider.apiEndpoint;
+          }
+          
+          // Use configured model
+          if (activeProvider.model) {
+            model = activeProvider.model;
+          }
+
+          // Apply advanced settings
+          if (settings.maxTokens) maxTokens = parseInt(settings.maxTokens) || 1024;
+          if (settings.temperature) temperature = parseFloat(settings.temperature) || 0.7;
+          if (settings.systemPrompt) customSystemPrompt = settings.systemPrompt;
+        }
+
+        // Fallback to Replit AI Integrations if no API key available
+        if (!apiKey) {
+          console.log("No custom AI key configured, using Replit AI Integrations fallback");
+          apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+          baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+        }
+
+        if (!apiKey) {
+          throw new TRPCError({ 
+            code: 'PRECONDITION_FAILED', 
+            message: 'No AI API key configured. Please add an AI provider in AI Settings or ensure Replit AI Integrations is enabled.' 
+          });
+        }
+
         const OpenAI = (await import("openai")).default;
-        const openai = new OpenAI({
-          apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-          baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-        });
+        const openai = new OpenAI({ apiKey, baseURL });
 
         let conversationId = input.conversationId;
         
@@ -3387,25 +3444,28 @@ Provide 2-3 actionable business insights.`;
           content: m.content,
         }));
 
-        // System prompt with ERP context
-        const systemPrompt = `You are an AI assistant for Sustech ERP System. You help users with:
+        // System prompt with ERP context (use custom if configured)
+        const defaultPrompt = `You are an AI assistant for Sustech ERP System. You help users with:
 - Financial analysis and reporting
 - Sales and customer management
 - Project pipeline tracking
 - Human resources queries
-- Inventory and procurement
-${input.context ? `\nCurrent context: ${input.context}` : ""}
+- Inventory and procurement`;
+
+        const systemPrompt = customSystemPrompt || defaultPrompt;
+        const contextPrompt = `${systemPrompt}${input.context ? `\n\nCurrent context: ${input.context}` : ""}
 
 Provide concise, actionable insights. Format responses with markdown when helpful.`;
 
-        // Call OpenAI
+        // Call AI provider with configured settings
         const response = await openai.chat.completions.create({
-          model: "gpt-5-mini",
+          model,
           messages: [
-            { role: "system", content: systemPrompt },
+            { role: "system", content: contextPrompt },
             ...chatHistory,
           ],
-          max_completion_tokens: 1024,
+          max_completion_tokens: maxTokens,
+          temperature,
         });
 
         const assistantContent = response.choices[0]?.message?.content || "I couldn't generate a response. Please try again.";
@@ -3416,6 +3476,8 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
         return {
           conversationId,
           content: assistantContent,
+          model,
+          provider: activeProvider?.provider || 'openai',
         };
       }),
 
