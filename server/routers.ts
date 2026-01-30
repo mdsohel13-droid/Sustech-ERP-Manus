@@ -500,12 +500,30 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: protectedProcedure
+    delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteProject(input.id);
         return { success: true };
       }),
+
+    archive: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveProject(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    restore: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreProject(input.id);
+        return { success: true };
+      }),
+
+    getArchived: protectedProcedure.query(async () => {
+      return await db.getArchivedProjects();
+    }),
     
     getStats: protectedProcedure.query(async () => {
       return await db.getProjectStats();

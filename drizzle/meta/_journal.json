@@ -64,6 +64,13 @@
       "when": 1769771413841,
       "tag": "0008_clean_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1769793438793,
+      "tag": "0009_real_shocker",
+      "breakpoints": true
     }
   ]
 }

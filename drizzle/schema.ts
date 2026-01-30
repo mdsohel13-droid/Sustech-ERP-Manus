@@ -148,6 +148,9 @@ export const projects = pgTable("projects", {
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  isArchived: boolean("is_archived").default(false).notNull(),
+  archivedAt: timestamp("archived_at"),
+  archivedBy: integer("archived_by"),
 });
 
 export type Project = typeof projects.$inferSelect;

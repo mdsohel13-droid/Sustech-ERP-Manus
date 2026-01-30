@@ -335,7 +335,33 @@ export async function createProject(data: InsertProject) {
 export async function getAllProjects() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.select().from(projects).orderBy(desc(projects.createdAt));
+  return await db.select().from(projects).where(eq(projects.isArchived, false)).orderBy(desc(projects.createdAt));
+}
+
+export async function getArchivedProjects() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(projects).where(eq(projects.isArchived, true)).orderBy(desc(projects.archivedAt));
+}
+
+export async function archiveProject(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(projects).set({ 
+    isArchived: true, 
+    archivedAt: new Date(), 
+    archivedBy: userId 
+  }).where(eq(projects.id, id));
+}
+
+export async function restoreProject(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(projects).set({ 
+    isArchived: false, 
+    archivedAt: null, 
+    archivedBy: null 
+  }).where(eq(projects.id, id));
 }
 
 export async function getProjectsByStage(stage: string) {

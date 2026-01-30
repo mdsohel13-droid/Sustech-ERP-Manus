@@ -9,14 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown, Archive, ArchiveRestore } from "lucide-react";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 type ProjectStage = "lead" | "proposal" | "won" | "execution" | "testing";
 
@@ -54,11 +56,15 @@ export default function Projects() {
   const [financialsOpen, setFinancialsOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("active");
 
   const utils = trpc.useUtils();
   const { data: projects = [] } = trpc.projects.getAll.useQuery();
+  const { data: archivedProjects = [] } = trpc.projects.getArchived.useQuery();
   const { data: stats = [] } = trpc.projects.getStats.useQuery();
   const { currency } = useCurrency();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const createMutation = trpc.projects.create.useMutation({
     onSuccess: () => {
@@ -86,8 +92,29 @@ export default function Projects() {
   const deleteMutation = trpc.projects.delete.useMutation({
     onSuccess: () => {
       utils.projects.getAll.invalidate();
+      utils.projects.getArchived.invalidate();
       utils.projects.getStats.invalidate();
-      toast.success("Project deleted");
+      toast.success("Project deleted permanently");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const archiveMutation = trpc.projects.archive.useMutation({
+    onSuccess: () => {
+      utils.projects.getAll.invalidate();
+      utils.projects.getArchived.invalidate();
+      utils.projects.getStats.invalidate();
+      toast.success("Project archived");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const restoreMutation = trpc.projects.restore.useMutation({
+    onSuccess: () => {
+      utils.projects.getAll.invalidate();
+      utils.projects.getArchived.invalidate();
+      utils.projects.getStats.invalidate();
+      toast.success("Project restored");
     },
     onError: (error) => toast.error(error.message),
   });
@@ -227,8 +254,21 @@ export default function Projects() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5">
-        {(["lead", "proposal", "won", "execution", "testing"] as ProjectStage[]).map((stage, index) => {
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="active" className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4" />
+            Active Projects ({projects.length})
+          </TabsTrigger>
+          <TabsTrigger value="archive" className="flex items-center gap-2">
+            <Archive className="h-4 w-4" />
+            Archive ({archivedProjects.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active" className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-5">
+            {(["lead", "proposal", "won", "execution", "testing"] as ProjectStage[]).map((stage, index) => {
           const stageStat = stats?.find((s) => s.stage === stage);
           const isLastStage = stage === 'testing';
           return (
@@ -287,12 +327,22 @@ export default function Projects() {
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedProject(project); setFinancialsOpen(true); }}>
                           <Wallet className="h-3 w-3" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingProject(project); setDialogOpen(true); }}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" onClick={() => { if (confirm("Delete this project?")) deleteMutation.mutate({ id: project.id }); }}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditingProject(project); setDialogOpen(true); }}>
+                              <Edit className="h-4 w-4 mr-2" />Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => archiveMutation.mutate({ id: project.id })}>
+                              <Archive className="h-4 w-4 mr-2" />Archive
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
@@ -350,12 +400,24 @@ export default function Projects() {
                         <Button variant="ghost" size="sm" onClick={() => { setSelectedProject(project); setFinancialsOpen(true); }}>
                           <Wallet className="h-4 w-4 mr-1" />Financials
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setEditingProject(project); setDialogOpen(true); }}>
-                          Edit
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => { if (confirm("Delete this project?")) deleteMutation.mutate({ id: project.id }); }}>
-                          Delete
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditingProject(project); setDialogOpen(true); }}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => archiveMutation.mutate({ id: project.id })}>
+                              <Archive className="h-4 w-4 mr-2" />
+                              Archive
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -372,6 +434,85 @@ export default function Projects() {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        <TabsContent value="archive" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Archive className="h-5 w-5" />
+                Archived Projects
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Project Name</TableHead>
+                    <TableHead className="font-semibold">Customer</TableHead>
+                    <TableHead className="font-semibold">Value</TableHead>
+                    <TableHead className="font-semibold">Last Stage</TableHead>
+                    <TableHead className="font-semibold">Archived Date</TableHead>
+                    <TableHead className="font-semibold text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archivedProjects.map((project) => (
+                    <TableRow key={project.id} className="hover:bg-muted/30">
+                      <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell>{project.customerName}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(project.value, project.currency || currency)}</TableCell>
+                      <TableCell>
+                        <Badge className={stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"}>
+                          {stageLabels[project.stage as ProjectStage]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {project.archivedAt ? format(new Date(project.archivedAt), "MMM dd, yyyy") : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          {isAdmin && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => restoreMutation.mutate({ id: project.id })}
+                              >
+                                <ArchiveRestore className="h-4 w-4 mr-1" />
+                                Restore
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => { 
+                                  if (confirm("Permanently delete this project? This cannot be undone.")) 
+                                    deleteMutation.mutate({ id: project.id }); 
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {archivedProjects.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No archived projects. Projects that are archived or completed will appear here.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingProject(null); }}>
         <DialogContent className="max-w-2xl">
