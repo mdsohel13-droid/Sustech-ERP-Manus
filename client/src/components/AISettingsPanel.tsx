@@ -45,7 +45,7 @@ const AUTOMATION_PLATFORMS = [
   { id: "custom_webhook", name: "Custom Webhook", description: "Custom HTTP webhook endpoint" },
 ];
 
-export default function AISettings() {
+export default function AISettingsPanel() {
   const [activeTab, setActiveTab] = useState("providers");
   const [providerDialogOpen, setProviderDialogOpen] = useState(false);
   const [automationDialogOpen, setAutomationDialogOpen] = useState(false);

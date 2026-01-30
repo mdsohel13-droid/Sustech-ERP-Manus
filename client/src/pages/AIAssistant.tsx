@@ -14,9 +14,12 @@ import {
   Zap,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Settings
 } from "lucide-react";
 import { format } from "date-fns";
+import { usePermissions } from "@/hooks/usePermissions";
+import AISettingsPanel from "@/components/AISettingsPanel";
 
 interface Message {
   id: number;
@@ -36,6 +39,7 @@ interface Suggestion {
 }
 
 export default function AIAssistant() {
+  const { isAdmin } = usePermissions();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -173,6 +177,12 @@ export default function AIAssistant() {
               <Sparkles className="h-4 w-4" />
               Suggestions
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Chat Tab */}
@@ -307,6 +317,13 @@ export default function AIAssistant() {
               ))}
             </div>
           </TabsContent>
+
+          {/* Settings Tab (Admin Only) */}
+          {isAdmin && (
+            <TabsContent value="settings">
+              <AISettingsPanel />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </DashboardLayout>

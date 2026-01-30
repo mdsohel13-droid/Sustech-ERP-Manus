@@ -88,7 +88,6 @@ const ALL_MENU_ITEMS = [
   { icon: BarChart3, label: "Reports", path: "/reports", module: "reports", group: "analytics" },
   { icon: Lightbulb, label: "Ideas", path: "/ideas", module: "ideas", group: "tools" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant", module: "ai_assistant", group: "tools" },
-  { icon: Bot, label: "AI Settings", path: "/ai-settings", module: "admin", group: "system" },
   { icon: Activity, label: "Hyperlink Analytics", path: "/hyperlink-analytics", module: "admin", group: "system" },
   { icon: Settings, label: "Settings", path: "/settings", module: "settings", group: "system" },
   { icon: Shield, label: "Admin Panel", path: "/admin-settings", module: "admin", group: "system" },
