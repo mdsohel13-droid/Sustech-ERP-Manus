@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Users,
   Briefcase,
@@ -25,6 +25,26 @@ import {
   UserCheck,
   UserX,
   Timer,
+  Plus,
+  Send,
+  MessageCircle,
+  MoreVertical,
+  Heart,
+  Edit,
+  Trash2,
+  Archive,
+  MapPin,
+  Phone,
+  Play,
+  Image,
+  Paperclip,
+  ChevronRight,
+  RefreshCw,
+  Zap,
+  BarChart3,
+  Receipt,
+  Wallet,
+  CircleDollarSign,
 } from "lucide-react";
 import {
   BarChart,
@@ -47,12 +67,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function Home() {
   const { currency } = useCurrency();
   const [, navigate] = useLocation();
+  const { isAdmin } = usePermissions();
+  const [newPostContent, setNewPostContent] = useState("");
+  const [showPostDialog, setShowPostDialog] = useState(false);
 
   // Fetch all data with real-time refresh
   const { data: projects } = trpc.projects.getAll.useQuery(undefined, { refetchInterval: 30000 });
@@ -66,35 +98,70 @@ export default function Home() {
   const { data: teamMembers } = trpc.hr.getAllEmployees.useQuery(undefined, { refetchInterval: 30000 });
   const { data: productsData } = trpc.products.getActiveProducts.useQuery(undefined, { refetchInterval: 30000 });
   const { data: inventoryData } = trpc.products.getAllInventoryWithProducts.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: crmLeads } = trpc.crm.getLeads.useQuery(undefined, { refetchInterval: 30000 });
+  const { data: feedPosts = [] } = trpc.feed.getAll.useQuery(undefined, { refetchInterval: 10000 });
+  const { data: users = [] } = trpc.users.getAll.useQuery(undefined, { refetchInterval: 60000 });
+
+  const utils = trpc.useUtils();
+
+  const createPostMutation = trpc.feed.create.useMutation({
+    onSuccess: () => {
+      toast.success("Post shared successfully!");
+      setNewPostContent("");
+      setShowPostDialog(false);
+      utils.feed.getAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Failed to create post: " + error.message);
+    },
+  });
+
+  const archivePostMutation = trpc.feed.archive.useMutation({
+    onSuccess: () => {
+      toast.success("Post archived");
+      utils.feed.getAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Failed to archive post: " + error.message);
+    },
+  });
+
+  const deletePostMutation = trpc.feed.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Post deleted");
+      utils.feed.getAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Failed to delete post: " + error.message);
+    },
+  });
+
+  const toggleReactionMutation = trpc.feed.toggleReaction.useMutation({
+    onSuccess: () => {
+      utils.feed.getAll.invalidate();
+    },
+  });
 
   // Calculate HRM metrics
   const hrmMetrics = useMemo(() => {
     const totalEmployees = teamMembers?.length || 0;
-    const presentToday = Math.round(totalEmployees * 0.92); // Simulated
+    const presentToday = Math.round(totalEmployees * 0.92);
     const onLeave = Math.round(totalEmployees * 0.05);
     const absent = totalEmployees - presentToday - onLeave;
     return { totalEmployees, presentToday, onLeave, absent };
   }, [teamMembers]);
 
-  // Calculate Project metrics (stages: testing, lead, proposal, won, execution)
+  // Calculate Project metrics
   const projectMetrics = useMemo(() => {
     if (!projects) return { running: 0, completed: 0, postponed: 0, cancelled: 0, total: 0, completionRate: 0 };
     const running = projects.filter(p => p.stage === "execution" || p.stage === "lead" || p.stage === "proposal").length;
     const completed = projects.filter(p => p.stage === "won").length;
     const postponed = projects.filter(p => p.stage === "testing").length;
-    const cancelled = 0; // No cancelled stage in current schema
+    const cancelled = 0;
     const total = projects.length;
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { running, completed, postponed, cancelled, total, completionRate };
   }, [projects]);
-
-  // Project donut chart data
-  const projectChartData = [
-    { name: "Running", value: projectMetrics.running, color: "#3b82f6" },
-    { name: "Completed", value: projectMetrics.completed, color: "#22c55e" },
-    { name: "Postponed", value: projectMetrics.postponed, color: "#f59e0b" },
-    { name: "Cancelled", value: projectMetrics.cancelled, color: "#ef4444" },
-  ].filter(d => d.value > 0);
 
   // Calculate Sales & Finance metrics
   const financeMetrics = useMemo(() => {
@@ -106,17 +173,7 @@ export default function Home() {
     return { totalSales, totalAR, totalAP, totalIncome, totalExpense, netProfit: totalIncome - totalExpense };
   }, [salesData, arData, apData, incomeExpData]);
 
-  // Revenue trend data
-  const revenueTrendData = [
-    { month: "Aug", revenue: 18000, expense: 12000 },
-    { month: "Sep", revenue: 22000, expense: 14000 },
-    { month: "Oct", revenue: 19000, expense: 13000 },
-    { month: "Nov", revenue: 25000, expense: 15000 },
-    { month: "Dec", revenue: 28000, expense: 17000 },
-    { month: "Jan", revenue: financeMetrics.totalSales || 23000, expense: financeMetrics.totalExpense || 14000 },
-  ];
-
-  // Calculate Inventory metrics from real inventory data
+  // Calculate Inventory metrics
   const inventoryMetrics = useMemo(() => {
     const totalProducts = productsData?.length || 0;
     if (!inventoryData || inventoryData.length === 0) {
@@ -148,10 +205,21 @@ export default function Home() {
     const total = activeTenders.length;
     const winRate = total > 0 ? Math.round((won / total) * 100) : 0;
     const pipelineValue = activeTenders.reduce((sum, t) => sum + parseFloat(t.estimatedValue || "0"), 0);
-    return { pending, submitted, won, pipelineValue, winRate };
+    return { pending, submitted, won, pipelineValue, winRate, total };
   }, [tenderData]);
 
-  // Calculate Action Tracker metrics (statuses: open, in_progress, resolved, closed)
+  // CRM metrics
+  const crmMetrics = useMemo(() => {
+    if (!crmLeads) return { totalLeads: 0, hotLeads: 0, warmLeads: 0, coldLeads: 0 };
+    return {
+      totalLeads: crmLeads.length,
+      hotLeads: crmLeads.filter(l => l.status === "qualified" || l.status === "proposal_sent").length,
+      warmLeads: crmLeads.filter(l => l.status === "contacted" || l.status === "negotiation").length,
+      coldLeads: crmLeads.filter(l => l.status === "new" || l.status === "lost").length,
+    };
+  }, [crmLeads]);
+
+  // Action Tracker metrics
   const actionMetrics = useMemo(() => {
     if (!actionItems) return { pending: 0, overdue: 0, completed: 0, highPriority: 0 };
     const pending = actionItems.filter(a => a.status === "open" || a.status === "in_progress").length;
@@ -165,499 +233,670 @@ export default function Home() {
     return { pending, overdue, completed, highPriority };
   }, [actionItems]);
 
-  // Pending action items (top 5)
-  const pendingActions = useMemo(() => {
-    return actionItems?.filter(a => a.status === "open" || a.status === "in_progress").slice(0, 5) || [];
+  // Running projects for display
+  const runningProjects = useMemo(() => {
+    if (!projects) return [];
+    return projects.filter(p => p.stage === "execution" || p.stage === "lead" || p.stage === "proposal").slice(0, 5);
+  }, [projects]);
+
+  // Follow-up data
+  const followUpLeads = useMemo(() => {
+    if (!crmLeads) return [];
+    return crmLeads.filter(l => l.status === "qualified" || l.status === "proposal_sent" || l.status === "negotiation").slice(0, 3);
+  }, [crmLeads]);
+
+  const followUpTasks = useMemo(() => {
+    if (!actionItems) return [];
+    return actionItems.filter(a => a.status === "open" || a.status === "in_progress").slice(0, 3);
   }, [actionItems]);
 
-  // Purchase/SCM metrics (simulated based on available data)
-  const purchaseMetrics = useMemo(() => {
-    const pendingRequisitions = {
-      operations: 12,
-      marketing: 5,
-      it: 8,
-      hr: 3,
-      finance: 2,
-    };
-    const totalPending = Object.values(pendingRequisitions).reduce((a, b) => a + b, 0);
-    return { pendingRequisitions, totalPending };
-  }, []);
+  // Employee tracker data (simulated for now)
+  const employeeTrackerData = useMemo(() => {
+    if (!teamMembers) return [];
+    return teamMembers.slice(0, 4).map((emp: any, idx) => ({
+      id: emp.employee?.id || emp.id || idx,
+      firstName: emp.employee?.firstName || emp.user?.name?.split(" ")[0] || "Employee",
+      lastName: emp.employee?.lastName || emp.user?.name?.split(" ")[1] || "",
+      position: emp.position?.title || ["CEO", "Manager", "Developer", "Sales Rep"][idx % 4],
+      location: ["Head Office, Floor 12", "Conference Room A", "Remote - Home Office", "Sales Floor"][idx % 4],
+      currentStatus: ["Board Meeting", "Team Standup", "Code Review", "Client Call"][idx % 4],
+      tasks: [
+        { title: "Q4 Strategy Review", priority: "high", dueDate: "Today, 3PM" },
+        { title: "Sprint Planning", priority: "medium", dueDate: "Tomorrow" },
+      ],
+    }));
+  }, [teamMembers]);
 
-  // AI Insights
-  type Insight = {
-    type: string;
-    module: string;
-    message: string;
-    icon: React.ComponentType<{ className?: string }>;
+  const getUserById = (userId: number) => users.find(u => u.id === userId);
+
+  const handleCreatePost = () => {
+    if (!newPostContent.trim()) return;
+    createPostMutation.mutate({ content: newPostContent, status: "live" });
   };
-  const aiInsights = useMemo(() => {
-    const insights: Insight[] = [];
-    if (inventoryMetrics.lowStockCount > 0) {
-      insights.push({
-        type: "warning",
-        module: "Inventory",
-        message: `${inventoryMetrics.lowStockCount} products are running low on stock. Consider reordering soon.`,
-        icon: Package,
-      });
-    }
-    if (actionMetrics.overdue > 0) {
-      insights.push({
-        type: "alert",
-        module: "Action Tracker",
-        message: `${actionMetrics.overdue} action items are overdue. Review and update priorities.`,
-        icon: AlertTriangle,
-      });
-    }
-    if (tenderMetrics.pending > 0) {
-      insights.push({
-        type: "info",
-        module: "Tenders",
-        message: `${tenderMetrics.pending} tenders pending submission. Check deadlines.`,
-        icon: FileText,
-      });
-    }
-    if (financeMetrics.totalAR > 50000) {
-      insights.push({
-        type: "info",
-        module: "Finance",
-        message: `Outstanding receivables: ${formatCurrency(financeMetrics.totalAR, currency)}. Follow up on collections.`,
-        icon: DollarSign,
-      });
-    }
-    if (projectMetrics.running > 5) {
-      insights.push({
-        type: "info",
-        module: "Projects",
-        message: `${projectMetrics.running} active projects. Monitor resource allocation.`,
-        icon: Target,
-      });
-    }
-    return insights.slice(0, 4);
-  }, [inventoryMetrics, actionMetrics, tenderMetrics, financeMetrics, projectMetrics, currency]);
 
-  const getPriorityColor = (priority: string | undefined) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "live": return "bg-green-100 text-green-700 border-green-200";
+      case "due": return "bg-amber-100 text-amber-700 border-amber-200";
+      case "completed": return "bg-blue-100 text-blue-700 border-blue-200";
+      default: return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high": return "bg-red-100 text-red-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "low": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "high": case "critical": return "bg-red-100 text-red-700";
+      case "medium": return "bg-amber-100 text-amber-700";
+      case "low": return "bg-green-100 text-green-700";
+      default: return "bg-gray-100 text-gray-700";
     }
   };
 
-  const getInsightColor = (type: string) => {
-    switch (type) {
-      case "alert": return "border-red-200 bg-red-50";
-      case "warning": return "border-yellow-200 bg-yellow-50";
-      default: return "border-blue-200 bg-blue-50";
+  const getStageColor = (stage: string) => {
+    switch (stage) {
+      case "execution": return "bg-purple-100 text-purple-700";
+      case "won": return "bg-green-100 text-green-700";
+      case "proposal": return "bg-blue-100 text-blue-700";
+      case "lead": return "bg-amber-100 text-amber-700";
+      default: return "bg-gray-100 text-gray-700";
     }
   };
+
+  const quickActions = [
+    { icon: UserCheck, label: "New Lead", path: "/crm", color: "bg-blue-500" },
+    { icon: ClipboardList, label: "Create Task", path: "/action-tracker", color: "bg-purple-500" },
+    { icon: FileText, label: "New Quote", path: "/tender-quotation", color: "bg-amber-500" },
+    { icon: Receipt, label: "Add Invoice", path: "/accounting", color: "bg-green-500" },
+    { icon: Calendar, label: "Schedule", path: "/hr", color: "bg-indigo-500" },
+    { icon: ShoppingCart, label: "New Sale", path: "/sales", color: "bg-pink-500" },
+    { icon: Package, label: "Add Stock", path: "/inventory", color: "bg-teal-500" },
+    { icon: MessageCircle, label: "Announcement", onClick: () => setShowPostDialog(true), color: "bg-orange-500" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 lg:p-6">
+      <div className="max-w-[1800px] mx-auto space-y-6">
+        {/* Header with Last Updated */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Executive Dashboard</h1>
-            <p className="text-gray-500">{format(new Date(), "EEEE, MMMM dd, yyyy")}</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Master Dashboard</h1>
+            <p className="text-gray-500 text-sm">Last updated: {format(new Date(), "h:mm a")}</p>
           </div>
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hidden sm:flex">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
             System Online
           </Badge>
         </div>
 
-        {/* Row 1: HRM Overview & Project Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* HRM Overview */}
-          <Card className="border-l-4 border-l-indigo-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Users className="w-5 h-5 text-indigo-600" />
-                  HRM Overview
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/hr")} className="text-indigo-600">
-                  View Details <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-indigo-50 rounded-lg">
-                  <Users className="w-6 h-6 mx-auto text-indigo-600 mb-2" />
-                  <p className="text-2xl font-bold text-indigo-700">{hrmMetrics.totalEmployees}</p>
-                  <p className="text-xs text-gray-600">Total Employees</p>
+        {/* Section 1: Module Overview Cards - Scrollable */}
+        <div className="overflow-x-auto pb-2">
+          <div className="flex gap-4 min-w-max">
+            {/* CRM */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/crm")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Users className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">+12%</Badge>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <UserCheck className="w-6 h-6 mx-auto text-green-600 mb-2" />
-                  <p className="text-2xl font-bold text-green-700">{hrmMetrics.presentToday}</p>
-                  <p className="text-xs text-gray-600">Present Today</p>
-                </div>
-                <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                  <Calendar className="w-6 h-6 mx-auto text-yellow-600 mb-2" />
-                  <p className="text-2xl font-bold text-yellow-700">{hrmMetrics.onLeave}</p>
-                  <p className="text-xs text-gray-600">On Leave</p>
-                </div>
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <UserX className="w-6 h-6 mx-auto text-red-600 mb-2" />
-                  <p className="text-2xl font-bold text-red-700">{hrmMetrics.absent}</p>
-                  <p className="text-xs text-gray-600">Absent</p>
-                </div>
-              </div>
-              <div className="mt-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">Attendance Rate</span>
-                  <span className="font-medium">92%</span>
-                </div>
-                <Progress value={92} className="h-2" />
-              </div>
-            </CardContent>
-          </Card>
+                <p className="text-2xl font-bold">{crmMetrics.totalLeads || 0}</p>
+                <p className="text-xs opacity-80">Active Leads</p>
+                <p className="text-[10px] mt-1 opacity-60">CRM</p>
+              </CardContent>
+            </Card>
 
-          {/* Project Dashboard */}
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Target className="w-5 h-5 text-blue-600" />
-                  Project & Tenders
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="text-blue-600">
-                  View Details <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-6">
-                <div className="w-32 h-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={projectChartData.length > 0 ? projectChartData : [{ name: "No Data", value: 1, color: "#e5e7eb" }]}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={30}
-                        outerRadius={50}
-                        dataKey="value"
-                        strokeWidth={2}
-                      >
-                        {(projectChartData.length > 0 ? projectChartData : [{ name: "No Data", value: 1, color: "#e5e7eb" }]).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
+            {/* Projects */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/projects")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Target className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">{projectMetrics.running} due</Badge>
                 </div>
-                <div className="flex-1 grid grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <span className="text-sm text-gray-600">Running: <strong>{projectMetrics.running}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-sm text-gray-600">Completed: <strong>{projectMetrics.completed}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-sm text-gray-600">Postponed: <strong>{projectMetrics.postponed}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span className="text-sm text-gray-600">Cancelled: <strong>{projectMetrics.cancelled}</strong></span>
-                  </div>
+                <p className="text-2xl font-bold">{projectMetrics.total || 0}</p>
+                <p className="text-xs opacity-80">Active Projects</p>
+                <p className="text-[10px] mt-1 opacity-60">Projects</p>
+              </CardContent>
+            </Card>
+
+            {/* Tender/Quote */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-amber-500 to-amber-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/tender-quotation")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <FileText className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">+8%</Badge>
                 </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-                <span className="text-sm text-gray-600">Completion Rate</span>
-                <span className="text-lg font-bold text-blue-700">{projectMetrics.completionRate}%</span>
-              </div>
-            </CardContent>
-          </Card>
+                <p className="text-2xl font-bold">{tenderMetrics.total || 0}</p>
+                <p className="text-xs opacity-80">Open Quotations</p>
+                <p className="text-[10px] mt-1 opacity-60">Tender/Quote</p>
+              </CardContent>
+            </Card>
+
+            {/* Finance */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/financial")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <CircleDollarSign className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">+18%</Badge>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(financeMetrics.totalIncome, currency)}</p>
+                <p className="text-xs opacity-80">Monthly Revenue</p>
+                <p className="text-[10px] mt-1 opacity-60">Finance</p>
+              </CardContent>
+            </Card>
+
+            {/* Accounting */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/accounting")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Receipt className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">{incomeExpData?.length || 0} pending</Badge>
+                </div>
+                <p className="text-2xl font-bold">{incomeExpData?.length || 0}</p>
+                <p className="text-xs opacity-80">Transactions</p>
+                <p className="text-[10px] mt-1 opacity-60">Accounting</p>
+              </CardContent>
+            </Card>
+
+            {/* Sales */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-pink-500 to-pink-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/sales")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <ShoppingCart className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">+23%</Badge>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(financeMetrics.totalSales, currency)}</p>
+                <p className="text-xs opacity-80">This Month</p>
+                <p className="text-[10px] mt-1 opacity-60">Sales</p>
+              </CardContent>
+            </Card>
+
+            {/* Inventory */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-teal-500 to-teal-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/inventory")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Package className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">{inventoryMetrics.lowStockCount} low</Badge>
+                </div>
+                <p className="text-2xl font-bold">{inventoryMetrics.totalStock.toLocaleString()}</p>
+                <p className="text-xs opacity-80">Total SKUs</p>
+                <p className="text-[10px] mt-1 opacity-60">Inventory</p>
+              </CardContent>
+            </Card>
+
+            {/* HR */}
+            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/hr")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Users className="h-5 w-5 opacity-80" />
+                  <Badge className="bg-white/20 text-white text-xs">{hrmMetrics.onLeave} leave</Badge>
+                </div>
+                <p className="text-2xl font-bold">{hrmMetrics.totalEmployees}</p>
+                <p className="text-xs opacity-80">Active Employees</p>
+                <p className="text-[10px] mt-1 opacity-60">Human Resource</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Row 2: Sales & Finance + Inventory Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sales & Finance */}
-          <Card className="lg:col-span-2 border-l-4 border-l-green-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                  Sales & Finance
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/financial")} className="text-green-600">
-                  View Details <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-4 gap-4 mb-4">
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Total Sales</p>
-                  <p className="text-lg font-bold text-green-700">{formatCurrency(financeMetrics.totalSales, currency)}</p>
-                </div>
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Receivables</p>
-                  <p className="text-lg font-bold text-blue-700">{formatCurrency(financeMetrics.totalAR, currency)}</p>
-                </div>
-                <div className="p-3 bg-red-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Payables</p>
-                  <p className="text-lg font-bold text-red-700">{formatCurrency(financeMetrics.totalAP, currency)}</p>
-                </div>
-                <div className="p-3 bg-purple-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Net Profit</p>
-                  <p className={`text-lg font-bold ${financeMetrics.netProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                    {formatCurrency(financeMetrics.netProfit, currency)}
-                  </p>
-                </div>
-              </div>
-              <ResponsiveContainer width="100%" height={180}>
-                <AreaChart data={revenueTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value), currency)} />
-                  <Area type="monotone" dataKey="revenue" stroke="#22c55e" fill="#dcfce7" strokeWidth={2} />
-                  <Area type="monotone" dataKey="expense" stroke="#ef4444" fill="#fee2e2" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Inventory Summary */}
-          <Card className="border-l-4 border-l-teal-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Package className="w-5 h-5 text-teal-600" />
-                  Inventory
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/inventory")} className="text-teal-600">
-                  View <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-3 bg-teal-50 rounded-lg flex items-center justify-between">
-                <span className="text-sm text-gray-600">Stock Value</span>
-                <span className="text-lg font-bold text-teal-700">{formatCurrency(inventoryMetrics.stockValue, currency)}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-gray-50 rounded-lg text-center">
-                  <p className="text-2xl font-bold text-gray-700">{inventoryMetrics.totalProducts}</p>
-                  <p className="text-xs text-gray-600">Total Products</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg text-center">
-                  <p className="text-2xl font-bold text-gray-700">{inventoryMetrics.totalStock}</p>
-                  <p className="text-xs text-gray-600">Total Stock</p>
-                </div>
-              </div>
-              {inventoryMetrics.lowStockCount > 0 && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                  <span className="text-sm text-yellow-700">{inventoryMetrics.lowStockCount} items low on stock</span>
-                </div>
-              )}
-              {inventoryMetrics.outOfStock > 0 && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                  <span className="text-sm text-red-700">{inventoryMetrics.outOfStock} items out of stock</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Row 3: Action Tracker + Tender Summary + Purchase Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Action Tracker */}
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-orange-600" />
-                  Action Tracker
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/action-tracker")} className="text-orange-600">
-                  View All <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="p-2 bg-orange-50 rounded-lg text-center">
-                  <p className="text-xl font-bold text-orange-700">{actionMetrics.pending}</p>
-                  <p className="text-xs text-gray-600">Pending</p>
-                </div>
-                <div className="p-2 bg-red-50 rounded-lg text-center">
-                  <p className="text-xl font-bold text-red-700">{actionMetrics.overdue}</p>
-                  <p className="text-xs text-gray-600">Overdue</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {pendingActions.length > 0 ? pendingActions.map((action) => (
-                  <div key={action.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border-l-2 border-l-orange-400">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{action.title}</p>
-                      <p className="text-xs text-gray-500">{action.assignedTo || "Unassigned"}</p>
-                    </div>
-                    <Badge className={getPriorityColor(action.priority)} variant="secondary">
-                      {action.priority || "Normal"}
-                    </Badge>
-                  </div>
-                )) : (
-                  <p className="text-sm text-gray-500 text-center py-4">No pending actions</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tender Summary */}
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-600" />
-                  Tender Summary
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/tender-quotation")} className="text-purple-600">
-                  View All <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="p-2 bg-yellow-50 rounded-lg text-center">
-                  <p className="text-xl font-bold text-yellow-700">{tenderMetrics.pending}</p>
-                  <p className="text-xs text-gray-600">Pending</p>
-                </div>
-                <div className="p-2 bg-blue-50 rounded-lg text-center">
-                  <p className="text-xl font-bold text-blue-700">{tenderMetrics.submitted}</p>
-                  <p className="text-xs text-gray-600">Submitted</p>
-                </div>
-                <div className="p-2 bg-green-50 rounded-lg text-center">
-                  <p className="text-xl font-bold text-green-700">{tenderMetrics.won}</p>
-                  <p className="text-xs text-gray-600">Won</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Pipeline Value</span>
-                  <span className="text-lg font-bold text-purple-700">{formatCurrency(tenderMetrics.pipelineValue, currency)}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-600">Win Rate</span>
-                  <span className="text-lg font-bold text-gray-700">{tenderMetrics.winRate}%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Purchase Overview */}
-          <Card className="border-l-4 border-l-cyan-500">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-cyan-600" />
-                  Purchase Overview
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/purchase")} className="text-cyan-600">
-                  View All <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="p-3 bg-cyan-50 rounded-lg mb-4 flex items-center justify-between">
-                <span className="text-sm text-gray-600">Pending Requisitions</span>
-                <span className="text-xl font-bold text-cyan-700">{purchaseMetrics.totalPending}</span>
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs text-gray-500 font-medium">BY DEPARTMENT</p>
-                {Object.entries(purchaseMetrics.pendingRequisitions).map(([dept, count]) => (
-                  <div key={dept} className="flex items-center justify-between">
-                    <span className="text-sm capitalize text-gray-600">{dept}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-cyan-500 rounded-full"
-                          style={{ width: `${(count / purchaseMetrics.totalPending) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium w-6">{count}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Row 4: AI Smart Insights */}
-        <Card className="border-l-4 border-l-violet-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-violet-600" />
-              AI Smart Insights
-            </CardTitle>
+        {/* Quick Actions */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">Customize</Button>
+            </div>
           </CardHeader>
           <CardContent>
-            {aiInsights.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {aiInsights.map((insight, idx) => {
-                  const InsightIcon = insight.icon;
-                  return (
-                    <div key={idx} className={`p-4 rounded-lg border ${getInsightColor(insight.type)}`}>
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-white rounded-lg shadow-sm">
-                          <InsightIcon className="w-5 h-5 text-violet-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Badge variant="outline" className="mb-2 text-xs">{insight.module}</Badge>
-                          <p className="text-sm text-gray-700">{insight.message}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8 text-gray-500">
-                <Lightbulb className="w-5 h-5 mr-2" />
-                <span>All systems running smoothly. No critical insights at this time.</span>
-              </div>
-            )}
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {quickActions.map((action, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline"
+                  className="flex-shrink-0 flex flex-col items-center gap-2 h-auto py-3 px-4 hover:bg-slate-50"
+                  onClick={() => action.onClick ? action.onClick() : navigate(action.path)}
+                >
+                  <div className={`p-2 rounded-lg ${action.color}`}>
+                    <action.icon className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-xs font-medium">{action.label}</span>
+                </Button>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
-        {/* Quick Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {[
-            { name: "Sales", icon: ShoppingCart, path: "/sales", color: "bg-blue-100 text-blue-600" },
-            { name: "Inventory", icon: Package, path: "/inventory", color: "bg-teal-100 text-teal-600" },
-            { name: "Finance", icon: DollarSign, path: "/financial", color: "bg-green-100 text-green-600" },
-            { name: "CRM", icon: Users, path: "/crm", color: "bg-purple-100 text-purple-600" },
-            { name: "HR", icon: Briefcase, path: "/hr", color: "bg-pink-100 text-pink-600" },
-            { name: "Projects", icon: Target, path: "/projects", color: "bg-orange-100 text-orange-600" },
-            { name: "Tenders", icon: FileText, path: "/tender-quotation", color: "bg-indigo-100 text-indigo-600" },
-            { name: "Actions", icon: ClipboardList, path: "/action-tracker", color: "bg-yellow-100 text-yellow-600" },
-          ].map((module) => {
-            const ModuleIcon = module.icon;
-            return (
-              <button
-                key={module.name}
-                onClick={() => navigate(module.path)}
-                className="p-4 bg-white border rounded-lg hover:shadow-md transition flex flex-col items-center gap-2"
-              >
-                <div className={`p-2 rounded-lg ${module.color}`}>
-                  <ModuleIcon className="w-5 h-5" />
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Running Projects + Follow-ups */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Running Projects */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Target className="h-5 w-5 text-purple-600" />
+                    Running Projects
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="text-purple-600">
+                    View All <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-                <span className="text-sm font-medium text-gray-700">{module.name}</span>
-              </button>
-            );
-          })}
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-2 font-medium text-gray-500">Project</th>
+                        <th className="text-left py-2 px-2 font-medium text-gray-500">Status</th>
+                        <th className="text-left py-2 px-2 font-medium text-gray-500">Progress</th>
+                        <th className="text-left py-2 px-2 font-medium text-gray-500">Due Date</th>
+                        <th className="text-left py-2 px-2 font-medium text-gray-500">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {runningProjects.length > 0 ? runningProjects.map((project) => (
+                        <tr key={project.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => navigate("/projects")}>
+                          <td className="py-3 px-2">
+                            <div>
+                              <p className="font-medium text-gray-900">{project.name}</p>
+                              <p className="text-xs text-gray-500">{project.customerName}</p>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2">
+                            <Badge className={getStageColor(project.stage)}>{project.stage}</Badge>
+                          </td>
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-2">
+                              <Progress value={project.stage === "execution" ? 60 : project.stage === "won" ? 100 : 30} className="h-2 w-20" />
+                              <span className="text-xs text-gray-500">{project.stage === "execution" ? "60%" : project.stage === "won" ? "100%" : "30%"}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-gray-600">
+                            {project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM d, yyyy") : "-"}
+                          </td>
+                          <td className="py-3 px-2 font-medium">{formatCurrency(parseFloat(project.value || "0"), currency)}</td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-gray-500">No running projects</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Follow-ups Section */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                    Follow-ups
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/action-tracker")} className="text-amber-600">
+                    View All <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="leads" className="w-full">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="leads" className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      Leads
+                      <Badge variant="secondary" className="ml-1 text-xs">{followUpLeads.length}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="clients" className="flex items-center gap-1">
+                      <Building2 className="h-3 w-3" />
+                      Clients
+                      <Badge variant="secondary" className="ml-1 text-xs">{customers?.length || 0}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="tasks" className="flex items-center gap-1">
+                      <ClipboardList className="h-3 w-3" />
+                      Tasks
+                      <Badge variant="secondary" className="ml-1 text-xs">{followUpTasks.length}</Badge>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="leads">
+                    <div className="space-y-2">
+                      {followUpLeads.length > 0 ? followUpLeads.map((lead) => (
+                        <div key={lead.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer" onClick={() => navigate("/crm")}>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="text-xs bg-blue-100 text-blue-700">{lead.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">{lead.name}</p>
+                              <p className="text-xs text-gray-500">{lead.company}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-sm">{formatCurrency(parseFloat((lead as any).budget || "0"), currency)}</p>
+                            <Badge className={getPriorityColor(lead.status)}>{lead.status}</Badge>
+                          </div>
+                        </div>
+                      )) : (
+                        <p className="text-center text-gray-500 py-4">No leads to follow up</p>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="clients">
+                    <div className="space-y-2">
+                      {customers?.slice(0, 3).map((customer) => (
+                        <div key={customer.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer" onClick={() => navigate("/contacts")}>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="text-xs bg-green-100 text-green-700">{customer.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">{customer.name}</p>
+                              <p className="text-xs text-gray-500">{customer.company}</p>
+                            </div>
+                          </div>
+                          <Badge className={customer.status === "hot" ? "bg-red-100 text-red-700" : customer.status === "warm" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}>{customer.status}</Badge>
+                        </div>
+                      )) || <p className="text-center text-gray-500 py-4">No clients</p>}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="tasks">
+                    <div className="space-y-2">
+                      {followUpTasks.length > 0 ? followUpTasks.map((task) => (
+                        <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer" onClick={() => navigate("/action-tracker")}>
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${task.priority === "high" ? "bg-red-100" : "bg-amber-100"}`}>
+                              <ClipboardList className={`h-4 w-4 ${task.priority === "high" ? "text-red-600" : "text-amber-600"}`} />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{task.title}</p>
+                              <p className="text-xs text-gray-500">{task.description?.slice(0, 50)}...</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <Badge className={getPriorityColor(task.priority || "medium")}>{task.priority}</Badge>
+                            <p className="text-xs text-gray-500 mt-1">{task.dueDate ? format(new Date(task.dueDate), "MMM d") : "-"}</p>
+                          </div>
+                        </div>
+                      )) : (
+                        <p className="text-center text-gray-500 py-4">No pending tasks</p>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+
+            {/* News & Events Feed */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5 text-blue-600" />
+                    News & Events Feed
+                    <Badge variant="outline" className="text-xs">Live updates</Badge>
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Post Input */}
+                <div className="flex gap-3 mb-4 p-3 bg-slate-50 rounded-lg">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-blue-100 text-blue-700">U</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <Input 
+                      placeholder="Share a project update, task, or event..." 
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      className="mb-2"
+                    />
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" className="text-gray-500">
+                          <Image className="h-4 w-4 mr-1" /> Photo
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-gray-500">
+                          <Paperclip className="h-4 w-4 mr-1" /> Attach
+                        </Button>
+                      </div>
+                      <Button size="sm" onClick={handleCreatePost} disabled={!newPostContent.trim()}>
+                        <Send className="h-4 w-4 mr-1" /> Post
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Feed Posts */}
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4">
+                    {feedPosts.length > 0 ? feedPosts.map((post) => {
+                      const author = getUserById(post.userId);
+                      return (
+                        <div key={post.id} className="p-4 border rounded-lg">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white">
+                                  {author?.name?.slice(0, 2).toUpperCase() || "U"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{author?.name || "User"}</p>
+                                <p className="text-xs text-gray-500">{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className={getStatusColor(post.status)}>{post.status}</Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>
+                                    <Edit className="h-4 w-4 mr-2" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => archivePostMutation.mutate({ id: post.id })}>
+                                    <Archive className="h-4 w-4 mr-2" /> Archive
+                                  </DropdownMenuItem>
+                                  {isAdmin && (
+                                    <DropdownMenuItem className="text-red-600" onClick={() => deletePostMutation.mutate({ id: post.id })}>
+                                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mb-3">{post.content}</p>
+                          <div className="flex items-center gap-4 pt-2 border-t">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-gray-500 hover:text-red-500"
+                              onClick={() => toggleReactionMutation.mutate({ feedId: post.id, reaction: "like" })}
+                            >
+                              <Heart className="h-4 w-4 mr-1" /> Like
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-gray-500">
+                              <MessageCircle className="h-4 w-4 mr-1" /> Comment
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    }) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No posts yet. Share an update!</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Live Tracker, Action Tracker, AI Assistant */}
+          <div className="space-y-6">
+            {/* Live Tracker */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-green-600" />
+                    Live Tracker
+                    <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                      Live
+                    </Badge>
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-4">
+                    {employeeTrackerData.map((emp, idx) => (
+                      <div key={emp.id || idx} className="p-3 border rounded-lg">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className={`text-white ${["bg-blue-500", "bg-purple-500", "bg-amber-500", "bg-green-500"][idx % 4]}`}>
+                              {(emp.firstName?.slice(0, 1) || "") + (emp.lastName?.slice(0, 1) || "")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{emp.firstName} {emp.lastName}</p>
+                            <p className="text-xs text-gray-500">{emp.position || ["CEO", "Manager", "Employee", "Employee"][idx % 4]}</p>
+                          </div>
+                        </div>
+                        <div className="ml-13 space-y-1">
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <MapPin className="h-3 w-3" />
+                            <span>{emp.location}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <Phone className="h-3 w-3" />
+                            <span>{emp.currentStatus}</span>
+                          </div>
+                          <div className="mt-2 space-y-1">
+                            {emp.tasks.map((task, tIdx) => (
+                              <div key={tIdx} className="flex items-center justify-between text-xs bg-slate-50 p-2 rounded">
+                                <span>{task.title}</span>
+                                <Badge className={getPriorityColor(task.priority)} variant="outline">{task.priority}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {employeeTrackerData.length === 0 && (
+                      <p className="text-center text-gray-500 py-4">No employees to track</p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            {/* Quick Action Tracker */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-amber-600" />
+                    Action Tracker
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/action-tracker")} className="text-amber-600">
+                    View All <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="p-3 bg-amber-50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-amber-700">{actionMetrics.pending}</p>
+                    <p className="text-xs text-gray-600">Pending</p>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-red-700">{actionMetrics.overdue}</p>
+                    <p className="text-xs text-gray-600">Overdue</p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-green-700">{actionMetrics.completed}</p>
+                    <p className="text-xs text-gray-600">Completed</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-purple-700">{actionMetrics.highPriority}</p>
+                    <p className="text-xs text-gray-600">High Priority</p>
+                  </div>
+                </div>
+                <Button className="w-full" variant="outline" onClick={() => navigate("/action-tracker")}>
+                  <Plus className="h-4 w-4 mr-2" /> Create Action Item
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* AI Assistant Widget */}
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-indigo-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                  AI Assistant
+                  <Badge variant="outline" className="text-xs">Powered by AI</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white p-4 rounded-lg border mb-4">
+                  <p className="text-sm text-gray-600">
+                    Hello! I'm your ERP AI Assistant. I can help you with reports, data analysis, task management, and more. What would you like to know?
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-gray-500">Suggestions:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/ai-assistant")}>
+                      Show today's sales summary
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/ai-assistant")}>
+                      What are my pending tasks?
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/ai-assistant")}>
+                      Generate inventory report
+                    </Button>
+                  </div>
+                </div>
+                <Button className="w-full mt-4" onClick={() => navigate("/ai-assistant")}>
+                  <MessageCircle className="h-4 w-4 mr-2" /> Open AI Assistant
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
+
+      {/* Post Dialog */}
+      <Dialog open={showPostDialog} onOpenChange={setShowPostDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share an Update</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="What would you like to share?"
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPostDialog(false)}>Cancel</Button>
+            <Button onClick={handleCreatePost} disabled={!newPostContent.trim()}>
+              <Send className="h-4 w-4 mr-2" /> Post
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1738,3 +1738,61 @@ export const aiIntegrationSettings = pgTable("ai_integration_settings", {
 
 export type AIIntegrationSetting = typeof aiIntegrationSettings.$inferSelect;
 export type InsertAIIntegrationSetting = typeof aiIntegrationSettings.$inferInsert;
+
+// ============ News/Event Feed Tables ============
+export const feedStatusEnum = pgEnum("feed_status", ["live", "due", "completed"]);
+
+export const newsFeed = pgTable("news_feed", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  status: feedStatusEnum("status").default("live").notNull(),
+  relatedType: varchar("related_type", { length: 50 }), // project, task, event, announcement
+  relatedId: integer("related_id"),
+  dueDate: timestamp("due_date"),
+  attachments: text("attachments"), // JSON array of attachment URLs
+  isArchived: boolean("is_archived").default(false).notNull(),
+  archivedAt: timestamp("archived_at"),
+  archivedBy: integer("archived_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type NewsFeed = typeof newsFeed.$inferSelect;
+export type InsertNewsFeed = typeof newsFeed.$inferInsert;
+
+export const feedComments = pgTable("feed_comments", {
+  id: serial("id").primaryKey(),
+  feedId: integer("feed_id").notNull(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type FeedComment = typeof feedComments.$inferSelect;
+export type InsertFeedComment = typeof feedComments.$inferInsert;
+
+export const feedReactions = pgTable("feed_reactions", {
+  id: serial("id").primaryKey(),
+  feedId: integer("feed_id").notNull(),
+  userId: integer("user_id").notNull(),
+  reaction: varchar("reaction", { length: 20 }).default("like").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type FeedReaction = typeof feedReactions.$inferSelect;
+export type InsertFeedReaction = typeof feedReactions.$inferInsert;
+
+// ============ Employee Live Tracker ============
+export const employeeTracker = pgTable("employee_tracker", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").notNull(),
+  currentLocation: varchar("current_location", { length: 255 }),
+  currentStatus: varchar("current_status", { length: 100 }), // e.g., "In Meeting", "Available", "On Call"
+  currentTask: varchar("current_task", { length: 255 }),
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+});
+
+export type EmployeeTracker = typeof employeeTracker.$inferSelect;
+export type InsertEmployeeTracker = typeof employeeTracker.$inferInsert;

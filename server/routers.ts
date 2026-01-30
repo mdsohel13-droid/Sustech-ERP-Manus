@@ -3543,6 +3543,157 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
         return { success: true };
       }),
   }),
+
+  // News Feed Router
+  feed: router({
+    getAll: protectedProcedure
+      .query(async () => {
+        return await db.getAllFeedPosts(false);
+      }),
+
+    getArchived: adminProcedure
+      .query(async () => {
+        return await db.getArchivedFeedPosts();
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getFeedPostById(input.id);
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        content: z.string().min(1),
+        status: z.enum(["live", "due", "completed"]).optional(),
+        relatedType: z.string().optional(),
+        relatedId: z.number().optional(),
+        dueDate: z.string().optional(),
+        attachments: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.user?.id;
+        if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+        return await db.createFeedPost({
+          ...input,
+          userId,
+          dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
+        });
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        content: z.string().optional(),
+        status: z.enum(["live", "due", "completed"]).optional(),
+        dueDate: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...data } = input;
+        const post = await db.getFeedPostById(id);
+        if (!post) throw new TRPCError({ code: "NOT_FOUND" });
+        if (post.userId !== ctx.user?.id && ctx.user?.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        return await db.updateFeedPost(id, {
+          ...data,
+          dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        });
+      }),
+
+    archive: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.user?.id;
+        if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+        const post = await db.getFeedPostById(input.id);
+        if (!post) throw new TRPCError({ code: "NOT_FOUND" });
+        if (post.userId !== userId && ctx.user?.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        return await db.archiveFeedPost(input.id, userId);
+      }),
+
+    restore: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await db.restoreFeedPost(input.id);
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteFeedPost(input.id);
+        return { success: true };
+      }),
+
+    // Comments
+    getComments: protectedProcedure
+      .input(z.object({ feedId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getFeedComments(input.feedId);
+      }),
+
+    addComment: protectedProcedure
+      .input(z.object({
+        feedId: z.number(),
+        content: z.string().min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.user?.id;
+        if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+        return await db.createFeedComment({
+          feedId: input.feedId,
+          userId,
+          content: input.content,
+        });
+      }),
+
+    deleteComment: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteFeedComment(input.id);
+        return { success: true };
+      }),
+
+    // Reactions
+    getReactions: protectedProcedure
+      .input(z.object({ feedId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getFeedReactions(input.feedId);
+      }),
+
+    toggleReaction: protectedProcedure
+      .input(z.object({
+        feedId: z.number(),
+        reaction: z.string().default("like"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const userId = ctx.user?.id;
+        if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+        return await db.toggleFeedReaction(input.feedId, userId, input.reaction);
+      }),
+  }),
+
+  // Employee Tracker Router
+  tracker: router({
+    getAll: protectedProcedure
+      .query(async () => {
+        return await db.getEmployeeTrackerData();
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        employeeId: z.number(),
+        currentLocation: z.string().optional(),
+        currentStatus: z.string().optional(),
+        currentTask: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { employeeId, ...data } = input;
+        return await db.updateEmployeeTracker(employeeId, data);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

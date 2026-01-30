@@ -73,6 +73,10 @@ import {
   aiConversations, InsertAIConversation,
   aiMessages, InsertAIMessage,
   aiIntegrationSettings, InsertAIIntegrationSetting,
+  newsFeed, InsertNewsFeed,
+  feedComments, InsertFeedComment,
+  feedReactions, InsertFeedReaction,
+  employeeTracker, InsertEmployeeTracker,
 } from "../drizzle/schema";
 const ENV = { ownerOpenId: process.env.OWNER_OPEN_ID || '' };
 
@@ -4272,4 +4276,133 @@ export async function deleteAIIntegrationSetting(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(aiIntegrationSettings).where(eq(aiIntegrationSettings.id, id));
+}
+
+// ============ News Feed Functions ============
+export async function getAllFeedPosts(includeArchived = false) {
+  const db = await getDb();
+  if (!db) return [];
+  if (includeArchived) {
+    return await db.select().from(newsFeed).orderBy(desc(newsFeed.createdAt));
+  }
+  return await db.select().from(newsFeed).where(eq(newsFeed.isArchived, false)).orderBy(desc(newsFeed.createdAt));
+}
+
+export async function getArchivedFeedPosts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(newsFeed).where(eq(newsFeed.isArchived, true)).orderBy(desc(newsFeed.archivedAt));
+}
+
+export async function getFeedPostById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [post] = await db.select().from(newsFeed).where(eq(newsFeed.id, id));
+  return post || null;
+}
+
+export async function createFeedPost(data: Omit<InsertNewsFeed, "id" | "createdAt" | "updatedAt">) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [post] = await db.insert(newsFeed).values(data).returning();
+  return post;
+}
+
+export async function updateFeedPost(id: number, data: Partial<InsertNewsFeed>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [post] = await db.update(newsFeed).set({ ...data, updatedAt: new Date() }).where(eq(newsFeed.id, id)).returning();
+  return post;
+}
+
+export async function archiveFeedPost(id: number, archivedBy: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [post] = await db.update(newsFeed).set({ 
+    isArchived: true, 
+    archivedAt: new Date(), 
+    archivedBy,
+    updatedAt: new Date() 
+  }).where(eq(newsFeed.id, id)).returning();
+  return post;
+}
+
+export async function restoreFeedPost(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [post] = await db.update(newsFeed).set({ 
+    isArchived: false, 
+    archivedAt: null, 
+    archivedBy: null,
+    updatedAt: new Date() 
+  }).where(eq(newsFeed.id, id)).returning();
+  return post;
+}
+
+export async function deleteFeedPost(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(feedReactions).where(eq(feedReactions.feedId, id));
+  await db.delete(feedComments).where(eq(feedComments.feedId, id));
+  await db.delete(newsFeed).where(eq(newsFeed.id, id));
+}
+
+// Feed Comments
+export async function getFeedComments(feedId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(feedComments).where(eq(feedComments.feedId, feedId)).orderBy(feedComments.createdAt);
+}
+
+export async function createFeedComment(data: Omit<InsertFeedComment, "id" | "createdAt" | "updatedAt">) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [comment] = await db.insert(feedComments).values(data).returning();
+  return comment;
+}
+
+export async function deleteFeedComment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(feedComments).where(eq(feedComments.id, id));
+}
+
+// Feed Reactions
+export async function getFeedReactions(feedId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(feedReactions).where(eq(feedReactions.feedId, feedId));
+}
+
+export async function toggleFeedReaction(feedId: number, userId: number, reaction: string = "like") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(feedReactions).where(and(eq(feedReactions.feedId, feedId), eq(feedReactions.userId, userId)));
+  if (existing.length > 0) {
+    await db.delete(feedReactions).where(eq(feedReactions.id, existing[0].id));
+    return null;
+  } else {
+    const [newReaction] = await db.insert(feedReactions).values({ feedId, userId, reaction }).returning();
+    return newReaction;
+  }
+}
+
+// Employee Tracker
+export async function getEmployeeTrackerData() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(employeeTracker).orderBy(desc(employeeTracker.lastUpdated));
+}
+
+export async function updateEmployeeTracker(employeeId: number, data: Partial<InsertEmployeeTracker>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(employeeTracker).where(eq(employeeTracker.employeeId, employeeId));
+  if (existing.length > 0) {
+    const [tracker] = await db.update(employeeTracker).set({ ...data, lastUpdated: new Date() }).where(eq(employeeTracker.employeeId, employeeId)).returning();
+    return tracker;
+  } else {
+    const [tracker] = await db.insert(employeeTracker).values({ employeeId, ...data } as InsertEmployeeTracker).returning();
+    return tracker;
+  }
 }
