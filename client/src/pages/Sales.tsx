@@ -273,7 +273,7 @@ export default function Sales() {
     
     return {
       totalSales,
-      openOpportunities: 36, // Placeholder - would come from opportunities table
+      openOpportunities: 0, // TODO: Connect to opportunities table when available
       salesThisMonth,
       revenueThisQuarter,
       topProducts,
@@ -282,24 +282,48 @@ export default function Sales() {
     };
   }, [dailySales, catalogProducts, products, employees]);
   
-  // Sales Performance chart data
+  // Sales Performance chart data - derived from real daily sales
   const salesPerformanceData = useMemo(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-    return months.map((month) => ({
+    if (!dailySales || dailySales.length === 0) {
+      return [{ month: "No Data", revenue: 0, trend: 0 }];
+    }
+    
+    // Group sales by month
+    const monthlyData: Record<string, number> = {};
+    dailySales.forEach((sale) => {
+      const date = new Date(sale.createdAt);
+      const monthKey = date.toLocaleString('default', { month: 'short' });
+      const revenue = Number(sale.quantity || 0) * Number(sale.unitPrice || 0);
+      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + revenue;
+    });
+    
+    return Object.entries(monthlyData).slice(0, 6).map(([month, revenue]) => ({
       month,
-      revenue: Math.floor(40000 + Math.random() * 30000),
-      trend: Math.floor(30000 + Math.random() * 25000),
+      revenue: Math.round(revenue),
+      trend: Math.round(revenue * 0.85), // Historical average approximation
     }));
-  }, []);
+  }, [dailySales]);
   
-  // Sales Pipeline chart data
+  // Sales Pipeline chart data - derived from real sales data
   const salesPipelineData = useMemo(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
-    return months.map((month) => ({
+    if (!dailySales || dailySales.length === 0) {
+      return [{ month: "No Data", value: 0 }];
+    }
+    
+    // Group sales by month for pipeline view
+    const monthlyData: Record<string, number> = {};
+    dailySales.forEach((sale) => {
+      const date = new Date(sale.createdAt);
+      const monthKey = date.toLocaleString('default', { month: 'short' });
+      const value = Number(sale.quantity || 0) * Number(sale.unitPrice || 0);
+      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + value;
+    });
+    
+    return Object.entries(monthlyData).slice(0, 7).map(([month, value]) => ({
       month,
-      value: Math.floor(100000 + Math.random() * 250000),
+      value: Math.round(value),
     }));
-  }, []);
+  }, [dailySales]);
   
   // Sales Funnel data
   const salesFunnelData = useMemo(() => [

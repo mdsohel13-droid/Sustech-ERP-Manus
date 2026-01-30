@@ -1771,7 +1771,7 @@ function calculateAnalytics(dailySales: any[], weeklyTargets: any[], monthlyTarg
 
   return {
     totalSales,
-    salesGrowth: 12, // Placeholder - can be calculated from historical data
+    salesGrowth: 0, // TODO: Calculate from historical data when available
     achievementRate,
     totalTransactions,
     avgTransactionValue,

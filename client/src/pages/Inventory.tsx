@@ -164,26 +164,46 @@ export default function Inventory() {
     };
   }, [products, productsWithInventory, warehouses]);
   
-  // Chart data for Inventory Turnover
+  // Chart data for Inventory Turnover - derived from real inventory data
   const inventoryTurnoverData = useMemo(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-    return months.map((month, idx) => ({
-      month,
-      itemsSold: Math.floor(15 + Math.random() * 50),
-      inventoryTurnover: Math.floor(20 + Math.random() * 45),
-      turnoverRate: (0.8 + Math.random() * 0.5).toFixed(2),
-    }));
-  }, []);
+    // Calculate actual inventory metrics from products data
+    const totalStock = stats.totalStockUnits;
+    const lowStockItems = stats.lowStockCount;
+    
+    // Show current snapshot instead of fake historical data
+    return [{
+      category: "Current Stock",
+      totalUnits: totalStock,
+      lowStock: lowStockItems,
+      healthy: totalStock - lowStockItems,
+    }];
+  }, [stats]);
   
-  // Chart data for Stock Levels
+  // Chart data for Stock Levels - uses real warehouse distribution
   const stockLevelData = useMemo(() => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
-    return months.map((month) => ({
-      month,
-      totalStock: Math.floor(500 + Math.random() * 300),
-      lowStock: Math.floor(20 + Math.random() * 30),
+    // Aggregate by warehouse from real inventory data
+    const warehouseData: Record<string, { total: number; lowStock: number }> = {};
+    
+    productsWithInventory.forEach((product: any) => {
+      product.inventory?.forEach((inv: any) => {
+        const whName = inv.warehouseName || "Default";
+        if (!warehouseData[whName]) {
+          warehouseData[whName] = { total: 0, lowStock: 0 };
+        }
+        const qty = parseFloat(inv.quantity || "0");
+        warehouseData[whName].total += qty;
+        if (qty < (product.reorderLevel || 10)) {
+          warehouseData[whName].lowStock += 1;
+        }
+      });
+    });
+    
+    return Object.entries(warehouseData).map(([name, data]) => ({
+      warehouse: name,
+      totalStock: data.total,
+      lowStock: data.lowStock,
     }));
-  }, []);
+  }, [productsWithInventory]);
   
   // Stock distribution data for pie chart
   const stockDistributionData = useMemo(() => {

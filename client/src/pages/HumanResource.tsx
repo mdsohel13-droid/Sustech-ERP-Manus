@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,24 +138,24 @@ export default function HumanResource() {
     onSuccess: () => {
       utils.users.getAll.invalidate();
       setAddUserDialogOpen(false);
-      alert("User created successfully!");
+      toast.success("User created successfully!");
     },
     onError: (error) => {
-      alert("Failed to create user: " + error.message);
+      toast.error("Failed to create user: " + error.message);
     },
   });
 
   const updateUserMutation = trpc.users.updateRole.useMutation({
     onSuccess: () => {
       utils.users.getAll.invalidate();
-      alert("User role updated successfully!");
+      toast.success("User role updated successfully!");
     },
   });
 
   const setPermissionsMutation = trpc.permissions.setUserPermissions.useMutation({
     onSuccess: () => {
       setPermissionsDialogOpen(false);
-      alert("Permissions updated successfully!");
+      toast.success("Permissions updated successfully!");
     },
   });
 
@@ -162,10 +163,10 @@ export default function HumanResource() {
     onSuccess: () => {
       utils.hr.getAllEmployees.invalidate();
       setAddEmployeeDialogOpen(false);
-      alert("Employee created successfully!");
+      toast.success("Employee created successfully!");
     },
     onError: (error) => {
-      alert("Failed to create employee: " + error.message);
+      toast.error("Failed to create employee: " + error.message);
     },
   });
 
@@ -198,10 +199,10 @@ export default function HumanResource() {
       utils.hr.getAllDepartments.invalidate();
       utils.hr.getDashboardStats.invalidate();
       setAddDepartmentDialogOpen(false);
-      alert("Department created successfully!");
+      toast.success("Department created successfully!");
     },
     onError: (error) => {
-      alert("Failed to create department: " + error.message);
+      toast.error("Failed to create department: " + error.message);
     },
   });
 
@@ -209,20 +210,20 @@ export default function HumanResource() {
     onSuccess: () => {
       utils.hr.getAllEmployees.invalidate();
       setEditEmployeeDialogOpen(false);
-      alert("Employee updated successfully!");
+      toast.success("Employee updated successfully!");
     },
     onError: (error) => {
-      alert("Failed to update employee: " + error.message);
+      toast.error("Failed to update employee: " + error.message);
     },
   });
 
   const updateConfidentialMutation = trpc.hr.updateEmployeeConfidential.useMutation({
     onSuccess: () => {
       setConfidentialDialogOpen(false);
-      alert("Confidential information updated successfully!");
+      toast.success("Confidential information updated successfully!");
     },
     onError: (error) => {
-      alert("Failed to update confidential info: " + error.message);
+      toast.error("Failed to update confidential info: " + error.message);
     },
   });
 
@@ -304,10 +305,10 @@ export default function HumanResource() {
     onSuccess: () => {
       utils.hr.getJobDescriptions.invalidate();
       setAddJobDescDialogOpen(false);
-      alert("Job description created successfully!");
+      toast.success("Job description created successfully!");
     },
     onError: (error) => {
-      alert("Failed to create job description: " + error.message);
+      toast.error("Failed to create job description: " + error.message);
     },
   });
 
@@ -332,10 +333,10 @@ export default function HumanResource() {
     onSuccess: () => {
       utils.hr.getOnboardingTasks.invalidate();
       utils.hr.getOnboardingProgress.invalidate();
-      alert("Onboarding tasks initialized successfully!");
+      toast.success("Onboarding tasks initialized successfully!");
     },
     onError: (error) => {
-      alert("Failed to initialize onboarding: " + error.message);
+      toast.error("Failed to initialize onboarding: " + error.message);
     },
   });
 
@@ -345,7 +346,7 @@ export default function HumanResource() {
       utils.hr.getOnboardingProgress.invalidate();
     },
     onError: (error) => {
-      alert("Failed to update task: " + error.message);
+      toast.error("Failed to update task: " + error.message);
     },
   });
 
@@ -354,10 +355,10 @@ export default function HumanResource() {
       utils.hr.getOnboardingTasks.invalidate();
       utils.hr.getOnboardingProgress.invalidate();
       setAddOnboardingTaskDialogOpen(false);
-      alert("Task added successfully!");
+      toast.success("Task added successfully!");
     },
     onError: (error) => {
-      alert("Failed to add task: " + error.message);
+      toast.error("Failed to add task: " + error.message);
     },
   });
 
@@ -372,7 +373,7 @@ export default function HumanResource() {
     onSuccess: () => {
       utils.hr.getOnboardingTemplates.invalidate();
       setAddTemplateDialogOpen(false);
-      alert("Template created successfully!");
+      toast.success("Template created successfully!");
     },
   });
 
@@ -1594,7 +1595,7 @@ export default function HumanResource() {
                     size="lg" 
                     className="bg-green-600 hover:bg-green-700"
                     onClick={() => {
-                      alert('Clock In recorded at ' + new Date().toLocaleTimeString());
+                      toast.success('Clock In recorded at ' + new Date().toLocaleTimeString());
                     }}
                   >
                     <Clock className="h-4 w-4 mr-2" />
@@ -1604,7 +1605,7 @@ export default function HumanResource() {
                     size="lg" 
                     variant="destructive"
                     onClick={() => {
-                      alert('Clock Out recorded at ' + new Date().toLocaleTimeString());
+                      toast.success('Clock Out recorded at ' + new Date().toLocaleTimeString());
                     }}
                   >
                     <Clock className="h-4 w-4 mr-2" />
@@ -1730,7 +1731,7 @@ export default function HumanResource() {
                   <Label>Reason</Label>
                   <Input placeholder="Brief reason for leave" />
                 </div>
-                <Button className="w-full" onClick={() => alert('Leave request submitted! Awaiting manager approval.')}>
+                <Button className="w-full" onClick={() => toast.success('Leave request submitted! Awaiting manager approval.')}>
                   Submit Leave Request
                 </Button>
               </CardContent>
@@ -1748,28 +1749,33 @@ export default function HumanResource() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[{ name: 'John Doe', type: 'Annual Leave', dates: 'Jan 20-22, 2026', days: 3 },
-                      { name: 'Jane Smith', type: 'Sick Leave', dates: 'Jan 18, 2026', days: 1 },
-                      { name: 'Bob Wilson', type: 'Casual Leave', dates: 'Jan 25, 2026', days: 1 }].map((req, idx) => (
-                      <div key={idx} className="p-3 border rounded-lg space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{req.name}</span>
-                          <Badge variant="outline">{req.type}</Badge>
+                    {pendingLeaves && pendingLeaves.length > 0 ? (
+                      pendingLeaves.map((item) => (
+                        <div key={item.application.id} className="p-3 border rounded-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{item.user?.name || 'Unknown'}</span>
+                            <Badge variant="outline">{item.application.leaveType}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <span>{item.application.startDate} - {item.application.endDate}</span>
+                            <span>{item.application.daysCount} day(s)</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => toast.success('Leave approved!')}>
+                              Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" className="flex-1" onClick={() => toast.error('Leave rejected.')}>
+                              Reject
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span>{req.dates}</span>
-                          <span>{req.days} day(s)</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => alert('Leave approved!')}>
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="destructive" className="flex-1" onClick={() => alert('Leave rejected.')}>
-                            Reject
-                          </Button>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>No pending approvals</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1911,7 +1917,7 @@ export default function HumanResource() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button className="w-full" onClick={() => alert('Performance review created!')}>
+                  <Button className="w-full" onClick={() => toast.success('Performance review created!')}>
                     Start Review
                   </Button>
                 </CardContent>
@@ -1925,24 +1931,10 @@ export default function HumanResource() {
                 <CardDescription>Current performance targets and progress</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[{ name: 'Sales Target', target: '৳50,00,000', current: '৳42,50,000', progress: 85 },
-                    { name: 'Customer Satisfaction', target: '90%', current: '88%', progress: 98 },
-                    { name: 'Project Completion', target: '100%', current: '75%', progress: 75 },
-                    { name: 'Response Time', target: '<2 hours', current: '1.5 hours', progress: 100 }].map((kpi, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{kpi.name}</span>
-                        <span className="text-sm text-muted-foreground">{kpi.current} / {kpi.target}</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${kpi.progress >= 90 ? 'bg-green-500' : kpi.progress >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                          style={{ width: `${kpi.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <TrendingUp className="h-12 w-12 mb-4 opacity-50" />
+                  <p className="text-lg font-medium">KPI targets not configured</p>
+                  <p className="text-sm">Configure performance targets in Settings to track KPIs here.</p>
                 </div>
               </CardContent>
             </Card>
@@ -1991,7 +1983,7 @@ export default function HumanResource() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => alert('View review details')}>
+                        <Button variant="ghost" size="sm" onClick={() => toast.info('View review details')}>
                           View
                         </Button>
                       </TableCell>
