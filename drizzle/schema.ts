@@ -1700,3 +1700,41 @@ export const journalEntries = pgTable("journal_entries", {
 
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type InsertJournalEntry = typeof journalEntries.$inferInsert;
+
+// ============ AI Chat Tables ============
+export const aiConversations = pgTable("ai_conversations", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const aiMessages = pgTable("ai_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull(),
+  role: varchar("role", { length: 20 }).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AIConversation = typeof aiConversations.$inferSelect;
+export type InsertAIConversation = typeof aiConversations.$inferInsert;
+export type AIMessage = typeof aiMessages.$inferSelect;
+export type InsertAIMessage = typeof aiMessages.$inferInsert;
+
+// ============ AI Integration Settings ============
+export const aiIntegrationSettings = pgTable("ai_integration_settings", {
+  id: serial("id").primaryKey(),
+  provider: varchar("provider", { length: 50 }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  model: varchar("model", { length: 100 }),
+  apiEndpoint: text("api_endpoint"),
+  webhookUrl: text("webhook_url"),
+  settings: text("settings"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type AIIntegrationSetting = typeof aiIntegrationSettings.$inferSelect;
+export type InsertAIIntegrationSetting = typeof aiIntegrationSettings.$inferInsert;

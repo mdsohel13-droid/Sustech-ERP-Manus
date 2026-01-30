@@ -3352,6 +3352,135 @@ Provide 2-3 actionable business insights.`;
       return await db.getProcurementByCategory();
     }),
   }),
+
+  // ============ AI Module ============
+  ai: router({
+    // Chat with AI
+    chat: protectedProcedure
+      .input(z.object({
+        message: z.string(),
+        conversationId: z.number().optional(),
+        context: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const OpenAI = (await import("openai")).default;
+        const openai = new OpenAI({
+          apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+          baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        });
+
+        let conversationId = input.conversationId;
+        
+        // Create new conversation if needed
+        if (!conversationId) {
+          const conversation = await db.createAIConversation(input.message.substring(0, 50) + "...");
+          conversationId = conversation.id;
+        }
+
+        // Save user message
+        await db.createAIMessage(conversationId, "user", input.message);
+
+        // Get conversation history
+        const messages = await db.getAIMessages(conversationId);
+        const chatHistory = messages.map(m => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+
+        // System prompt with ERP context
+        const systemPrompt = `You are an AI assistant for Sustech ERP System. You help users with:
+- Financial analysis and reporting
+- Sales and customer management
+- Project pipeline tracking
+- Human resources queries
+- Inventory and procurement
+${input.context ? `\nCurrent context: ${input.context}` : ""}
+
+Provide concise, actionable insights. Format responses with markdown when helpful.`;
+
+        // Call OpenAI
+        const response = await openai.chat.completions.create({
+          model: "gpt-5-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...chatHistory,
+          ],
+          max_completion_tokens: 1024,
+        });
+
+        const assistantContent = response.choices[0]?.message?.content || "I couldn't generate a response. Please try again.";
+
+        // Save assistant message
+        await db.createAIMessage(conversationId, "assistant", assistantContent);
+
+        return {
+          conversationId,
+          content: assistantContent,
+        };
+      }),
+
+    // Get all conversations
+    getConversations: protectedProcedure.query(async () => {
+      return await db.getAIConversations();
+    }),
+
+    // Get conversation messages
+    getMessages: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getAIMessages(input.conversationId);
+      }),
+
+    // Delete conversation
+    deleteConversation: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteAIConversation(input.id);
+        return { success: true };
+      }),
+
+    // AI Integration Settings
+    getIntegrationSettings: adminProcedure.query(async () => {
+      return await db.getAIIntegrationSettings();
+    }),
+
+    createIntegrationSetting: adminProcedure
+      .input(z.object({
+        provider: z.string(),
+        name: z.string(),
+        isActive: z.boolean().optional(),
+        model: z.string().optional(),
+        apiEndpoint: z.string().optional(),
+        webhookUrl: z.string().optional(),
+        settings: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.createAIIntegrationSetting(input);
+      }),
+
+    updateIntegrationSetting: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        provider: z.string().optional(),
+        name: z.string().optional(),
+        isActive: z.boolean().optional(),
+        model: z.string().optional(),
+        apiEndpoint: z.string().optional(),
+        webhookUrl: z.string().optional(),
+        settings: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await db.updateAIIntegrationSetting(id, data);
+      }),
+
+    deleteIntegrationSetting: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteAIIntegrationSetting(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

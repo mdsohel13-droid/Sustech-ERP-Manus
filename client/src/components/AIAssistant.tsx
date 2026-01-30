@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 interface Message {
   id: string;
@@ -42,7 +43,10 @@ export function AIAssistant({ open, onClose }: AIAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<number | undefined>();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const chatMutation = trpc.ai.chat.useMutation();
 
   // Context-aware suggestions based on current page
   const getSuggestions = (): Suggestion[] => {
@@ -230,27 +234,42 @@ export function AIAssistant({ open, onClose }: AIAssistantProps) {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response (in production, this would call the LLM API)
-    setTimeout(() => {
-      const responses: Record<string, string> = {
-        "How can I use this page effectively?": `This page helps you manage your business operations. Here are some tips:\n\n• Use the sidebar to navigate between modules\n• Press ⌘K to quickly search and navigate\n• Check the KPI cards for quick insights\n• Use Quick Actions for common tasks`,
-        "Summarize today's business performance": `📊 **Today's Performance Summary**\n\n• Revenue: ৳45,000 (+12% vs yesterday)\n• New Orders: 8\n• Active Projects: 5\n• Pending Invoices: 3\n\nOverall, business is performing well with positive growth trends.`,
-        "What needs my attention today?": `⚠️ **Items Requiring Attention**\n\n1. **Overdue Invoice** - Invoice #INV-2024-001 is 5 days overdue (৳15,000)\n2. **Tender Deadline** - "Govt. IT Project" submission due in 2 days\n3. **Low Stock** - 3 products below reorder level\n4. **Pending Approval** - 2 leave requests awaiting approval`,
-        "default": `I understand you're asking about "${text}". \n\nAs an AI assistant, I can help you with:\n• Analyzing business data and trends\n• Generating reports and summaries\n• Answering questions about your ERP system\n• Providing recommendations\n\nThis feature is being enhanced. For now, please use the navigation and search features to find what you need.`
-      };
+    try {
+      // Get page context for AI
+      const pageContext = location === "/" ? "Dashboard" : 
+        location.replace("/", "").replace(/-/g, " ").replace(/^\w/, c => c.toUpperCase());
 
-      const responseText = responses[text] || responses["default"];
+      const response = await chatMutation.mutateAsync({
+        message: text,
+        conversationId,
+        context: `User is on the ${pageContext} page`,
+      });
+
+      // Store conversation ID for follow-up messages
+      if (response.conversationId) {
+        setConversationId(response.conversationId);
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: responseText,
+        content: response.content,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("AI chat error:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "I apologize, but I encountered an error. Please try again later.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   // Scroll to bottom when messages change

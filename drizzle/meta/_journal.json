@@ -50,6 +50,13 @@
       "when": 1769718570612,
       "tag": "0006_unusual_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769756392440,
+      "tag": "0007_lonely_ultimo",
+      "breakpoints": true
     }
   ]
 }

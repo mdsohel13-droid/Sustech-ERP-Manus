@@ -70,6 +70,9 @@ import {
   purchaseOrderItems, InsertPurchaseOrderItem,
   financialAccounts, InsertFinancialAccount,
   journalEntries, InsertJournalEntry,
+  aiConversations, InsertAIConversation,
+  aiMessages, InsertAIMessage,
+  aiIntegrationSettings, InsertAIIntegrationSetting,
 } from "../drizzle/schema";
 const ENV = { ownerOpenId: process.env.OWNER_OPEN_ID || '' };
 
@@ -4193,4 +4196,80 @@ export async function getIncomeStatement(period: 'mtd' | 'ytd' = 'ytd') {
       { name: 'Net Profit', value: netProfit, percentage: revenue > 0 ? (netProfit / revenue) * 100 : 0 }
     ]
   };
+}
+
+// ============ AI Module ============
+
+export async function getAIConversations() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(aiConversations).orderBy(desc(aiConversations.createdAt));
+}
+
+export async function getAIConversation(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [conversation] = await db.select().from(aiConversations).where(eq(aiConversations.id, id));
+  return conversation;
+}
+
+export async function createAIConversation(title: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [conversation] = await db.insert(aiConversations).values({ title }).returning();
+  return conversation;
+}
+
+export async function deleteAIConversation(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(aiMessages).where(eq(aiMessages.conversationId, id));
+  await db.delete(aiConversations).where(eq(aiConversations.id, id));
+}
+
+export async function getAIMessages(conversationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(aiMessages).where(eq(aiMessages.conversationId, conversationId)).orderBy(asc(aiMessages.createdAt));
+}
+
+export async function createAIMessage(conversationId: number, role: string, content: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [message] = await db.insert(aiMessages).values({ conversationId, role, content }).returning();
+  return message;
+}
+
+// AI Integration Settings
+export async function getAIIntegrationSettings() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(aiIntegrationSettings).orderBy(aiIntegrationSettings.createdAt);
+}
+
+export async function getAIIntegrationSetting(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [setting] = await db.select().from(aiIntegrationSettings).where(eq(aiIntegrationSettings.id, id));
+  return setting;
+}
+
+export async function createAIIntegrationSetting(data: InsertAIIntegrationSetting) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [setting] = await db.insert(aiIntegrationSettings).values(data).returning();
+  return setting;
+}
+
+export async function updateAIIntegrationSetting(id: number, data: Partial<InsertAIIntegrationSetting>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [setting] = await db.update(aiIntegrationSettings).set({ ...data, updatedAt: new Date() }).where(eq(aiIntegrationSettings.id, id)).returning();
+  return setting;
+}
+
+export async function deleteAIIntegrationSetting(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(aiIntegrationSettings).where(eq(aiIntegrationSettings.id, id));
 }
