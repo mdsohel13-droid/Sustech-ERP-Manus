@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X, Receipt, CreditCard, FileText, ArrowUpRight, Wallet, Building, BookOpen, Link2, ExternalLink } from "lucide-react";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -24,11 +25,33 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
   const [typesDialogOpen, setTypesDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [editingType, setEditingType] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [linkARDialogOpen, setLinkARDialogOpen] = useState(false);
+  const [linkAPDialogOpen, setLinkAPDialogOpen] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: transactions } = trpc.projects.getTransactions.useQuery({ projectId }, { enabled: open });
   const { data: summary } = trpc.projects.getFinancialSummary.useQuery({ projectId }, { enabled: open });
   const { data: transactionTypes } = trpc.transactionTypes.getAll.useQuery(undefined, { enabled: open });
+  
+  const { data: allAR = [] } = trpc.financial.getAllAR.useQuery(undefined, { enabled: open });
+  const { data: allAP = [] } = trpc.financial.getAllAP.useQuery(undefined, { enabled: open });
+  const { data: journalEntries = [] } = trpc.financial.getAllJournalEntries.useQuery(undefined, { enabled: open });
+
+  const linkedAR = allAR.filter((ar: any) => 
+    ar.notes?.toLowerCase().includes(projectName.toLowerCase()) ||
+    ar.invoiceNumber?.toLowerCase().includes(projectName.toLowerCase().substring(0, 10))
+  );
+
+  const linkedAP = allAP.filter((ap: any) => 
+    ap.notes?.toLowerCase().includes(projectName.toLowerCase()) ||
+    ap.invoiceNumber?.toLowerCase().includes(projectName.toLowerCase().substring(0, 10))
+  );
+
+  const linkedJournals = journalEntries.filter((entry: any) =>
+    entry.description?.toLowerCase().includes(projectName.toLowerCase()) ||
+    entry.reference?.toLowerCase().includes(projectName.toLowerCase().substring(0, 10))
+  );
 
   const createMutation = trpc.projects.createTransaction.useMutation({
     onSuccess: () => {
@@ -84,6 +107,24 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
     },
   });
 
+  const createARMutation = trpc.financial.createAR.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAR.invalidate();
+      toast.success("Accounts Receivable entry created and linked");
+      setLinkARDialogOpen(false);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const createAPMutation = trpc.financial.createAP.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAP.invalidate();
+      toast.success("Accounts Payable entry created and linked");
+      setLinkAPDialogOpen(false);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -123,6 +164,30 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
     }
   };
 
+  const handleARSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createARMutation.mutate({
+      customerName: formData.get("customerName") as string,
+      amount: formData.get("amount") as string,
+      dueDate: formData.get("dueDate") as string,
+      invoiceNumber: formData.get("invoiceNumber") as string,
+      notes: `Project: ${projectName} | Currency: ${formData.get("currency") || "BDT"}\n${formData.get("notes") || ""}`,
+    });
+  };
+
+  const handleAPSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createAPMutation.mutate({
+      vendorName: formData.get("vendorName") as string,
+      amount: formData.get("amount") as string,
+      dueDate: formData.get("dueDate") as string,
+      invoiceNumber: formData.get("invoiceNumber") as string,
+      notes: `Project: ${projectName} | Currency: ${formData.get("currency") || "BDT"}\n${formData.get("notes") || ""}`,
+    });
+  };
+
   const getTypeColor = (type: string) => {
     const typeObj = transactionTypes?.find(t => t.code === type);
     if (typeObj?.color) {
@@ -131,21 +196,27 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
     return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "paid": return "bg-green-100 text-green-800";
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      case "overdue": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
   if (!open) return null;
 
   return (
     <>
-      {/* Full Screen Modal Overlay */}
       <div className="fixed inset-0 z-50 bg-black/50" onClick={() => onOpenChange(false)} />
       
-      {/* Full Screen Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="w-full h-full max-w-[95vw] max-h-[95vh] bg-background rounded-lg shadow-2xl flex flex-col">
-          {/* Header */}
           <div className="flex items-center justify-between px-8 py-6 border-b bg-background sticky top-0 z-10">
             <div className="flex-1">
-              <h2 className="text-3xl font-bold">Project Financials - {projectName}</h2>
-              <p className="text-sm text-muted-foreground mt-1">Track all financial transactions, costs, and profitability</p>
+              <h2 className="text-3xl font-bold">Project AC & Financials</h2>
+              <p className="text-sm text-muted-foreground mt-1">{projectName} - Integrated Accounts, Finance & Transaction Management</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setTypesDialogOpen(true)}>
@@ -158,132 +229,341 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
             </div>
           </div>
 
-          {/* Content */}
           <div className="overflow-y-auto flex-1 px-8 py-6">
-            {/* Financial Summary */}
-            {summary && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground">Total Revenue</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(summary.totalRevenue, "BDT")}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground">Total Costs</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-600">
-                      {formatCurrency(summary.totalCosts, "BDT")}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Purchases: {formatCurrency(summary.totalPurchases, "BDT")}<br/>
-                      Expenses: {formatCurrency(summary.totalExpenses, "BDT")}<br/>
-                      COGS: {formatCurrency(summary.totalCOGS, "BDT")}<br/>
-                      WACC: {formatCurrency(summary.totalWACC, "BDT")}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground">Profit/Loss</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className={`text-2xl font-bold flex items-center gap-2 ${summary.profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {summary.profitLoss >= 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
-                      {formatCurrency(Math.abs(summary.profitLoss), "BDT")}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm text-muted-foreground">Profit Margin</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className={`text-2xl font-bold ${summary.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {summary.profitMargin.toFixed(2)}%
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-6">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="transactions" className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4" />
+                  Transactions
+                </TabsTrigger>
+                <TabsTrigger value="receivables" className="flex items-center gap-2">
+                  <ArrowUpRight className="h-4 w-4" />
+                  Receivables ({linkedAR.length})
+                </TabsTrigger>
+                <TabsTrigger value="payables" className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Payables ({linkedAP.length})
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Transactions List */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold">Transactions</h3>
-                <Button onClick={() => { setEditingTransaction(null); setTransactionDialogOpen(true); }} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />Add Transaction
-                </Button>
-              </div>
+              <TabsContent value="overview" className="space-y-6">
+                {summary && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Total Revenue
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                          {formatCurrency(summary.totalRevenue, "BDT")}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                          <TrendingDown className="h-4 w-4" />
+                          Total Costs
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+                          {formatCurrency(summary.totalCosts, "BDT")}
+                        </div>
+                        <div className="text-xs text-red-600/70 dark:text-red-400/70 mt-1">
+                          Purchases: {formatCurrency(summary.totalPurchases, "BDT")}<br/>
+                          Expenses: {formatCurrency(summary.totalExpenses, "BDT")}<br/>
+                          COGS: {formatCurrency(summary.totalCOGS, "BDT")}<br/>
+                          WACC: {formatCurrency(summary.totalWACC, "BDT")}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className={`bg-gradient-to-br ${summary.profitLoss >= 0 ? 'from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 border-emerald-200' : 'from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200'}`}>
+                      <CardHeader className="pb-2">
+                        <CardTitle className={`text-sm flex items-center gap-2 ${summary.profitLoss >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-orange-700 dark:text-orange-300'}`}>
+                          <DollarSign className="h-4 w-4" />
+                          Profit/Loss
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={`text-2xl font-bold flex items-center gap-2 ${summary.profitLoss >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-orange-700 dark:text-orange-300'}`}>
+                          {summary.profitLoss >= 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
+                          {formatCurrency(Math.abs(summary.profitLoss), "BDT")}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                          <Wallet className="h-4 w-4" />
+                          Profit Margin
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={`text-2xl font-bold ${summary.profitMargin >= 0 ? 'text-purple-700 dark:text-purple-300' : 'text-orange-700'}`}>
+                          {summary.profitMargin.toFixed(2)}%
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
 
-              <div className="border rounded-lg overflow-x-auto">
-                <table className="w-full min-w-[1000px]">
-                  <thead className="bg-muted sticky top-0">
-                    <tr>
-                      <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Date</th>
-                      <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Type</th>
-                      <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Description</th>
-                      <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Category</th>
-                      <th className="text-right p-4 text-sm font-medium whitespace-nowrap">Amount</th>
-                      <th className="text-center p-4 text-sm font-medium whitespace-nowrap">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions?.map((transaction) => (
-                      <tr key={transaction.id} className="border-t hover:bg-muted/50">
-                        <td className="p-4 text-sm whitespace-nowrap">{format(new Date(transaction.transactionDate), "MMM dd, yyyy")}</td>
-                        <td className="p-4 whitespace-nowrap">
-                          <Badge className={getTypeColor(transaction.transactionType)}>
-                            {transactionTypes?.find(t => t.code === transaction.transactionType)?.name || transaction.transactionType.toUpperCase()}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-sm max-w-xs truncate">{transaction.description || "-"}</td>
-                        <td className="p-4 text-sm whitespace-nowrap">{transaction.category || "-"}</td>
-                        <td className="p-4 text-sm text-right font-medium whitespace-nowrap">
-                          {formatCurrency(Number(transaction.amount), transaction.currency)}
-                        </td>
-                        <td className="p-4 text-center whitespace-nowrap">
-                          <div className="flex gap-2 justify-center">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => { setEditingTransaction(transaction); setTransactionDialogOpen(true); }}
-                            >
-                              Edit
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => {
-                                if (confirm("Delete this transaction?")) {
-                                  deleteMutation.mutate({ id: transaction.id });
-                                }
-                              }}
-                            >
-                              Delete
-                            </Button>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Link2 className="h-5 w-5" />
+                        Quick Links
+                      </CardTitle>
+                      <CardDescription>Navigate to related modules</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <Button variant="outline" className="w-full justify-start" asChild>
+                        <a href="/accounting">
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          Open Accounting Module
+                          <ExternalLink className="h-3 w-3 ml-auto" />
+                        </a>
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start" asChild>
+                        <a href="/finance">
+                          <Building className="h-4 w-4 mr-2" />
+                          Open Finance Module
+                          <ExternalLink className="h-3 w-3 ml-auto" />
+                        </a>
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Integration Summary
+                      </CardTitle>
+                      <CardDescription>Linked records from other modules</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <ArrowUpRight className="h-4 w-4 text-green-600" />
+                            <span>Accounts Receivable</span>
                           </div>
-                        </td>
+                          <Badge variant="secondary">{linkedAR.length} linked</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-red-600" />
+                            <span>Accounts Payable</span>
+                          </div>
+                          <Badge variant="secondary">{linkedAP.length} linked</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                            <span>Journal Entries</span>
+                          </div>
+                          <Badge variant="secondary">{linkedJournals.length} linked</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="transactions" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold">Project Transactions</h3>
+                  <Button onClick={() => { setEditingTransaction(null); setTransactionDialogOpen(true); }} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />Add Transaction
+                  </Button>
+                </div>
+
+                <div className="border rounded-lg overflow-x-auto">
+                  <table className="w-full min-w-[1000px]">
+                    <thead className="bg-muted sticky top-0">
+                      <tr>
+                        <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Date</th>
+                        <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Type</th>
+                        <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Description</th>
+                        <th className="text-left p-4 text-sm font-medium whitespace-nowrap">Category</th>
+                        <th className="text-right p-4 text-sm font-medium whitespace-nowrap">Amount</th>
+                        <th className="text-center p-4 text-sm font-medium whitespace-nowrap">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    </thead>
+                    <tbody>
+                      {transactions?.map((transaction) => (
+                        <tr key={transaction.id} className="border-t hover:bg-muted/50">
+                          <td className="p-4 text-sm whitespace-nowrap">{format(new Date(transaction.transactionDate), "MMM dd, yyyy")}</td>
+                          <td className="p-4 whitespace-nowrap">
+                            <Badge className={getTypeColor(transaction.transactionType)}>
+                              {transactionTypes?.find(t => t.code === transaction.transactionType)?.name || transaction.transactionType.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="p-4 text-sm max-w-xs truncate">{transaction.description || "-"}</td>
+                          <td className="p-4 text-sm whitespace-nowrap">{transaction.category || "-"}</td>
+                          <td className="p-4 text-sm text-right font-medium whitespace-nowrap">
+                            {formatCurrency(Number(transaction.amount), transaction.currency)}
+                          </td>
+                          <td className="p-4 text-center whitespace-nowrap">
+                            <div className="flex gap-2 justify-center">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => { setEditingTransaction(transaction); setTransactionDialogOpen(true); }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  if (confirm("Delete this transaction?")) {
+                                    deleteMutation.mutate({ id: transaction.id });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {(!transactions || transactions.length === 0) && (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                            No transactions found. Click "Add Transaction" to create one.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="receivables" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold">Linked Accounts Receivable</h3>
+                    <p className="text-sm text-muted-foreground">AR entries linked to this project (via notes or invoice reference)</p>
+                  </div>
+                  <Button onClick={() => setLinkARDialogOpen(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />Create Linked AR
+                  </Button>
+                </div>
+
+                <div className="border rounded-lg overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-4 text-sm font-medium">Customer</th>
+                        <th className="text-left p-4 text-sm font-medium">Invoice #</th>
+                        <th className="text-left p-4 text-sm font-medium">Due Date</th>
+                        <th className="text-right p-4 text-sm font-medium">Amount</th>
+                        <th className="text-center p-4 text-sm font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {linkedAR.map((ar: any) => (
+                        <tr key={ar.id} className="border-t hover:bg-muted/50">
+                          <td className="p-4 text-sm">{ar.customerName}</td>
+                          <td className="p-4 text-sm">{ar.invoiceNumber || "-"}</td>
+                          <td className="p-4 text-sm">{format(new Date(ar.dueDate), "MMM dd, yyyy")}</td>
+                          <td className="p-4 text-sm text-right font-medium">{formatCurrency(Number(ar.amount), ar.currency)}</td>
+                          <td className="p-4 text-center">
+                            <Badge className={getStatusColor(ar.status)}>{ar.status}</Badge>
+                          </td>
+                        </tr>
+                      ))}
+                      {linkedAR.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                            No linked receivables found. Create one to link it to this project.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      <strong>Tip:</strong> AR entries are automatically linked when they contain the project name in their notes or invoice number. You can also manage all AR entries in the <a href="/finance" className="underline">Finance Module</a>.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="payables" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold">Linked Accounts Payable</h3>
+                    <p className="text-sm text-muted-foreground">AP entries linked to this project (via notes or invoice reference)</p>
+                  </div>
+                  <Button onClick={() => setLinkAPDialogOpen(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />Create Linked AP
+                  </Button>
+                </div>
+
+                <div className="border rounded-lg overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-4 text-sm font-medium">Vendor</th>
+                        <th className="text-left p-4 text-sm font-medium">Invoice #</th>
+                        <th className="text-left p-4 text-sm font-medium">Due Date</th>
+                        <th className="text-right p-4 text-sm font-medium">Amount</th>
+                        <th className="text-center p-4 text-sm font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {linkedAP.map((ap: any) => (
+                        <tr key={ap.id} className="border-t hover:bg-muted/50">
+                          <td className="p-4 text-sm">{ap.vendorName}</td>
+                          <td className="p-4 text-sm">{ap.invoiceNumber || "-"}</td>
+                          <td className="p-4 text-sm">{format(new Date(ap.dueDate), "MMM dd, yyyy")}</td>
+                          <td className="p-4 text-sm text-right font-medium">{formatCurrency(Number(ap.amount), ap.currency)}</td>
+                          <td className="p-4 text-center">
+                            <Badge className={getStatusColor(ap.status)}>{ap.status}</Badge>
+                          </td>
+                        </tr>
+                      ))}
+                      {linkedAP.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                            No linked payables found. Create one to link it to this project.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      <strong>Tip:</strong> AP entries are automatically linked when they contain the project name in their notes or invoice number. You can also manage all AP entries in the <a href="/finance" className="underline">Finance Module</a>.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
 
-      {/* Add/Edit Transaction Dialog */}
       {transactionDialogOpen && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
           <div className="bg-background rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -388,7 +668,6 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
         </div>
       )}
 
-      {/* Manage Transaction Types Dialog */}
       {typesDialogOpen && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
           <div className="bg-background rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -399,7 +678,6 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
               </Button>
             </div>
             <div className="p-6 space-y-6">
-              {/* Add/Edit Type Form */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">{editingType ? "Edit" : "Add New"} Transaction Type</CardTitle>
@@ -480,7 +758,6 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                 </CardContent>
               </Card>
 
-              {/* Existing Types List */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Existing Transaction Types</CardTitle>
@@ -509,22 +786,22 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                             variant="ghost"
                             size="sm"
                             onClick={() => setEditingType(type)}
+                            disabled={type.isSystem}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          {!type.isSystem && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (confirm(`Delete transaction type "${type.name}"?`)) {
-                                  deleteTypeMutation.mutate({ id: type.id });
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm("Delete this transaction type?")) {
+                                deleteTypeMutation.mutate({ id: type.id });
+                              }
+                            }}
+                            disabled={type.isSystem}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -532,6 +809,116 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </div>
+      )}
+
+      {linkARDialogOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-2xl max-w-lg w-full">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Create Linked AR Entry</h3>
+              <Button variant="ghost" size="sm" onClick={() => setLinkARDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form onSubmit={handleARSubmit} className="p-6 space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="customerName">Customer Name</Label>
+                <Input id="customerName" name="customerName" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input id="amount" name="amount" type="number" step="0.01" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select name="currency" defaultValue="BDT">
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BDT">BDT</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="dueDate">Due Date</Label>
+                  <Input id="dueDate" name="dueDate" type="date" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="invoiceNumber">Invoice Number</Label>
+                  <Input id="invoiceNumber" name="invoiceNumber" />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea id="notes" name="notes" rows={2} placeholder="Additional notes" />
+              </div>
+              <p className="text-xs text-muted-foreground">This AR entry will be automatically linked to project "{projectName}"</p>
+              <div className="flex gap-2 justify-end pt-4 border-t">
+                <Button type="button" variant="outline" onClick={() => setLinkARDialogOpen(false)}>Cancel</Button>
+                <Button type="submit">Create AR Entry</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {linkAPDialogOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-2xl max-w-lg w-full">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Create Linked AP Entry</h3>
+              <Button variant="ghost" size="sm" onClick={() => setLinkAPDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form onSubmit={handleAPSubmit} className="p-6 space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="vendorName">Vendor Name</Label>
+                <Input id="vendorName" name="vendorName" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input id="amount" name="amount" type="number" step="0.01" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select name="currency" defaultValue="BDT">
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BDT">BDT</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="dueDate">Due Date</Label>
+                  <Input id="dueDate" name="dueDate" type="date" required />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="invoiceNumber">Invoice Number</Label>
+                  <Input id="invoiceNumber" name="invoiceNumber" />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea id="notes" name="notes" rows={2} placeholder="Additional notes" />
+              </div>
+              <p className="text-xs text-muted-foreground">This AP entry will be automatically linked to project "{projectName}"</p>
+              <div className="flex gap-2 justify-end pt-4 border-t">
+                <Button type="button" variant="outline" onClick={() => setLinkAPDialogOpen(false)}>Cancel</Button>
+                <Button type="submit">Create AP Entry</Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
