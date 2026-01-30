@@ -973,20 +973,38 @@ export default function Accounting() {
                     <SelectContent>
                       {entryType === "income" ? (
                         <>
-                          <SelectItem value="Sales Revenue">Sales Revenue</SelectItem>
-                          <SelectItem value="Service Revenue">Service Revenue</SelectItem>
-                          <SelectItem value="Investment Income">Investment Income</SelectItem>
-                          <SelectItem value="Other Income">Other Income</SelectItem>
+                          {financialAccounts
+                            .filter((a: any) => a.accountType === 'revenue' && a.isActive)
+                            .map((a: any) => (
+                              <SelectItem key={a.id} value={a.accountName}>{a.accountName}</SelectItem>
+                            ))}
+                          {financialAccounts.filter((a: any) => a.accountType === 'revenue' && a.isActive).length === 0 && (
+                            <>
+                              <SelectItem value="Sales Revenue">Sales Revenue</SelectItem>
+                              <SelectItem value="Service Revenue">Service Revenue</SelectItem>
+                              <SelectItem value="Investment Income">Investment Income</SelectItem>
+                              <SelectItem value="Other Income">Other Income</SelectItem>
+                            </>
+                          )}
                         </>
                       ) : (
                         <>
-                          <SelectItem value="Office Supplies">Office Supplies</SelectItem>
-                          <SelectItem value="Salaries">Salaries</SelectItem>
-                          <SelectItem value="Rent">Rent</SelectItem>
-                          <SelectItem value="Utilities">Utilities</SelectItem>
-                          <SelectItem value="Marketing">Marketing</SelectItem>
-                          <SelectItem value="Travel">Travel</SelectItem>
-                          <SelectItem value="Other Expense">Other Expense</SelectItem>
+                          {financialAccounts
+                            .filter((a: any) => a.accountType === 'expense' && a.isActive)
+                            .map((a: any) => (
+                              <SelectItem key={a.id} value={a.accountName}>{a.accountName}</SelectItem>
+                            ))}
+                          {financialAccounts.filter((a: any) => a.accountType === 'expense' && a.isActive).length === 0 && (
+                            <>
+                              <SelectItem value="Office Supplies">Office Supplies</SelectItem>
+                              <SelectItem value="Salaries">Salaries</SelectItem>
+                              <SelectItem value="Rent">Rent</SelectItem>
+                              <SelectItem value="Utilities">Utilities</SelectItem>
+                              <SelectItem value="Marketing">Marketing</SelectItem>
+                              <SelectItem value="Travel">Travel</SelectItem>
+                              <SelectItem value="Other Expense">Other Expense</SelectItem>
+                            </>
+                          )}
                         </>
                       )}
                     </SelectContent>
