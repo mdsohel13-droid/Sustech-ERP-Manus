@@ -26,6 +26,7 @@ import Contacts from "./pages/Contacts";
 import Inventory from "./pages/Inventory";
 import Procurement from "./pages/Procurement";
 import Finance from "./pages/Finance";
+import SCM from "./pages/SCM";
 import AccessDenied from "./pages/AccessDenied";
 import { HyperlinkAnalyticsDashboard } from "./pages/HyperlinkAnalyticsDashboard";
 import AIAssistant from "./pages/AIAssistant";
@@ -136,6 +137,13 @@ function Router() {
       </Route>
       <Route path={"/procurement"}>
         <Procurement />
+      </Route>
+      <Route path={"/scm"}>
+        <DashboardLayout>
+          <ProtectedRoute module="inventory">
+            <SCM />
+          </ProtectedRoute>
+        </DashboardLayout>
       </Route>
       <Route path={"/access-denied"}>
         <AccessDenied />

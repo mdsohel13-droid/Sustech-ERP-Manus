@@ -58,7 +58,8 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  Bot
+  Bot,
+  Truck
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
@@ -79,6 +80,7 @@ const ALL_MENU_ITEMS = [
   { icon: Users, label: "CRM", path: "/crm", module: "crm", group: "operations" },
   { icon: Receipt, label: "Procurement", path: "/procurement", module: "procurement", group: "operations" },
   { icon: Warehouse, label: "Inventory", path: "/inventory", module: "inventory", group: "operations" },
+  { icon: Truck, label: "SCM", path: "/scm", module: "inventory", group: "operations" },
   { icon: DollarSign, label: "Finance", path: "/finance", module: "financial", group: "finance" },
   { icon: Receipt, label: "Accounting", path: "/accounting", module: "accounting", group: "finance" },
   { icon: Briefcase, label: "Projects", path: "/projects", module: "projects", group: "business" },
