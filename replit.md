@@ -66,6 +66,14 @@ The Accounting module (formerly "Income & Expense") provides comprehensive finan
 - **Permanent Delete**: Hard delete from archive with confirmation dialog
 - **Delete**: Direct delete (non-archived entries) with confirmation
 
+**Settings Tab - Chart of Accounts Management:**
+- **Dynamic Chart of Accounts**: Full CRUD operations for financial accounts (asset, liability, equity, revenue, expense types)
+- **Account Creation**: Add new accounts with code, name, type, subtype, opening balance, and description
+- **Account Editing**: Update account balances through dedicated edit dialog
+- **Account Types**: Support for all standard accounting types with subtypes (cash, bank, receivables, payables, inventory, etc.)
+- **Visual Status**: Color-coded badges for account types and active/inactive status
+- **Journal Entry Integration**: Account dropdown in journal entries dynamically pulls from Chart of Accounts
+
 **Database Schema:**
 - `income_expenditure` table with fields: id, date, type (income/expenditure), category, subcategory, amount, currency, description, referenceNumber, paymentMethod, createdBy, createdAt, updatedAt, isArchived, archivedAt
 

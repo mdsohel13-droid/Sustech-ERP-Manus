@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle, BookOpen, CreditCard, ArrowRightLeft } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle, BookOpen, CreditCard, ArrowRightLeft, Settings } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, Line } from "recharts";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
@@ -34,6 +34,8 @@ export default function Accounting() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; item: any; type: 'archive' | 'delete' | 'permanent' }>({ show: false, item: null, type: 'archive' });
   const [viewingEntry, setViewingEntry] = useState<any>(null);
   const [journalDialogOpen, setJournalDialogOpen] = useState(false);
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<any>(null);
 
   const utils = trpc.useUtils();
   const { currency } = useCurrency();
@@ -125,6 +127,28 @@ export default function Accounting() {
       utils.financial.getAllJournalEntries.invalidate();
       toast.success("Journal entry created successfully");
       setJournalDialogOpen(false);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const createAccountMutation = trpc.financial.createFinancialAccount.useMutation({
+    onSuccess: () => {
+      utils.financial.getAccounts.invalidate();
+      utils.financial.getBalanceSheet.invalidate();
+      toast.success("Account created successfully");
+      setAccountDialogOpen(false);
+      setEditingAccount(null);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateAccountBalanceMutation = trpc.financial.updateAccountBalance.useMutation({
+    onSuccess: () => {
+      utils.financial.getAccounts.invalidate();
+      utils.financial.getBalanceSheet.invalidate();
+      toast.success("Account balance updated");
+      setAccountDialogOpen(false);
+      setEditingAccount(null);
     },
     onError: (error) => toast.error(error.message),
   });
@@ -368,6 +392,10 @@ export default function Accounting() {
           <TabsTrigger value="journal" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Journal Entries
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Settings
           </TabsTrigger>
         </TabsList>
 
@@ -806,6 +834,96 @@ export default function Accounting() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Settings Tab - Chart of Accounts Management */}
+        <TabsContent value="settings" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Accounting Settings</h2>
+              <p className="text-muted-foreground">Manage Chart of Accounts and categories</p>
+            </div>
+            <Button onClick={() => { setEditingAccount(null); setAccountDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Account
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Chart of Accounts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Subtype</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {financialAccounts.length > 0 ? (
+                    financialAccounts.map((account: any) => (
+                      <TableRow key={account.id}>
+                        <TableCell className="font-mono">{account.accountCode}</TableCell>
+                        <TableCell className="font-medium">{account.accountName}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={
+                            account.accountType === 'asset' ? 'bg-blue-50 text-blue-700' :
+                            account.accountType === 'liability' ? 'bg-red-50 text-red-700' :
+                            account.accountType === 'equity' ? 'bg-purple-50 text-purple-700' :
+                            account.accountType === 'revenue' ? 'bg-green-50 text-green-700' :
+                            'bg-orange-50 text-orange-700'
+                          }>
+                            {account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground capitalize">
+                          {account.accountSubtype?.replace(/_/g, ' ')}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(parseFloat(account.balance || '0'), currency)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={account.isActive ? "default" : "secondary"}>
+                            {account.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditingAccount(account);
+                              setAccountDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>No accounts configured yet</p>
+                        <p className="text-sm">Add your first account to get started</p>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -1155,17 +1273,138 @@ export default function Accounting() {
         </DialogContent>
       </Dialog>
 
-      <Button
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-        size="icon"
-        onClick={() => {
-          setEditingEntry(null);
-          setEntryType("expenditure");
-          setDialogOpen(true);
-        }}
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {/* Account Management Dialog */}
+      <Dialog open={accountDialogOpen} onOpenChange={(open) => {
+        setAccountDialogOpen(open);
+        if (!open) setEditingAccount(null);
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingAccount ? 'Edit Account' : 'Add New Account'}</DialogTitle>
+            <DialogDescription>
+              {editingAccount ? 'Update account details' : 'Add a new account to the Chart of Accounts'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            if (editingAccount) {
+              updateAccountBalanceMutation.mutate({
+                accountId: editingAccount.id,
+                balance: formData.get('balance') as string || '0',
+              });
+            } else {
+              createAccountMutation.mutate({
+                accountCode: formData.get('accountCode') as string,
+                accountName: formData.get('accountName') as string,
+                accountType: formData.get('accountType') as any,
+                accountSubtype: formData.get('accountSubtype') as any,
+                balance: formData.get('balance') as string || '0',
+                description: formData.get('description') as string || undefined,
+              });
+            }
+          }}>
+            <div className="grid gap-4 py-4">
+              {!editingAccount && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="accountCode">Account Code *</Label>
+                      <Input 
+                        id="accountCode" 
+                        name="accountCode" 
+                        placeholder="e.g., 1001"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="accountName">Account Name *</Label>
+                      <Input 
+                        id="accountName" 
+                        name="accountName" 
+                        placeholder="e.g., Cash on Hand"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="accountType">Account Type *</Label>
+                      <Select name="accountType" defaultValue="asset" required>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="asset">Asset</SelectItem>
+                          <SelectItem value="liability">Liability</SelectItem>
+                          <SelectItem value="equity">Equity</SelectItem>
+                          <SelectItem value="revenue">Revenue</SelectItem>
+                          <SelectItem value="expense">Expense</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="accountSubtype">Subtype *</Label>
+                      <Select name="accountSubtype" defaultValue="cash" required>
+                        <SelectTrigger><SelectValue placeholder="Select subtype" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cash">Cash</SelectItem>
+                          <SelectItem value="bank">Bank</SelectItem>
+                          <SelectItem value="deposits">Deposits</SelectItem>
+                          <SelectItem value="accounts_receivable">Accounts Receivable</SelectItem>
+                          <SelectItem value="inventory">Inventory</SelectItem>
+                          <SelectItem value="fixed_assets">Fixed Assets</SelectItem>
+                          <SelectItem value="accounts_payable">Accounts Payable</SelectItem>
+                          <SelectItem value="wages_payable">Wages Payable</SelectItem>
+                          <SelectItem value="taxes_payable">Taxes Payable</SelectItem>
+                          <SelectItem value="provisions">Provisions</SelectItem>
+                          <SelectItem value="other_payable">Other Payable</SelectItem>
+                          <SelectItem value="common_stock">Common Stock</SelectItem>
+                          <SelectItem value="retained_earnings">Retained Earnings</SelectItem>
+                          <SelectItem value="sales_revenue">Sales Revenue</SelectItem>
+                          <SelectItem value="service_revenue">Service Revenue</SelectItem>
+                          <SelectItem value="cost_of_goods_sold">Cost of Goods Sold</SelectItem>
+                          <SelectItem value="operating_expenses">Operating Expenses</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </>
+              )}
+              <div className="grid gap-2">
+                <Label htmlFor="balance">{editingAccount ? 'Update Balance' : 'Opening Balance'}</Label>
+                <Input 
+                  id="balance" 
+                  name="balance" 
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  defaultValue={editingAccount?.balance || ''}
+                />
+              </div>
+              {!editingAccount && (
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description" 
+                    name="description" 
+                    placeholder="Optional account description"
+                    rows={2}
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAccountDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createAccountMutation.isPending || updateAccountBalanceMutation.isPending}>
+                {editingAccount ? 'Update Balance' : 'Create Account'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
