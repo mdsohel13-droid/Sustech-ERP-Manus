@@ -302,17 +302,6 @@ export default function Home() {
     }
   };
 
-  const quickActions = [
-    { icon: UserCheck, label: "New Lead", path: "/crm", color: "bg-blue-500" },
-    { icon: ClipboardList, label: "Create Task", path: "/action-tracker", color: "bg-purple-500" },
-    { icon: FileText, label: "New Quote", path: "/tender-quotation", color: "bg-amber-500" },
-    { icon: Receipt, label: "Add Invoice", path: "/accounting", color: "bg-green-500" },
-    { icon: Calendar, label: "Schedule", path: "/hr", color: "bg-indigo-500" },
-    { icon: ShoppingCart, label: "New Sale", path: "/sales", color: "bg-pink-500" },
-    { icon: Package, label: "Add Stock", path: "/inventory", color: "bg-teal-500" },
-    { icon: MessageCircle, label: "Announcement", onClick: () => setShowPostDialog(true), color: "bg-orange-500" },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 lg:p-6">
       <div className="max-w-[1800px] mx-auto space-y-6">
@@ -436,33 +425,6 @@ export default function Home() {
             </Card>
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">Customize</Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {quickActions.map((action, idx) => (
-                <Button
-                  key={idx}
-                  variant="outline"
-                  className="flex-shrink-0 flex flex-col items-center gap-2 h-auto py-3 px-4 hover:bg-slate-50"
-                  onClick={() => action.onClick ? action.onClick() : navigate(action.path)}
-                >
-                  <div className={`p-2 rounded-lg ${action.color}`}>
-                    <action.icon className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-xs font-medium">{action.label}</span>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
