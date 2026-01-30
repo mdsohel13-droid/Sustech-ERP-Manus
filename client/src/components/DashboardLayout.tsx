@@ -8,6 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -24,6 +29,7 @@ import { getLoginUrl } from "@/const";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LoginPage } from "@/components/LoginPage";
+import { trpc } from "@/lib/trpc";
 import { 
   LayoutDashboard, 
   LogOut, 
@@ -47,13 +53,19 @@ import {
   UserCircle,
   HelpCircle,
   Activity,
-  Shield
+  Shield,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  XCircle
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Badge } from "./ui/badge";
+import { ScrollArea } from "./ui/scroll-area";
 
 import { CommandBar } from "./CommandBar";
 import { AIAssistant } from "./AIAssistant";
@@ -199,6 +211,11 @@ function DashboardLayoutContent({
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  
+  const { data: notifications = [], isLoading: notificationsLoading } = trpc.dashboard.getNotifications.useQuery(undefined, {
+    refetchInterval: 60000,
+  });
 
   // Group menu items
   const groupedMenuItems = MODULE_GROUPS.map(group => ({
@@ -360,10 +377,69 @@ function DashboardLayoutContent({
 
           <div className="flex items-center gap-2">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-            </Button>
+            <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="w-5 h-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h4 className="font-semibold">Notifications</h4>
+                  {notifications.length > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      {notifications.length} new
+                    </Badge>
+                  )}
+                </div>
+                <ScrollArea className="h-80">
+                  {notificationsLoading ? (
+                    <div className="flex items-center justify-center h-20">
+                      <Clock className="w-5 h-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center px-4">
+                      <Bell className="w-10 h-10 text-muted-foreground/50 mb-2" />
+                      <p className="text-sm text-muted-foreground">No notifications yet</p>
+                      <p className="text-xs text-muted-foreground/70">You're all caught up!</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {notifications.map((notification: any) => (
+                        <div key={notification.id} className="p-4 hover:bg-muted/50 transition-colors">
+                          <div className="flex items-start gap-3">
+                            <div className={`mt-0.5 p-1.5 rounded-full ${
+                              notification.notificationType === 'ar_overdue' ? 'bg-red-100 text-red-600' :
+                              notification.notificationType === 'project_status' ? 'bg-blue-100 text-blue-600' :
+                              notification.notificationType === 'attendance_anomaly' ? 'bg-amber-100 text-amber-600' :
+                              'bg-purple-100 text-purple-600'
+                            }`}>
+                              {notification.notificationType === 'ar_overdue' ? <AlertCircle className="w-4 h-4" /> :
+                               notification.notificationType === 'project_status' ? <Briefcase className="w-4 h-4" /> :
+                               notification.notificationType === 'attendance_anomaly' ? <Clock className="w-4 h-4" /> :
+                               <Activity className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{notification.title}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
+                              <p className="text-xs text-muted-foreground/70 mt-1">
+                                {new Date(notification.sentAt).toLocaleDateString()} at {new Date(notification.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            <Badge variant={notification.status === 'sent' ? 'default' : 'destructive'} className="text-xs shrink-0">
+                              {notification.status === 'sent' ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
             
             {/* Theme Toggle */}
             <ThemeToggle />
