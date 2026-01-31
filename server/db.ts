@@ -2177,6 +2177,7 @@ export async function updateQuotationItem(id: number, data: Partial<InsertQuotat
 }
 
 export async function deleteQuotationItem(id: number) {
+  enforceDataProtection("deleteQuotationItem");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(quotationItems).where(eq(quotationItems.id, id));
@@ -2224,6 +2225,7 @@ export async function updateJobDescription(id: number, data: any) {
 }
 
 export async function deleteJobDescription(id: number) {
+  enforceDataProtection("deleteJobDescription");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(jobDescriptions).where(eq(jobDescriptions.id, id));
@@ -2256,6 +2258,7 @@ export async function updateEmployeeRole(id: number, data: any) {
 }
 
 export async function deleteEmployeeRole(id: number) {
+  enforceDataProtection("deleteEmployeeRole");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(employeeRoles).where(eq(employeeRoles.id, id));
@@ -2289,6 +2292,7 @@ export async function updateEmployeeConfidential(employeeId: number, data: any) 
 }
 
 export async function deleteEmployeeConfidential(employeeId: number) {
+  enforceDataProtection("deleteEmployeeConfidential");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(employeeConfidential).where(eq(employeeConfidential.employeeId, employeeId));
@@ -2311,6 +2315,7 @@ export async function createOnboardingTemplate(data: { taskName: string; taskCat
 }
 
 export async function deleteOnboardingTemplate(id: number) {
+  enforceDataProtection("deleteOnboardingTemplate");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.execute(sql`UPDATE onboarding_templates SET is_active = 0 WHERE id = ${id}`);
@@ -2357,6 +2362,7 @@ export async function addOnboardingTask(employeeId: number, data: { taskName: st
 }
 
 export async function deleteOnboardingTask(taskId: number) {
+  enforceDataProtection("deleteOnboardingTask");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.execute(sql`DELETE FROM onboarding_tasks WHERE id = ${taskId}`);
@@ -2849,6 +2855,7 @@ export async function updateProductCategory(id: number, data: Partial<InsertProd
 }
 
 export async function deleteProductCategory(id: number) {
+  enforceDataProtection("deleteProductCategory");
   const db = await getDb();
   if (!db) return;
   await db.update(productCategories)
@@ -2891,6 +2898,7 @@ export async function updateProductUnit(id: number, data: Partial<InsertProductU
 }
 
 export async function deleteProductUnit(id: number) {
+  enforceDataProtection("deleteProductUnit");
   const db = await getDb();
   if (!db) return;
   await db.update(productUnits)
@@ -2933,6 +2941,7 @@ export async function updateProductBrand(id: number, data: Partial<InsertProduct
 }
 
 export async function deleteProductBrand(id: number) {
+  enforceDataProtection("deleteProductBrand");
   const db = await getDb();
   if (!db) return;
   await db.update(productBrands)
@@ -2975,6 +2984,7 @@ export async function updateProductWarranty(id: number, data: Partial<InsertProd
 }
 
 export async function deleteProductWarranty(id: number) {
+  enforceDataProtection("deleteProductWarranty");
   const db = await getDb();
   if (!db) return;
   await db.update(productWarranties)
@@ -3010,6 +3020,7 @@ export async function updateSellingPriceGroup(id: number, data: Partial<InsertSe
 }
 
 export async function deleteSellingPriceGroup(id: number) {
+  enforceDataProtection("deleteSellingPriceGroup");
   const db = await getDb();
   if (!db) return;
   await db.update(sellingPriceGroups)
@@ -3045,6 +3056,7 @@ export async function updateProductVariation(id: number, data: Partial<InsertPro
 }
 
 export async function deleteProductVariation(id: number) {
+  enforceDataProtection("deleteProductVariation");
   const db = await getDb();
   if (!db) return;
   await db.update(productVariations)
@@ -3151,6 +3163,7 @@ export async function updateWarehouse(id: number, data: Partial<InsertWarehouse>
 }
 
 export async function deleteWarehouse(id: number) {
+  enforceDataProtection("deleteWarehouse");
   const db = await getDb();
   if (!db) return;
   await db.delete(warehouses).where(eq(warehouses.id, id));
@@ -3827,6 +3840,7 @@ export async function updatePurchaseOrderItem(id: number, item: Partial<InsertPu
 }
 
 export async function deletePurchaseOrderItem(id: number) {
+  enforceDataProtection("deletePurchaseOrderItem");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(purchaseOrderItems).where(eq(purchaseOrderItems.id, id));
@@ -4344,6 +4358,7 @@ export async function createAIConversation(title: string) {
 }
 
 export async function deleteAIConversation(id: number) {
+  enforceDataProtection("deleteAIConversation");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(aiMessages).where(eq(aiMessages.conversationId, id));
@@ -4392,6 +4407,7 @@ export async function updateAIIntegrationSetting(id: number, data: Partial<Inser
 }
 
 export async function deleteAIIntegrationSetting(id: number) {
+  enforceDataProtection("deleteAIIntegrationSetting");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(aiIntegrationSettings).where(eq(aiIntegrationSettings.id, id));
@@ -4500,6 +4516,7 @@ export async function restoreFeedPost(id: number) {
 }
 
 export async function deleteFeedPost(id: number) {
+  enforceDataProtection("deleteFeedPost");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(feedReactions).where(eq(feedReactions.feedId, id));
@@ -4522,6 +4539,7 @@ export async function createFeedComment(data: Omit<InsertFeedComment, "id" | "cr
 }
 
 export async function deleteFeedComment(id: number) {
+  enforceDataProtection("deleteFeedComment");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(feedComments).where(eq(feedComments.id, id));
