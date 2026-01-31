@@ -4314,6 +4314,47 @@ export async function getAllFeedPosts(includeArchived = false) {
   return await db.select().from(newsFeed).where(eq(newsFeed.isArchived, false)).orderBy(desc(newsFeed.createdAt));
 }
 
+export async function getAllFeedPostsWithCounts(includeArchived = false) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const posts = includeArchived
+    ? await db.select().from(newsFeed).orderBy(desc(newsFeed.createdAt))
+    : await db.select().from(newsFeed).where(eq(newsFeed.isArchived, false)).orderBy(desc(newsFeed.createdAt));
+  
+  if (posts.length === 0) return [];
+  
+  const postIds = posts.map(p => p.id);
+  
+  const [allReactions, allCommentCounts] = await Promise.all([
+    db.select().from(feedReactions).where(sql`${feedReactions.feedId} IN (${sql.join(postIds.map(id => sql`${id}`), sql`, `)})`),
+    db.select({
+      feedId: feedComments.feedId,
+      count: sql<number>`COUNT(*)::int`
+    }).from(feedComments)
+      .where(sql`${feedComments.feedId} IN (${sql.join(postIds.map(id => sql`${id}`), sql`, `)})`)
+      .groupBy(feedComments.feedId)
+  ]);
+  
+  const reactionsByPostId = allReactions.reduce((acc, r) => {
+    if (!acc[r.feedId]) acc[r.feedId] = [];
+    acc[r.feedId].push(r);
+    return acc;
+  }, {} as Record<number, typeof allReactions>);
+  
+  const commentCountByPostId = allCommentCounts.reduce((acc, c) => {
+    acc[c.feedId] = c.count;
+    return acc;
+  }, {} as Record<number, number>);
+  
+  return posts.map(post => ({
+    ...post,
+    reactionCount: reactionsByPostId[post.id]?.length || 0,
+    commentCount: commentCountByPostId[post.id] || 0,
+    reactions: reactionsByPostId[post.id] || [],
+  }));
+}
+
 export async function getArchivedFeedPosts() {
   const db = await getDb();
   if (!db) return [];

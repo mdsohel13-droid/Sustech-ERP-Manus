@@ -1,4 +1,4 @@
-import { integer, pgEnum, pgTable, text, timestamp, varchar, decimal, boolean, date, serial } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, timestamp, varchar, decimal, boolean, date, serial, index } from "drizzle-orm/pg-core";
 
 // Define enums
 export const userRoleEnum = pgEnum("user_role", ["admin", "manager", "viewer", "user"]);
@@ -1771,7 +1771,10 @@ export const feedComments = pgTable("feed_comments", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  feedIdIdx: index("feed_comments_feed_id_idx").on(table.feedId),
+  userIdIdx: index("feed_comments_user_id_idx").on(table.userId),
+}));
 
 export type FeedComment = typeof feedComments.$inferSelect;
 export type InsertFeedComment = typeof feedComments.$inferInsert;
@@ -1782,7 +1785,10 @@ export const feedReactions = pgTable("feed_reactions", {
   userId: integer("user_id").notNull(),
   reaction: varchar("reaction", { length: 20 }).default("like").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  feedIdIdx: index("feed_reactions_feed_id_idx").on(table.feedId),
+  userFeedIdx: index("feed_reactions_user_feed_idx").on(table.userId, table.feedId),
+}));
 
 export type FeedReaction = typeof feedReactions.$inferSelect;
 export type InsertFeedReaction = typeof feedReactions.$inferInsert;

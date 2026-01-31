@@ -78,13 +78,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Home() {
   const { currency } = useCurrency();
   const [, navigate] = useLocation();
   const { isAdmin } = usePermissions();
+  const { user } = useAuth();
   const [newPostContent, setNewPostContent] = useState("");
   const [showPostDialog, setShowPostDialog] = useState(false);
+  const [expandedComments, setExpandedComments] = useState<number | null>(null);
+  const [commentTexts, setCommentTexts] = useState<Record<number, string>>({});
+  const [postAttachments, setPostAttachments] = useState<string[]>([]);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   // Fetch all data with real-time refresh
   const { data: projects } = trpc.projects.getAll.useQuery(undefined, { refetchInterval: 30000 });
@@ -141,6 +147,65 @@ export default function Home() {
       utils.feed.getAll.invalidate();
     },
   });
+
+  const addCommentMutation = trpc.feed.addComment.useMutation({
+    onSuccess: () => {
+      toast.success("Comment added!");
+      utils.feed.getAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Failed to add comment: " + error.message);
+    },
+  });
+
+  const uploadAttachmentMutation = trpc.attachments.upload.useMutation({
+    onSuccess: (data) => {
+      setPostAttachments(prev => [...prev, data.url]);
+      setUploadingFile(false);
+      toast.success("File attached!");
+    },
+    onError: (error) => {
+      setUploadingFile(false);
+      toast.error("Failed to upload: " + error.message);
+    },
+  });
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'file') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
+      return;
+    }
+
+    setUploadingFile(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      await uploadAttachmentMutation.mutateAsync({
+        entityType: "feed_draft",
+        entityId: 0,
+        fileName: file.name,
+        fileData: base64,
+        fileType: file.type,
+        fileSize: file.size,
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleAddComment = (feedId: number) => {
+    const commentText = commentTexts[feedId] || "";
+    if (!commentText.trim()) return;
+    addCommentMutation.mutate({ feedId, content: commentText });
+    setCommentTexts(prev => ({ ...prev, [feedId]: "" }));
+  };
+
+  const setCommentText = (feedId: number, text: string) => {
+    setCommentTexts(prev => ({ ...prev, [feedId]: text }));
+  };
 
   // Calculate HRM metrics
   const hrmMetrics = useMemo(() => {
@@ -271,7 +336,12 @@ export default function Home() {
 
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
-    createPostMutation.mutate({ content: newPostContent, status: "live" });
+    createPostMutation.mutate({ 
+      content: newPostContent, 
+      status: "live",
+      attachments: postAttachments.length > 0 ? JSON.stringify(postAttachments) : undefined,
+    });
+    setPostAttachments([]);
   };
 
   const getStatusColor = (status: string) => {
@@ -616,16 +686,59 @@ export default function Home() {
                       onChange={(e) => setNewPostContent(e.target.value)}
                       className="mb-2"
                     />
+                    {postAttachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {postAttachments.map((url, idx) => (
+                          <div key={idx} className="relative group">
+                            {url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                              <img src={url} alt="Attachment" className="h-16 w-16 object-cover rounded border" />
+                            ) : (
+                              <div className="h-16 w-16 bg-gray-100 rounded border flex items-center justify-center">
+                                <Paperclip className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
+                            <button 
+                              onClick={() => setPostAttachments(prev => prev.filter((_, i) => i !== idx))}
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" className="text-gray-500">
-                          <Image className="h-4 w-4 mr-1" /> Photo
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-gray-500">
-                          <Paperclip className="h-4 w-4 mr-1" /> Attach
-                        </Button>
+                        <label className="cursor-pointer">
+                          <Button variant="ghost" size="sm" className="text-gray-500" asChild disabled={uploadingFile}>
+                            <span>
+                              <Image className="h-4 w-4 mr-1" /> {uploadingFile ? "Uploading..." : "Photo"}
+                            </span>
+                          </Button>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(e, 'photo')}
+                            disabled={uploadingFile}
+                          />
+                        </label>
+                        <label className="cursor-pointer">
+                          <Button variant="ghost" size="sm" className="text-gray-500" asChild disabled={uploadingFile}>
+                            <span>
+                              <Paperclip className="h-4 w-4 mr-1" /> Attach
+                            </span>
+                          </Button>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif"
+                            onChange={(e) => handleFileUpload(e, 'file')}
+                            disabled={uploadingFile}
+                          />
+                        </label>
                       </div>
-                      <Button size="sm" onClick={handleCreatePost} disabled={!newPostContent.trim()}>
+                      <Button size="sm" onClick={handleCreatePost} disabled={!newPostContent.trim() || uploadingFile}>
                         <Send className="h-4 w-4 mr-1" /> Post
                       </Button>
                     </div>
@@ -635,8 +748,10 @@ export default function Home() {
                 {/* Feed Posts */}
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-4">
-                    {feedPosts.length > 0 ? feedPosts.map((post) => {
+                    {feedPosts.length > 0 ? feedPosts.map((post: any) => {
                       const author = getUserById(post.userId);
+                      const userHasLiked = user?.id ? post.reactions?.some((r: any) => r.userId === user.id && r.reaction === "like") : false;
+                      const attachmentUrls = post.attachments ? (() => { try { return JSON.parse(post.attachments); } catch { return []; } })() : [];
                       return (
                         <div key={post.id} className="p-4 border rounded-lg">
                           <div className="flex items-start justify-between mb-3">
@@ -676,19 +791,45 @@ export default function Home() {
                             </div>
                           </div>
                           <p className="text-gray-700 mb-3">{post.content}</p>
+                          {attachmentUrls.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {attachmentUrls.map((url: string, idx: number) => (
+                                url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                                  <img key={idx} src={url} alt="Attachment" className="max-h-48 rounded border cursor-pointer hover:opacity-90" onClick={() => window.open(url, '_blank')} />
+                                ) : (
+                                  <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-gray-50 rounded border text-sm text-blue-600 hover:bg-gray-100">
+                                    <Paperclip className="h-4 w-4" />
+                                    Attachment {idx + 1}
+                                  </a>
+                                )
+                              ))}
+                            </div>
+                          )}
                           <div className="flex items-center gap-4 pt-2 border-t">
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="text-gray-500 hover:text-red-500"
+                              className={userHasLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"}
                               onClick={() => toggleReactionMutation.mutate({ feedId: post.id, reaction: "like" })}
                             >
-                              <Heart className="h-4 w-4 mr-1" /> Like
+                              <Heart className={`h-4 w-4 mr-1 ${userHasLiked ? "fill-current" : ""}`} />
+                              Like {post.reactionCount > 0 && `(${post.reactionCount})`}
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-gray-500">
-                              <MessageCircle className="h-4 w-4 mr-1" /> Comment
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-gray-500"
+                              onClick={() => setExpandedComments(expandedComments === post.id ? null : post.id)}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1" />
+                              Comment {post.commentCount > 0 && `(${post.commentCount})`}
                             </Button>
                           </div>
+                          {expandedComments === post.id && (
+                            <div className="mt-3 pt-3 border-t">
+                              <FeedComments feedId={post.id} onAddComment={handleAddComment} commentText={commentTexts[post.id] || ""} setCommentText={(text) => setCommentText(post.id, text)} users={users} />
+                            </div>
+                          )}
                         </div>
                       );
                     }) : (
@@ -859,6 +1000,72 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function FeedComments({ 
+  feedId, 
+  onAddComment, 
+  commentText, 
+  setCommentText, 
+  users 
+}: { 
+  feedId: number; 
+  onAddComment: (feedId: number) => void;
+  commentText: string;
+  setCommentText: (value: string) => void;
+  users: any[];
+}) {
+  const { data: comments = [], isLoading } = trpc.feed.getComments.useQuery({ feedId });
+  
+  const getUserById = (userId: number) => users.find(u => u.id === userId);
+
+  if (isLoading) {
+    return <div className="text-sm text-gray-500 py-2">Loading comments...</div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {comments.length > 0 ? (
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {comments.map((comment: any) => {
+            const author = getUserById(comment.userId);
+            return (
+              <div key={comment.id} className="flex gap-2">
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarFallback className="text-xs bg-gray-200">
+                    {author?.name?.slice(0, 2).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="bg-gray-50 rounded-lg px-3 py-1.5 flex-1">
+                  <p className="text-xs font-medium">{author?.name || "User"}</p>
+                  <p className="text-sm text-gray-700">{comment.content}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500">No comments yet. Be the first to comment!</p>
+      )}
+      <div className="flex gap-2">
+        <Input 
+          placeholder="Write a comment..." 
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          className="text-sm h-8"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              onAddComment(feedId);
+            }
+          }}
+        />
+        <Button size="sm" className="h-8" onClick={() => onAddComment(feedId)} disabled={!commentText.trim()}>
+          <Send className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   );
 }

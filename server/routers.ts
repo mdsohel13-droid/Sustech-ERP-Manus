@@ -3579,7 +3579,7 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
   feed: router({
     getAll: protectedProcedure
       .query(async () => {
-        return await db.getAllFeedPosts(false);
+        return await db.getAllFeedPostsWithCounts(false);
       }),
 
     getArchived: adminProcedure
