@@ -18,8 +18,10 @@ Key architectural decisions and features include:
 - **Integrated Inventory Management**: Products module is tightly integrated with inventory for real-time stock levels and transaction history.
 - **Role-Based Access Control (RBAC)**: Authentication and authorization are implemented using OAuth and email/password, with granular access control procedures (`adminProcedure`, `managerProcedure`, `protectedProcedure`).
 - **Robust Data Integrity**: Enforced through PostgreSQL `CHECK` constraints and Zod API validation for all mutations.
-- **Audit Logging**: All financial mutations are automatically logged with user, action, entity changes, timestamp, and origin.
+- **Comprehensive Audit Logging**: All delete operations across modules (AR, AP, Projects, Customers, Transactions) are logged with user ID, timestamp, entity type, old values, and operation status.
 - **Transaction Safety**: Financial operations use PostgreSQL transactions to ensure atomicity.
+- **Soft Delete Pattern**: Projects use `is_archived` flag instead of hard delete to preserve data integrity.
+- **Environment Safety**: Database utility functions include safeguards to prevent accidental production database operations in development mode.
 
 **Module-Specific Features:**
 - **Finance Module**: Comprehensive financial management with dedicated tables for accounts, journal entries, receivables, payables, income/expenditure, and daily sales. Features include KPI dashboards, balance sheets, cash flow analysis, aging reports, and forecasting.

@@ -81,12 +81,32 @@ import {
 const ENV = { ownerOpenId: process.env.OWNER_OPEN_ID || '' };
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _dbSafetyLogged = false;
+
+function isProductionDatabase(): boolean {
+  const dbUrl = process.env.DATABASE_URL || "";
+  return dbUrl.includes("production") || dbUrl.includes("prod");
+}
+
+function isDevelopmentMode(): boolean {
+  return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+}
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       _pool = new Pool({ connectionString: process.env.DATABASE_URL });
       _db = drizzle(_pool);
+      
+      if (!_dbSafetyLogged) {
+        const isProduction = isProductionDatabase();
+        const isDev = isDevelopmentMode();
+        console.log(`[DB Safety] Environment: ${isDev ? 'Development' : 'Production'}, Database: ${isProduction ? 'PRODUCTION' : 'Development'}`);
+        if (isDev && isProduction) {
+          console.warn(`[DB Safety] WARNING: Development mode connected to production database - destructive operations may be blocked`);
+        }
+        _dbSafetyLogged = true;
+      }
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -268,6 +288,13 @@ export async function updateAP(id: number, data: Partial<InsertAccountsPayable>)
   return await db.update(accountsPayable).set(data).where(eq(accountsPayable.id, id));
 }
 
+export async function getAPById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(accountsPayable).where(eq(accountsPayable.id, id)).limit(1);
+  return result[0] || null;
+}
+
 export async function deleteAP(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -374,6 +401,13 @@ export async function updateProject(id: number, data: Partial<InsertProject>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.update(projects).set(data).where(eq(projects.id, id));
+}
+
+export async function getProjectById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
+  return result[0] || null;
 }
 
 export async function deleteProject(id: number) {
@@ -1090,6 +1124,13 @@ export async function updateProjectTransaction(id: number, data: Partial<InsertP
   if (!db) throw new Error("Database not available");
   
   await db.update(projectTransactions).set(data).where(eq(projectTransactions.id, id));
+}
+
+export async function getProjectTransactionById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(projectTransactions).where(eq(projectTransactions.id, id)).limit(1);
+  return result[0] || null;
 }
 
 export async function deleteProjectTransaction(id: number) {

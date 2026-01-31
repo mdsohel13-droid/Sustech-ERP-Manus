@@ -204,9 +204,20 @@ export const appRouter = router({
     
     bulkDeleteAR: protectedProcedure
       .input(z.object({ ids: z.array(z.number()) }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         for (const id of input.ids) {
+          const oldRecord = await db.getARById(id);
           await db.deleteAR(id);
+          await db.createAuditLog({
+            userId: ctx.user.id,
+            action: "delete",
+            module: "financial",
+            entityType: "accounts_receivable",
+            entityId: String(id),
+            entityName: oldRecord?.customerName || "bulk_delete",
+            oldValues: JSON.stringify(oldRecord),
+            status: "success",
+          });
         }
         return { success: true, deleted: input.ids.length };
       }),
@@ -298,16 +309,38 @@ export const appRouter = router({
     
     deleteAP: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const oldRecord = await db.getAPById(input.id);
         await db.deleteAP(input.id);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "delete",
+          module: "financial",
+          entityType: "accounts_payable",
+          entityId: String(input.id),
+          entityName: oldRecord?.vendorName || "unknown",
+          oldValues: JSON.stringify(oldRecord),
+          status: "success",
+        });
         return { success: true };
       }),
     
     bulkDeleteAP: protectedProcedure
       .input(z.object({ ids: z.array(z.number()) }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         for (const id of input.ids) {
+          const oldRecord = await db.getAPById(id);
           await db.deleteAP(id);
+          await db.createAuditLog({
+            userId: ctx.user.id,
+            action: "delete",
+            module: "financial",
+            entityType: "accounts_payable",
+            entityId: String(id),
+            entityName: oldRecord?.vendorName || "bulk_delete",
+            oldValues: JSON.stringify(oldRecord),
+            status: "success",
+          });
         }
         return { success: true, deleted: input.ids.length };
       }),
@@ -515,8 +548,19 @@ export const appRouter = router({
     
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const oldRecord = await db.getProjectById(input.id);
         await db.deleteProject(input.id);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "delete",
+          module: "projects",
+          entityType: "project",
+          entityId: String(input.id),
+          entityName: oldRecord?.name || "unknown",
+          oldValues: JSON.stringify(oldRecord),
+          status: "success",
+        });
         return { success: true };
       }),
 
@@ -598,8 +642,19 @@ export const appRouter = router({
     
     deleteTransaction: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const oldRecord = await db.getProjectTransactionById(input.id);
         await db.deleteProjectTransaction(input.id);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "delete",
+          module: "projects",
+          entityType: "project_transaction",
+          entityId: String(input.id),
+          entityName: oldRecord?.description || "transaction",
+          oldValues: JSON.stringify(oldRecord),
+          status: "success",
+        });
         return { success: true };
       }),
   }),
@@ -653,8 +708,19 @@ export const appRouter = router({
     
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const oldRecord = await db.getCustomerById(input.id);
         await db.deleteCustomer(input.id);
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "delete",
+          module: "crm",
+          entityType: "customer",
+          entityId: String(input.id),
+          entityName: oldRecord?.name || "unknown",
+          oldValues: JSON.stringify(oldRecord),
+          status: "success",
+        });
         return { success: true };
       }),
     
