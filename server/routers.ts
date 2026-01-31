@@ -42,10 +42,22 @@ export const appRouter = router({
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      // Clear demo mode cookie too
-      ctx.res.clearCookie("erp-demo-mode", { path: "/", maxAge: -1 });
+      // Clear erp-user-id cookie with matching options from login
+      ctx.res.clearCookie("erp-user-id", { 
+        path: "/", 
+        httpOnly: true,
+        sameSite: "lax"
+      });
+      // Also try with secure for production
+      ctx.res.clearCookie("erp-user-id", { 
+        path: "/", 
+        httpOnly: true,
+        sameSite: "lax",
+        secure: true
+      });
+      // Clear demo mode cookie
+      ctx.res.clearCookie("erp-demo-mode", { path: "/", sameSite: "lax" });
+      ctx.res.clearCookie("erp-demo-mode", { path: "/", sameSite: "lax", secure: true });
       return {
         success: true,
       } as const;
