@@ -79,11 +79,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { ArchiveRestore } from "lucide-react";
 
 export default function Home() {
   const { currency } = useCurrency();
   const [, navigate] = useLocation();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, isManager } = usePermissions();
   const { user } = useAuth();
   const [newPostContent, setNewPostContent] = useState("");
   const [showPostDialog, setShowPostDialog] = useState(false);
@@ -91,6 +92,8 @@ export default function Home() {
   const [commentTexts, setCommentTexts] = useState<Record<number, string>>({});
   const [postAttachments, setPostAttachments] = useState<string[]>([]);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [feedTab, setFeedTab] = useState<"live" | "archived">("live");
+  const canViewArchive = isAdmin || isManager;
 
   // Fetch all data with real-time refresh
   const { data: projects } = trpc.projects.getAll.useQuery(undefined, { refetchInterval: 30000 });
@@ -106,6 +109,10 @@ export default function Home() {
   const { data: inventoryData } = trpc.products.getAllInventoryWithProducts.useQuery(undefined, { refetchInterval: 30000 });
   const { data: crmLeads } = trpc.crm.getLeads.useQuery(undefined, { refetchInterval: 30000 });
   const { data: feedPosts = [] } = trpc.feed.getAll.useQuery(undefined, { refetchInterval: 10000 });
+  const { data: archivedPosts = [], refetch: refetchArchived } = trpc.feed.getArchived.useQuery(undefined, { 
+    enabled: canViewArchive,
+    refetchInterval: 30000 
+  });
   const { data: users = [] } = trpc.users.getAll.useQuery(undefined, { refetchInterval: 60000 });
 
   const utils = trpc.useUtils();
@@ -126,9 +133,21 @@ export default function Home() {
     onSuccess: () => {
       toast.success("Post archived");
       utils.feed.getAll.invalidate();
+      utils.feed.getArchived.invalidate();
     },
     onError: (error) => {
       toast.error("Failed to archive post: " + error.message);
+    },
+  });
+
+  const restorePostMutation = trpc.feed.restore.useMutation({
+    onSuccess: () => {
+      toast.success("Post restored");
+      utils.feed.getAll.invalidate();
+      utils.feed.getArchived.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Failed to restore post: " + error.message);
     },
   });
 
@@ -669,12 +688,27 @@ export default function Home() {
                   <CardTitle className="text-lg font-semibold flex items-center gap-2">
                     <MessageCircle className="h-5 w-5 text-blue-600" />
                     News & Events Feed
-                    <Badge variant="outline" className="text-xs">Live updates</Badge>
                   </CardTitle>
+                  {canViewArchive && (
+                    <Tabs value={feedTab} onValueChange={(v) => setFeedTab(v as "live" | "archived")}>
+                      <TabsList className="h-8">
+                        <TabsTrigger value="live" className="text-xs px-3 h-7">
+                          Live
+                          <Badge variant="secondary" className="ml-1 text-[10px] px-1">{feedPosts.filter((p: any) => !p.isArchived).length}</Badge>
+                        </TabsTrigger>
+                        <TabsTrigger value="archived" className="text-xs px-3 h-7">
+                          <Archive className="h-3 w-3 mr-1" />
+                          Archived
+                          <Badge variant="secondary" className="ml-1 text-[10px] px-1">{archivedPosts.filter((p: any) => p.isArchived).length}</Badge>
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Post Input */}
+                {/* Post Input - only show when on live tab */}
+                {feedTab === "live" && (
                 <div className="flex gap-3 mb-4 p-3 bg-slate-50 rounded-lg">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-blue-100 text-blue-700">U</AvatarFallback>
@@ -744,11 +778,66 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Feed Posts */}
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-4">
-                    {feedPosts.length > 0 ? feedPosts.map((post: any) => {
+                    {/* Archived Posts View */}
+                    {feedTab === "archived" && canViewArchive && (
+                      archivedPosts.filter((p: any) => p.isArchived).length > 0 ? (
+                        archivedPosts.filter((p: any) => p.isArchived).map((post: any) => {
+                          const author = getUserById(post.userId);
+                          return (
+                            <div key={post.id} className="p-4 border rounded-lg bg-slate-50 border-dashed">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarFallback className="bg-gray-400 text-white">
+                                      {author?.name?.slice(0, 2).toUpperCase() || "U"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-medium text-gray-600">{author?.name || "User"}</p>
+                                    <p className="text-xs text-gray-400">{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-gray-500">Archived</Badge>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => restorePostMutation.mutate({ id: post.id })}
+                                    disabled={restorePostMutation.isPending}
+                                  >
+                                    <ArchiveRestore className="h-4 w-4 mr-1" /> Restore
+                                  </Button>
+                                  {isAdmin && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="text-red-600"
+                                      onClick={() => deletePostMutation.mutate({ id: post.id })}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-gray-500 whitespace-pre-wrap">{post.content}</p>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          <Archive className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No archived posts</p>
+                        </div>
+                      )
+                    )}
+
+                    {/* Live Posts View */}
+                    {feedTab === "live" && (feedPosts.length > 0 ? feedPosts.map((post: any) => {
                       const author = getUserById(post.userId);
                       const userHasLiked = user?.id ? post.reactions?.some((r: any) => r.userId === user.id && r.reaction === "like") : false;
                       const attachmentUrls = post.attachments ? (() => { try { return JSON.parse(post.attachments); } catch { return []; } })() : [];
@@ -837,7 +926,7 @@ export default function Home() {
                         <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
                         <p>No posts yet. Share an update!</p>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </ScrollArea>
               </CardContent>

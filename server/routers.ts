@@ -3582,9 +3582,9 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
         return await db.getAllFeedPostsWithCounts(false);
       }),
 
-    getArchived: adminProcedure
+    getArchived: managerProcedure
       .query(async () => {
-        return await db.getArchivedFeedPosts();
+        return await db.getAllFeedPostsWithCounts(true);
       }),
 
     getById: protectedProcedure
@@ -3645,7 +3645,7 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
         return await db.archiveFeedPost(input.id, userId);
       }),
 
-    restore: adminProcedure
+    restore: managerProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return await db.restoreFeedPost(input.id);

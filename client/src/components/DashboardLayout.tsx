@@ -172,11 +172,7 @@ export default function DashboardLayout({
   }
 
   if (!user) {
-    return <LoginPage onDemoLogin={() => {
-      document.cookie = "erp-demo-mode=true; path=/; max-age=86400; SameSite=Lax";
-      localStorage.setItem("erp-demo-mode", "true");
-      window.location.href = window.location.origin + "/?demo=true";
-    }} />;
+    return <LoginPage />;
   }
 
   return (

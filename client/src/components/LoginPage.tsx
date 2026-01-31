@@ -9,11 +9,7 @@ import { LayoutDashboard, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react"
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 
-interface LoginPageProps {
-  onDemoLogin: () => void;
-}
-
-export function LoginPage({ onDemoLogin }: LoginPageProps) {
+export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -136,25 +132,8 @@ export function LoginPage({ onDemoLogin }: LoginPageProps) {
                 >
                   Sign in with OAuth
                 </Button>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-slate-700" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-slate-900 px-2 text-slate-500">Or</span>
-                  </div>
-                </div>
-                <Button
-                  onClick={onDemoLogin}
-                  variant="secondary"
-                  size="lg"
-                  className="w-full"
-                  data-testid="demo-login"
-                >
-                  Demo Mode (Admin Access)
-                </Button>
-                <p className="text-xs text-slate-500 text-center">
-                  Demo mode gives you full admin access to explore the system
+                <p className="text-xs text-slate-500 text-center mt-4">
+                  Use your OAuth account to sign in securely
                 </p>
               </TabsContent>
             </Tabs>
