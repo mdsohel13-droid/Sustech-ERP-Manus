@@ -75,18 +75,22 @@ import { AIAssistant } from "./AIAssistant";
 // World-class ERP module structure following Odoo/NetSuite/SAP patterns
 const ALL_MENU_ITEMS = [
   { icon: LayoutDashboard, label: "Home", path: "/", module: "dashboard", group: "main" },
+  // BUSINESS group
+  { icon: Briefcase, label: "Projects", path: "/projects", module: "projects", group: "business" },
+  { icon: Target, label: "Action Tracker", path: "/action-tracker", module: "action_tracker", group: "business" },
+  { icon: FileText, label: "Tender/Quotation", path: "/tender-quotation", module: "tender_quotation", group: "business" },
+  { icon: Users, label: "Human Resource", path: "/hr", module: "hr", group: "business" },
+  // OPERATIONS group
   { icon: ShoppingCart, label: "Sales", path: "/sales", module: "sales", group: "operations" },
   { icon: Package, label: "Products", path: "/products", module: "products", group: "operations" },
   { icon: Users, label: "CRM", path: "/crm", module: "crm", group: "operations" },
   { icon: Receipt, label: "Procurement", path: "/procurement", module: "procurement", group: "operations" },
   { icon: Warehouse, label: "Inventory", path: "/inventory", module: "inventory", group: "operations" },
   { icon: Truck, label: "SCM", path: "/scm", module: "inventory", group: "operations" },
+  // FINANCE group
   { icon: DollarSign, label: "Finance", path: "/finance", module: "financial", group: "finance" },
   { icon: Receipt, label: "Accounting", path: "/accounting", module: "accounting", group: "finance" },
-  { icon: Briefcase, label: "Projects", path: "/projects", module: "projects", group: "business" },
-  { icon: Target, label: "Action Tracker", path: "/action-tracker", module: "action_tracker", group: "business" },
-  { icon: FileText, label: "Tender/Quotation", path: "/tender-quotation", module: "tender_quotation", group: "business" },
-  { icon: Users, label: "Human Resource", path: "/hr", module: "hr", group: "business" },
+  // Other groups
   { icon: BarChart3, label: "Reports", path: "/reports", module: "reports", group: "analytics" },
   { icon: Lightbulb, label: "Ideas", path: "/ideas", module: "ideas", group: "tools" },
   { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant", module: "ai_assistant", group: "tools" },
@@ -97,9 +101,9 @@ const ALL_MENU_ITEMS = [
 
 const MODULE_GROUPS = [
   { id: "main", label: "" },
+  { id: "business", label: "Business" },
   { id: "operations", label: "Operations" },
   { id: "finance", label: "Finance" },
-  { id: "business", label: "Business" },
   { id: "analytics", label: "Analytics" },
   { id: "tools", label: "Tools" },
   { id: "system", label: "System" },
