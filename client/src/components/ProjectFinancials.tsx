@@ -631,7 +631,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                   <Label htmlFor="transactionType">Type</Label>
                   <Select value={txnType} onValueChange={setTxnType} required>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[100]">
                       {transactionTypes?.map(type => (
                         <SelectItem key={type.id} value={type.code}>{type.name}</SelectItem>
                       ))}
@@ -657,7 +657,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                   <Label htmlFor="currency">Currency</Label>
                   <Select value={txnCurrency} onValueChange={setTxnCurrency} required>
                     <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[100]">
                       <SelectItem value="BDT">BDT</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
@@ -753,7 +753,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                         <Label htmlFor="category">Category</Label>
                         <Select name="category" defaultValue={editingType?.category || "expense"} required>
                           <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[100]">
                             <SelectItem value="income">Income</SelectItem>
                             <SelectItem value="expense">Expense</SelectItem>
                           </SelectContent>
@@ -763,7 +763,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                         <Label htmlFor="color">Color</Label>
                         <Select name="color" defaultValue={editingType?.color || "gray"}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[100]">
                             <SelectItem value="green">Green</SelectItem>
                             <SelectItem value="blue">Blue</SelectItem>
                             <SelectItem value="orange">Orange</SelectItem>
@@ -878,7 +878,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                   <Label htmlFor="currency">Currency</Label>
                   <Select name="currency" defaultValue="BDT">
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[100]">
                       <SelectItem value="BDT">BDT</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
@@ -933,7 +933,7 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                   <Label htmlFor="currency">Currency</Label>
                   <Select name="currency" defaultValue="BDT">
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[100]">
                       <SelectItem value="BDT">BDT</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
