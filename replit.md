@@ -27,6 +27,16 @@ Key architectural decisions and features include:
   - Automatically capture pre-operation data for recovery
   - Create comprehensive audit logs before any data modification
   - Provide consistent error handling and logging across all modules
+- **Comprehensive Database Safety (db.ts)**: All 40+ delete functions enforce data protection via `enforceDataProtection()` which blocks destructive operations in development when connected to production database. Protected functions include:
+  - Finance: deleteAR, deleteAP, deleteSale, deleteIncomeExpenditure, deleteBudget
+  - Projects: deleteProject, deleteProjectTransaction
+  - CRM: deleteCustomer, archiveCustomer, restoreCustomer
+  - Sales: deleteSalesProduct, deleteSalesTracking, deleteWeeklyTarget, deleteMonthlyTarget
+  - HRM: deleteUser, deleteDepartment, deletePosition, deleteJobDescription, deleteEmployeeRole, deleteEmployeeConfidential, deleteOnboardingTemplate, deleteOnboardingTask
+  - Inventory: deleteProductCategory, deleteProductUnit, deleteProductBrand, deleteProductWarranty, deleteSellingPriceGroup, deleteProductVariation, deleteWarehouse
+  - Procurement: deletePurchaseOrderItem
+  - Tender/Quotation: deleteTenderQuotation, deleteQuotationItem, deleteTransactionType
+  - Other: deleteIdeaNote, deleteAttachmentRecord, deleteUserPermissions, deleteAIConversation, deleteAIIntegrationSetting, deleteFeedPost, deleteFeedComment, deleteActionTracker
 
 **Module-Specific Features:**
 - **Finance Module**: Comprehensive financial management with dedicated tables for accounts, journal entries, receivables, payables, income/expenditure, and daily sales. Features include KPI dashboards, balance sheets, cash flow analysis, aging reports, and forecasting.
