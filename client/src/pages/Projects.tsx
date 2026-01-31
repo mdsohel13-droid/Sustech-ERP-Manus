@@ -354,149 +354,153 @@ export default function Projects() {
       )}
 
       {viewMode === 'list' && (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Project Name</TableHead>
-                  <TableHead className="font-semibold">Customer</TableHead>
-                  <TableHead className="font-semibold cursor-pointer" onClick={() => { setSortField('value'); setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc'); }}>
-                    Value <ArrowUpDown className="inline h-3 w-3 ml-1" />
-                  </TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Priority</TableHead>
-                  <TableHead className="font-semibold">Expected Close</TableHead>
-                  <TableHead className="font-semibold">Description</TableHead>
-                  <TableHead className="font-semibold text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProjects.map((project) => (
-                  <TableRow key={project.id} className="hover:bg-muted/30">
-                    <TableCell>
-                      <button onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="font-medium text-blue-600 hover:underline text-left">
-                        {project.name}
-                      </button>
-                    </TableCell>
-                    <TableCell>{project.customerName}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(project.value, project.currency || currency)}</TableCell>
-                    <TableCell>
-                      <Badge className={stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"}>
-                        {stageLabels[project.stage as ProjectStage]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yyyy") : "-"}
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                      {project.description || "-"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => { setSelectedProject(project); setFinancialsOpen(true); }}>
-                          <Wallet className="h-4 w-4 mr-1" />Financials
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setEditingProject(project); setDialogOpen(true); }}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => archiveMutation.mutate({ id: project.id })}>
-                              <Archive className="h-4 w-4 mr-2" />
-                              Archive
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="w-full table-fixed">
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                    <TableHead className="font-semibold text-xs w-[18%] py-2 px-2">Project</TableHead>
+                    <TableHead className="font-semibold text-xs w-[14%] py-2 px-2">Customer</TableHead>
+                    <TableHead className="font-semibold text-xs w-[10%] py-2 px-2 cursor-pointer hover:text-primary" onClick={() => { setSortField('value'); setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc'); }}>
+                      Value <ArrowUpDown className="inline h-2.5 w-2.5 ml-0.5" />
+                    </TableHead>
+                    <TableHead className="font-semibold text-xs w-[14%] py-2 px-2">Status</TableHead>
+                    <TableHead className="font-semibold text-xs w-[8%] py-2 px-2 text-center">Priority</TableHead>
+                    <TableHead className="font-semibold text-xs w-[10%] py-2 px-2">Close Date</TableHead>
+                    <TableHead className="font-semibold text-xs w-[18%] py-2 px-2">Description</TableHead>
+                    <TableHead className="font-semibold text-xs w-[8%] py-2 px-2 text-center">Actions</TableHead>
                   </TableRow>
-                ))}
-                {filteredProjects.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? "No projects match your search" : "No projects yet. Click 'New Project' to create one."}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredProjects.map((project, idx) => (
+                    <TableRow key={project.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
+                      <TableCell className="py-2 px-2">
+                        <button onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight break-words">
+                          {project.name}
+                        </button>
+                      </TableCell>
+                      <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 break-words leading-tight">{project.customerName}</TableCell>
+                      <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(project.value, project.currency || currency)}</TableCell>
+                      <TableCell className="py-2 px-2">
+                        <Badge className={`${stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"} text-[10px] px-1.5 py-0.5 font-medium whitespace-nowrap`}>
+                          {stageLabels[project.stage as ProjectStage]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-2 px-2 text-center">
+                        <Badge className={`${getPriorityColor(project.priority)} text-[10px] px-1.5 py-0.5 font-medium capitalize`}>{project.priority}</Badge>
+                      </TableCell>
+                      <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        {project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yy") : "-"}
+                      </TableCell>
+                      <TableCell className="py-2 px-2 text-xs text-muted-foreground leading-tight break-words line-clamp-2">
+                        {project.description || "-"}
+                      </TableCell>
+                      <TableCell className="py-2 px-2">
+                        <div className="flex items-center justify-center gap-0.5">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Financials" onClick={() => { setSelectedProject(project); setFinancialsOpen(true); }}>
+                            <Wallet className="h-3.5 w-3.5 text-emerald-600" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="text-xs">
+                              <DropdownMenuItem onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="text-xs">
+                                <Edit className="h-3 w-3 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => archiveMutation.mutate({ id: project.id })} className="text-xs">
+                                <Archive className="h-3 w-3 mr-2" />
+                                Archive
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredProjects.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-sm">
+                        {searchTerm ? "No projects match your search" : "No projects yet. Click 'New Project' to create one."}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
         </TabsContent>
 
         <TabsContent value="archive" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Archive className="h-5 w-5" />
+          <Card className="overflow-hidden">
+            <CardHeader className="py-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Archive className="h-4 w-4" />
                 Archived Projects
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Project Name</TableHead>
-                    <TableHead className="font-semibold">Customer</TableHead>
-                    <TableHead className="font-semibold">Value</TableHead>
-                    <TableHead className="font-semibold">Last Stage</TableHead>
-                    <TableHead className="font-semibold">Archived Date</TableHead>
-                    <TableHead className="font-semibold text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {archivedProjects.map((project) => (
-                    <TableRow key={project.id} className="hover:bg-muted/30">
-                      <TableCell className="font-medium">{project.name}</TableCell>
-                      <TableCell>{project.customerName}</TableCell>
-                      <TableCell className="font-medium">{formatCurrency(project.value, project.currency || currency)}</TableCell>
-                      <TableCell>
-                        <Badge className={stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"}>
-                          {stageLabels[project.stage as ProjectStage]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {project.archivedAt ? format(new Date(project.archivedAt), "MMM dd, yyyy") : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          {isAdmin && (
-                            <>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => restoreMutation.mutate({ id: project.id })}
-                              >
-                                <ArchiveRestore className="h-4 w-4 mr-1" />
-                                Restore
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-red-600 hover:text-red-700"
-                                onClick={() => { 
-                                  if (confirm("Permanently delete this project? This cannot be undone.")) 
-                                    deleteMutation.mutate({ id: project.id }); 
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
-                              </Button>
-                            </>
-                          )}
-                        </div>
+              <div className="overflow-x-auto">
+                <Table className="w-full table-fixed">
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                      <TableHead className="font-semibold text-xs w-[22%] py-2 px-2">Project Name</TableHead>
+                      <TableHead className="font-semibold text-xs w-[18%] py-2 px-2">Customer</TableHead>
+                      <TableHead className="font-semibold text-xs w-[14%] py-2 px-2">Value</TableHead>
+                      <TableHead className="font-semibold text-xs w-[16%] py-2 px-2">Last Stage</TableHead>
+                      <TableHead className="font-semibold text-xs w-[14%] py-2 px-2">Archived Date</TableHead>
+                      <TableHead className="font-semibold text-xs w-[16%] py-2 px-2 text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {archivedProjects.map((project, idx) => (
+                      <TableRow key={project.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
+                        <TableCell className="py-2 px-2 font-medium text-xs break-words leading-tight">{project.name}</TableCell>
+                        <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 break-words leading-tight">{project.customerName}</TableCell>
+                        <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(project.value, project.currency || currency)}</TableCell>
+                        <TableCell className="py-2 px-2">
+                          <Badge className={`${stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"} text-[10px] px-1.5 py-0.5 font-medium whitespace-nowrap`}>
+                            {stageLabels[project.stage as ProjectStage]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          {project.archivedAt ? format(new Date(project.archivedAt), "MMM dd, yy") : "-"}
+                        </TableCell>
+                        <TableCell className="py-2 px-2">
+                          <div className="flex items-center justify-center gap-0.5">
+                            {isAdmin && (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  title="Restore"
+                                  onClick={() => restoreMutation.mutate({ id: project.id })}
+                                >
+                                  <ArchiveRestore className="h-3.5 w-3.5 text-blue-600" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-7 w-7 text-red-600 hover:text-red-700"
+                                  title="Delete"
+                                  onClick={() => { 
+                                    if (confirm("Permanently delete this project? This cannot be undone.")) 
+                                      deleteMutation.mutate({ id: project.id }); 
+                                  }}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -509,6 +513,7 @@ export default function Projects() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
