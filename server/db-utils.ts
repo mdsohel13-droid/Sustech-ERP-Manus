@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { auditLogs } from "../drizzle/schema";
 
@@ -37,6 +37,161 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
     });
   } catch (error) {
     console.error("[Audit] Failed to create audit log:", error);
+  }
+}
+
+export interface ProtectedOperationResult<T = void> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  blocked?: boolean;
+}
+
+export function isProductionDatabase(): boolean {
+  const dbUrl = process.env.DATABASE_URL || "";
+  const dbEnv = process.env.DB_ENV || "";
+  return dbUrl.includes("production") || 
+         dbUrl.includes("prod") || 
+         dbEnv === "production" ||
+         process.env.REPLIT_DEPLOYMENT === "1";
+}
+
+export function isDevelopmentMode(): boolean {
+  return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+}
+
+export function checkDataProtection(): { canProceed: boolean; reason?: string } {
+  const isDev = isDevelopmentMode();
+  const isProdDb = isProductionDatabase();
+  
+  if (isDev && isProdDb) {
+    return { 
+      canProceed: false, 
+      reason: "Development environment cannot modify production database" 
+    };
+  }
+  return { canProceed: true };
+}
+
+export function enforceDataProtection(operation: string): void {
+  const protection = checkDataProtection();
+  if (!protection.canProceed) {
+    console.error(`[DATA PROTECTION] BLOCKED: ${operation} - ${protection.reason}`);
+    throw new Error(`Data Protection: ${operation} blocked - ${protection.reason}`);
+  }
+}
+
+export async function protectedDelete<T>(
+  entityType: string,
+  entityId: number,
+  userId: number,
+  fetchEntity: () => Promise<T | null>,
+  performDelete: () => Promise<void>
+): Promise<ProtectedOperationResult> {
+  const protection = checkDataProtection();
+  if (!protection.canProceed) {
+    console.warn(`[Data Protection] Blocked delete of ${entityType}:${entityId} - ${protection.reason}`);
+    return { success: false, blocked: true, error: protection.reason };
+  }
+
+  try {
+    const existingData = await fetchEntity();
+    if (!existingData) {
+      return { success: false, error: `${entityType} not found` };
+    }
+
+    await createAuditLog({
+      userId,
+      action: "delete",
+      entityType,
+      entityId,
+      previousData: existingData as Record<string, unknown>,
+      origin: "api",
+    });
+
+    await performDelete();
+    console.log(`[Data Protection] Successfully deleted ${entityType}:${entityId} by user ${userId}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`[Data Protection] Delete failed for ${entityType}:${entityId}:`, error);
+    return { success: false, error: String(error) };
+  }
+}
+
+export async function protectedSoftDelete<T>(
+  entityType: string,
+  entityId: number,
+  userId: number,
+  fetchEntity: () => Promise<T | null>,
+  performArchive: () => Promise<void>
+): Promise<ProtectedOperationResult> {
+  const protection = checkDataProtection();
+  if (!protection.canProceed) {
+    console.warn(`[Data Protection] Blocked archive of ${entityType}:${entityId} - ${protection.reason}`);
+    return { success: false, blocked: true, error: protection.reason };
+  }
+
+  try {
+    const existingData = await fetchEntity();
+    if (!existingData) {
+      return { success: false, error: `${entityType} not found` };
+    }
+
+    await createAuditLog({
+      userId,
+      action: "update",
+      entityType,
+      entityId,
+      previousData: existingData as Record<string, unknown>,
+      newData: { isArchived: true, _operation: "soft_delete" },
+      origin: "api",
+    });
+
+    await performArchive();
+    console.log(`[Data Protection] Successfully archived ${entityType}:${entityId} by user ${userId}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`[Data Protection] Archive failed for ${entityType}:${entityId}:`, error);
+    return { success: false, error: String(error) };
+  }
+}
+
+export async function protectedUpdate<T>(
+  entityType: string,
+  entityId: number,
+  userId: number,
+  fetchEntity: () => Promise<T | null>,
+  performUpdate: () => Promise<T>,
+  updateData: Record<string, unknown>
+): Promise<ProtectedOperationResult<T>> {
+  const protection = checkDataProtection();
+  if (!protection.canProceed) {
+    console.warn(`[Data Protection] Blocked update of ${entityType}:${entityId} - ${protection.reason}`);
+    return { success: false, blocked: true, error: protection.reason };
+  }
+
+  try {
+    const existingData = await fetchEntity();
+    if (!existingData) {
+      return { success: false, error: `${entityType} not found` };
+    }
+
+    await createAuditLog({
+      userId,
+      action: "update",
+      entityType,
+      entityId,
+      previousData: existingData as Record<string, unknown>,
+      newData: updateData,
+      origin: "api",
+    });
+
+    const result = await performUpdate();
+    console.log(`[Data Protection] Successfully updated ${entityType}:${entityId} by user ${userId}`);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(`[Data Protection] Update failed for ${entityType}:${entityId}:`, error);
+    return { success: false, error: String(error) };
   }
 }
 
@@ -80,24 +235,6 @@ export async function safeDelete(
   } catch (error) {
     console.error(`[SafeDelete] Failed to delete ${entityType}:`, error);
     return { success: false, error: String(error) };
-  }
-}
-
-export function isProductionDatabase(): boolean {
-  const dbUrl = process.env.DATABASE_URL || "";
-  return dbUrl.includes("production") || 
-         dbUrl.includes("prod") || 
-         process.env.NODE_ENV === "production";
-}
-
-export function isDevelopmentMode(): boolean {
-  return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-}
-
-export function validateDatabaseOperation(operation: string): void {
-  if (isDevelopmentMode() && isProductionDatabase()) {
-    console.warn(`[DB Safety] Blocked ${operation} in dev mode against production DB`);
-    throw new Error("Cannot perform destructive operations on production database in development mode");
   }
 }
 

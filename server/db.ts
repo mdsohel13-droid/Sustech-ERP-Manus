@@ -85,11 +85,22 @@ let _dbSafetyLogged = false;
 
 function isProductionDatabase(): boolean {
   const dbUrl = process.env.DATABASE_URL || "";
-  return dbUrl.includes("production") || dbUrl.includes("prod");
+  const dbEnv = process.env.DB_ENV || "";
+  return dbUrl.includes("production") || 
+         dbUrl.includes("prod") || 
+         dbEnv === "production" ||
+         process.env.REPLIT_DEPLOYMENT === "1";
 }
 
 function isDevelopmentMode(): boolean {
   return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+}
+
+function enforceDataProtection(operation: string): void {
+  if (isDevelopmentMode() && isProductionDatabase()) {
+    console.error(`[DATA PROTECTION] BLOCKED: ${operation} - Cannot modify production data from development environment`);
+    throw new Error(`Data Protection: ${operation} blocked - Cannot modify production data from development environment`);
+  }
 }
 
 export async function getDb() {
@@ -225,6 +236,7 @@ export async function updateAR(id: number, data: Partial<InsertAccountsReceivabl
 }
 
 export async function deleteAR(id: number) {
+  enforceDataProtection("deleteAR");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(accountsReceivable).where(eq(accountsReceivable.id, id));
@@ -296,6 +308,7 @@ export async function getAPById(id: number) {
 }
 
 export async function deleteAP(id: number) {
+  enforceDataProtection("deleteAP");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(accountsPayable).where(eq(accountsPayable.id, id));
@@ -334,6 +347,7 @@ export async function updateSale(id: number, data: Partial<InsertSales>) {
 }
 
 export async function deleteSale(id: number) {
+  enforceDataProtection("deleteSale");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(sales).where(eq(sales.id, id));
@@ -411,6 +425,7 @@ export async function getProjectById(id: number) {
 }
 
 export async function deleteProject(id: number) {
+  enforceDataProtection("deleteProject");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.delete(projects).where(eq(projects.id, id));
@@ -439,7 +454,7 @@ export async function createCustomer(data: InsertCustomer) {
 export async function getAllCustomers() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.select().from(customers).orderBy(desc(customers.lastContactDate));
+  return await db.select().from(customers).where(eq(customers.isArchived, false)).orderBy(desc(customers.lastContactDate));
 }
 
 export async function getCustomerById(id: number) {
@@ -456,9 +471,30 @@ export async function updateCustomer(id: number, data: Partial<InsertCustomer>) 
 }
 
 export async function deleteCustomer(id: number) {
+  enforceDataProtection("deleteCustomer");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.delete(customers).where(eq(customers.id, id));
+  return await db.update(customers).set({ isArchived: true }).where(eq(customers.id, id));
+}
+
+export async function archiveCustomer(id: number) {
+  enforceDataProtection("archiveCustomer");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(customers).set({ isArchived: true }).where(eq(customers.id, id));
+}
+
+export async function restoreCustomer(id: number) {
+  enforceDataProtection("restoreCustomer");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(customers).set({ isArchived: false }).where(eq(customers.id, id));
+}
+
+export async function getArchivedCustomers() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.select().from(customers).where(eq(customers.isArchived, true)).orderBy(desc(customers.updatedAt));
 }
 
 export async function getCustomerStats() {
@@ -570,6 +606,7 @@ export async function updateIdeaNote(id: number, data: Partial<InsertIdeaNote>) 
 }
 
 export async function deleteIdeaNote(id: number): Promise<void> {
+  enforceDataProtection("deleteIdeaNote");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(ideaNotes).where(eq(ideaNotes.id, id));
@@ -596,6 +633,7 @@ export async function updateSalesProduct(id: number, data: Partial<InsertSalesPr
 }
 
 export async function deleteSalesProduct(id: number) {
+  enforceDataProtection("deleteSalesProduct");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(salesProducts).set({ isActive: 0 }).where(eq(salesProducts.id, id));
@@ -630,6 +668,7 @@ export async function updateSalesTracking(id: number, data: Partial<InsertSalesT
 }
 
 export async function deleteSalesTracking(id: number) {
+  enforceDataProtection("deleteSalesTracking");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(salesTracking).where(eq(salesTracking.id, id));
@@ -693,6 +732,7 @@ export async function updateUserRole(userId: number, role: "admin" | "manager" |
 }
 
 export async function deleteUser(userId: number) {
+  enforceDataProtection("deleteUser");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(users).where(eq(users.id, userId));
@@ -938,6 +978,7 @@ export async function updateWeeklyTarget(id: number, data: { targetAmount?: stri
 }
 
 export async function deleteWeeklyTarget(id: number) {
+  enforceDataProtection("deleteWeeklyTarget");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -986,6 +1027,7 @@ export async function updateMonthlyTarget(id: number, data: { targetAmount?: str
 }
 
 export async function deleteMonthlyTarget(id: number) {
+  enforceDataProtection("deleteMonthlyTarget");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -1134,6 +1176,7 @@ export async function getProjectTransactionById(id: number) {
 }
 
 export async function deleteProjectTransaction(id: number) {
+  enforceDataProtection("deleteProjectTransaction");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -1258,6 +1301,7 @@ export async function updateIncomeExpenditure(id: number, data: Partial<InsertIn
 }
 
 export async function deleteIncomeExpenditure(id: number) {
+  enforceDataProtection("deleteIncomeExpenditure");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -1509,6 +1553,7 @@ export async function updateBudget(id: number, data: Partial<InsertBudget>) {
 }
 
 export async function deleteBudget(id: number) {
+  enforceDataProtection("deleteBudget");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -1555,6 +1600,7 @@ export async function updateActionTracker(id: number, data: Partial<InsertAction
 }
 
 export async function deleteActionTracker(id: number) {
+  enforceDataProtection("deleteActionTracker");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -1617,6 +1663,7 @@ export async function updateTenderQuotation(id: number, data: Partial<InsertTend
 }
 
 export async function deleteTenderQuotation(id: number) {
+  enforceDataProtection("deleteTenderQuotation");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -1689,6 +1736,7 @@ export async function updateTransactionType(id: number, data: Partial<InsertTran
 }
 
 export async function deleteTransactionType(id: number) {
+  enforceDataProtection("deleteTransactionType");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -1723,6 +1771,7 @@ export async function updateDepartment(id: number, data: Partial<InsertDepartmen
 }
 
 export async function deleteDepartment(id: number) {
+  enforceDataProtection("deleteDepartment");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(departments).where(eq(departments.id, id));
@@ -1754,6 +1803,7 @@ export async function updatePosition(id: number, data: Partial<InsertPosition>) 
 }
 
 export async function deletePosition(id: number) {
+  enforceDataProtection("deletePosition");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(positions).where(eq(positions.id, id));
@@ -1982,6 +2032,7 @@ export async function getAttachmentsByEntity(entityType: string, entityId: numbe
 }
 
 export async function deleteAttachmentRecord(id: number) {
+  enforceDataProtection("deleteAttachmentRecord");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(attachments).where(eq(attachments.id, id));
@@ -2049,6 +2100,7 @@ export async function setUserPermissionsBulk(userId: number, permissions: Array<
 }
 
 export async function deleteUserPermissions(userId: number) {
+  enforceDataProtection("deleteUserPermissions");
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(modulePermissions).where(eq(modulePermissions.userId, userId));

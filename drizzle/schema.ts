@@ -172,6 +172,7 @@ export const customers = pgTable("customers", {
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  isArchived: boolean("is_archived").default(false).notNull(),
 });
 
 export type Customer = typeof customers.$inferSelect;
