@@ -162,7 +162,7 @@ export function LoginPage({ onDemoLogin }: LoginPageProps) {
         </Card>
         
         <p className="text-center text-sm text-slate-500 mt-4">
-          Sustech Operations & Growth KPI Dashboard
+          Sustech ERP workspace V1.0
         </p>
       </div>
     </div>

@@ -4432,3 +4432,50 @@ export async function updateEmployeeTracker(employeeId: number, data: Partial<In
     return tracker;
   }
 }
+
+// Seed function to ensure required users exist
+export async function seedRequiredUsers() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot seed users: database not available");
+    return;
+  }
+  
+  try {
+    const bcrypt = await import('bcryptjs');
+    
+    // Check and create admin user
+    const adminEmail = 'sohelemid@gmail.com';
+    const existingAdmin = await db.select().from(users).where(eq(users.email, adminEmail));
+    if (existingAdmin.length === 0) {
+      const passwordHash = await bcrypt.hash('123abc456', 10);
+      await db.insert(users).values({
+        email: adminEmail,
+        name: 'Admin User',
+        openId: 'admin-user-1',
+        role: 'admin',
+        passwordHash,
+        loginMethod: 'password',
+      });
+      console.log("[Seed] Created admin user: " + adminEmail);
+    }
+    
+    // Check and create demo user
+    const demoOpenId = 'demo-admin-user';
+    const existingDemo = await db.select().from(users).where(eq(users.openId, demoOpenId));
+    if (existingDemo.length === 0) {
+      await db.insert(users).values({
+        email: 'demo@sustech.com',
+        name: 'Demo Admin',
+        openId: demoOpenId,
+        role: 'admin',
+        loginMethod: 'demo',
+      });
+      console.log("[Seed] Created demo user");
+    }
+    
+    console.log("[Seed] User seeding complete");
+  } catch (error) {
+    console.error("[Seed] Error seeding users:", error);
+  }
+}
