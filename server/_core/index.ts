@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { seedRequiredUsers } from "../db";
+import { registerObjectStorageRoutes } from "../replit_integrations/object_storage";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -39,6 +40,8 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  // Object Storage routes for file uploads
+  registerObjectStorageRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",

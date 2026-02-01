@@ -15,6 +15,7 @@ import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
+import { ProjectDetailDialog } from "@/components/ProjectDetailDialog";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
@@ -57,6 +58,8 @@ export default function Projects() {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("active");
+  const [detailProject, setDetailProject] = useState<any>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: projects = [] } = trpc.projects.getAll.useQuery();
@@ -313,7 +316,7 @@ export default function Projects() {
                   <div key={project.id} className="bg-background rounded-lg p-3 shadow-sm border cursor-grab" draggable onDragStart={() => handleDragStart(project.id)}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <button onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="font-medium text-sm text-blue-600 hover:underline text-left">{project.name}</button>
+                        <button onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }} className="font-medium text-sm text-blue-600 hover:underline text-left">{project.name}</button>
                         <p className="text-xs text-muted-foreground">{project.customerName}</p>
                       </div>
                       <GripVertical className="h-4 w-4 text-muted-foreground" />
@@ -376,7 +379,7 @@ export default function Projects() {
                   {filteredProjects.map((project, idx) => (
                     <TableRow key={project.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
                       <TableCell className="py-2 px-2 min-w-[200px] max-w-[280px]">
-                        <button onClick={() => { setEditingProject(project); setDialogOpen(true); }} className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight whitespace-normal break-words">
+                        <button onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }} className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight whitespace-normal break-words">
                           {project.name}
                         </button>
                       </TableCell>
@@ -600,6 +603,19 @@ export default function Projects() {
           onOpenChange={setFinancialsOpen}
         />
       )}
+
+      <ProjectDetailDialog
+        project={detailProject}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        onEdit={(project) => {
+          setDetailDialogOpen(false);
+          setEditingProject(project);
+          setDialogOpen(true);
+        }}
+        formatCurrency={formatCurrency}
+        currency={currency}
+      />
     </div>
   );
 }

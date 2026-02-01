@@ -6,7 +6,7 @@ import { publicProcedure, router, protectedProcedure, adminProcedure, managerPro
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
-import { storagePut } from "./storage";
+import { ObjectStorageService } from "./replit_integrations/object_storage";
 import * as db from "./db";
 import { generateQuotationPDF, generateInvoicePDF } from "./_core/pdfGenerator";
 import * as scm from "./scm";
@@ -2290,30 +2290,43 @@ Provide 2-3 actionable business insights.`;
         fileSize: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        // Convert base64 to buffer and upload to S3
-        const base64Data = input.fileData.split(',')[1];
+        const objectStorageService = new ObjectStorageService();
+        
+        // Convert base64 to buffer
+        const base64Data = input.fileData.split(',')[1] || input.fileData;
         const buffer = Buffer.from(base64Data, 'base64');
         
-        // Generate unique file key
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `attachments/${input.entityType}/${input.entityId}/${timestamp}-${randomSuffix}-${input.fileName}`;
+        // Get presigned upload URL
+        const uploadURL = await objectStorageService.getObjectEntityUploadURL();
         
-        // Upload to S3
-        const { url } = await storagePut(fileKey, buffer, input.fileType);
+        // Upload file directly to presigned URL
+        const uploadResponse = await fetch(uploadURL, {
+          method: 'PUT',
+          body: buffer,
+          headers: {
+            'Content-Type': input.fileType || 'application/octet-stream',
+          },
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload file to storage');
+        }
+        
+        // Normalize the path for storage
+        const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
         
         // Save to database
         await db.createAttachmentRecord({
           entityType: input.entityType as any,
           entityId: input.entityId,
           fileName: input.fileName,
-          fileUrl: url,
+          fileUrl: objectPath,
           fileType: input.fileType,
           fileSize: input.fileSize,
           uploadedBy: ctx.user.id,
         });
         
-        return { success: true, url };
+        return { success: true, url: objectPath };
       }),
 
     delete: protectedProcedure
