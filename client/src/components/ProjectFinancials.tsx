@@ -68,6 +68,9 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
       setTransactionDialogOpen(false);
       setEditingTransaction(null);
     },
+    onError: (error) => {
+      toast.error(error.message || "Failed to add transaction");
+    },
   });
 
   const updateMutation = trpc.projects.updateTransaction.useMutation({
@@ -77,6 +80,9 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
       toast.success("Transaction updated successfully");
       setTransactionDialogOpen(false);
       setEditingTransaction(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update transaction");
     },
   });
 
@@ -632,9 +638,11 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                   <Select value={txnType} onValueChange={setTxnType} required>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent className="z-[100]">
-                      {transactionTypes?.map(type => (
-                        <SelectItem key={type.id} value={type.code}>{type.name}</SelectItem>
-                      ))}
+                      <SelectItem value="revenue">Revenue</SelectItem>
+                      <SelectItem value="purchase">Purchase</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                      <SelectItem value="cogs">Cost of Goods Sold (COGS)</SelectItem>
+                      <SelectItem value="wacc">Weighted Avg Cost of Capital (WACC)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
