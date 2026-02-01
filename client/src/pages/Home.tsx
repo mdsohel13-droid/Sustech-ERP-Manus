@@ -317,10 +317,10 @@ export default function Home() {
     return { pending, overdue, completed, highPriority };
   }, [actionItems]);
 
-  // Running projects for display
+  // Running projects for display - show all running projects
   const runningProjects = useMemo(() => {
     if (!projects) return [];
-    return projects.filter(p => p.stage === "execution" || p.stage === "lead" || p.stage === "proposal").slice(0, 5);
+    return projects.filter(p => p.stage === "execution" || p.stage === "lead" || p.stage === "proposal");
   }, [projects]);
 
   // Follow-up data
@@ -406,113 +406,111 @@ export default function Home() {
           </Badge>
         </div>
 
-        {/* Section 1: Module Overview Cards - Scrollable */}
-        <div className="overflow-x-auto pb-2">
-          <div className="flex gap-4 min-w-max">
-            {/* CRM */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/crm")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Users className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">+12%</Badge>
-                </div>
-                <p className="text-2xl font-bold">{crmMetrics.totalLeads || 0}</p>
-                <p className="text-xs opacity-80">Active Leads</p>
-                <p className="text-[10px] mt-1 opacity-60">CRM</p>
-              </CardContent>
-            </Card>
+        {/* Section 1: Module Overview Cards - Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          {/* CRM */}
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/crm")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">+12%</Badge>
+              </div>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{crmMetrics.totalLeads || 0}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">Active Leads</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">CRM</p>
+            </CardContent>
+          </Card>
 
-            {/* Projects */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/projects")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Target className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">{projectMetrics.running} due</Badge>
-                </div>
-                <p className="text-2xl font-bold">{projectMetrics.total || 0}</p>
-                <p className="text-xs opacity-80">Active Projects</p>
-                <p className="text-[10px] mt-1 opacity-60">Projects</p>
-              </CardContent>
-            </Card>
+          {/* Projects */}
+          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/projects")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">{projectMetrics.running} run</Badge>
+              </div>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{projectMetrics.total || 0}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">Active Projects</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">Projects</p>
+            </CardContent>
+          </Card>
 
-            {/* Tender/Quote */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-amber-500 to-amber-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/tender-quotation")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <FileText className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">+8%</Badge>
-                </div>
-                <p className="text-2xl font-bold">{tenderMetrics.total || 0}</p>
-                <p className="text-xs opacity-80">Open Quotations</p>
-                <p className="text-[10px] mt-1 opacity-60">Tender/Quote</p>
-              </CardContent>
-            </Card>
+          {/* Tender/Quote */}
+          <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/tender-quotation")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">{tenderMetrics.won} won</Badge>
+              </div>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{tenderMetrics.total || 0}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">Open Quotations</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">Tender/Quote</p>
+            </CardContent>
+          </Card>
 
-            {/* Finance */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/financial")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <CircleDollarSign className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">+18%</Badge>
-                </div>
-                <p className="text-2xl font-bold">{formatCurrency(financeMetrics.totalIncome, currency)}</p>
-                <p className="text-xs opacity-80">Monthly Revenue</p>
-                <p className="text-[10px] mt-1 opacity-60">Finance</p>
-              </CardContent>
-            </Card>
+          {/* Finance */}
+          <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/financial")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <CircleDollarSign className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">+18%</Badge>
+              </div>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(financeMetrics.totalIncome, currency)}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">Monthly Revenue</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">Finance</p>
+            </CardContent>
+          </Card>
 
-            {/* Accounting */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/accounting")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Receipt className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">{incomeExpData?.length || 0} pending</Badge>
-                </div>
-                <p className="text-2xl font-bold">{incomeExpData?.length || 0}</p>
-                <p className="text-xs opacity-80">Transactions</p>
-                <p className="text-[10px] mt-1 opacity-60">Accounting</p>
-              </CardContent>
-            </Card>
+          {/* Accounting */}
+          <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/accounting")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Receipt className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">{incomeExpData?.length || 0}</Badge>
+              </div>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{incomeExpData?.length || 0}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">Transactions</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">Accounting</p>
+            </CardContent>
+          </Card>
 
-            {/* Sales */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-pink-500 to-pink-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/sales")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <ShoppingCart className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">+23%</Badge>
-                </div>
-                <p className="text-2xl font-bold">{formatCurrency(financeMetrics.totalSales, currency)}</p>
-                <p className="text-xs opacity-80">This Month</p>
-                <p className="text-[10px] mt-1 opacity-60">Sales</p>
-              </CardContent>
-            </Card>
+          {/* Sales */}
+          <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/sales")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">+23%</Badge>
+              </div>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(financeMetrics.totalSales, currency)}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">This Month</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">Sales</p>
+            </CardContent>
+          </Card>
 
-            {/* Inventory */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-teal-500 to-teal-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/inventory")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Package className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">{inventoryMetrics.lowStockCount} low</Badge>
-                </div>
-                <p className="text-2xl font-bold">{inventoryMetrics.totalStock.toLocaleString()}</p>
-                <p className="text-xs opacity-80">Total SKUs</p>
-                <p className="text-[10px] mt-1 opacity-60">Inventory</p>
-              </CardContent>
-            </Card>
+          {/* Inventory */}
+          <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/inventory")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">{inventoryMetrics.lowStockCount} low</Badge>
+              </div>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{inventoryMetrics.totalStock.toLocaleString()}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">Total SKUs</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">Inventory</p>
+            </CardContent>
+          </Card>
 
-            {/* HR */}
-            <Card className="w-48 flex-shrink-0 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/hr")}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Users className="h-5 w-5 opacity-80" />
-                  <Badge className="bg-white/20 text-white text-xs">{hrmMetrics.onLeave} leave</Badge>
-                </div>
-                <p className="text-2xl font-bold">{hrmMetrics.totalEmployees}</p>
-                <p className="text-xs opacity-80">Active Employees</p>
-                <p className="text-[10px] mt-1 opacity-60">Human Resource</p>
-              </CardContent>
-            </Card>
-          </div>
+          {/* HR */}
+          <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/hr")}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                <Badge className="bg-white/20 text-white text-[10px] sm:text-xs px-1.5">{hrmMetrics.onLeave} leave</Badge>
+              </div>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{hrmMetrics.totalEmployees}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 leading-tight">Employees</p>
+              <p className="text-[9px] sm:text-[10px] mt-1 opacity-60 font-medium">HR</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Grid */}
@@ -526,6 +524,7 @@ export default function Home() {
                   <CardTitle className="text-lg font-semibold flex items-center gap-2">
                     <Target className="h-5 w-5 text-purple-600" />
                     Running Projects
+                    <Badge variant="secondary" className="ml-2">{runningProjects.length}</Badge>
                   </CardTitle>
                   <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="text-purple-600">
                     View All <ChevronRight className="h-4 w-4" />
@@ -533,48 +532,53 @@ export default function Home() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-2 px-2 font-medium text-gray-500">Project</th>
-                        <th className="text-left py-2 px-2 font-medium text-gray-500">Status</th>
-                        <th className="text-left py-2 px-2 font-medium text-gray-500">Progress</th>
-                        <th className="text-left py-2 px-2 font-medium text-gray-500">Due Date</th>
-                        <th className="text-left py-2 px-2 font-medium text-gray-500">Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {runningProjects.length > 0 ? runningProjects.map((project) => (
-                        <tr key={project.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => navigate("/projects")}>
-                          <td className="py-3 px-2">
-                            <div>
-                              <p className="font-medium text-gray-900">{project.name}</p>
-                              <p className="text-xs text-gray-500">{project.customerName}</p>
-                            </div>
-                          </td>
-                          <td className="py-3 px-2">
-                            <Badge className={getStageColor(project.stage)}>{project.stage}</Badge>
-                          </td>
-                          <td className="py-3 px-2">
-                            <div className="flex items-center gap-2">
-                              <Progress value={project.stage === "execution" ? 60 : project.stage === "won" ? 100 : 30} className="h-2 w-20" />
-                              <span className="text-xs text-gray-500">{project.stage === "execution" ? "60%" : project.stage === "won" ? "100%" : "30%"}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-2 text-gray-600">
-                            {project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM d, yyyy") : "-"}
-                          </td>
-                          <td className="py-3 px-2 font-medium">{formatCurrency(parseFloat(project.value || "0"), currency)}</td>
+                <ScrollArea className="h-[320px]">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-white z-10">
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-2 font-medium text-gray-500">Project</th>
+                          <th className="text-left py-2 px-2 font-medium text-gray-500">Status</th>
+                          <th className="text-left py-2 px-2 font-medium text-gray-500">Progress</th>
+                          <th className="text-left py-2 px-2 font-medium text-gray-500">Due Date</th>
+                          <th className="text-left py-2 px-2 font-medium text-gray-500">Value</th>
                         </tr>
-                      )) : (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-gray-500">No running projects</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {runningProjects.length > 0 ? runningProjects.map((project) => {
+                          const progressValue = project.stage === "execution" ? 60 : project.stage === "won" ? 100 : project.stage === "proposal" ? 40 : 20;
+                          return (
+                            <tr key={project.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => navigate("/projects")}>
+                              <td className="py-3 px-2 max-w-[200px]">
+                                <div>
+                                  <p className="font-medium text-gray-900 text-sm leading-tight line-clamp-2">{project.name}</p>
+                                  <p className="text-xs text-gray-500 truncate">{project.customerName}</p>
+                                </div>
+                              </td>
+                              <td className="py-3 px-2">
+                                <Badge className={`${getStageColor(project.stage)} text-xs`}>{project.stage}</Badge>
+                              </td>
+                              <td className="py-3 px-2">
+                                <div className="flex items-center gap-2">
+                                  <Progress value={progressValue} className="h-2 w-16" />
+                                  <span className="text-xs text-gray-500 w-8">{progressValue}%</span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-2 text-gray-600 text-xs whitespace-nowrap">
+                                {project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM d, yy") : "-"}
+                              </td>
+                              <td className="py-3 px-2 font-medium text-sm text-emerald-600">{formatCurrency(parseFloat(project.value || "0"), currency)}</td>
+                            </tr>
+                          );
+                        }) : (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-gray-500">No running projects</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
 
