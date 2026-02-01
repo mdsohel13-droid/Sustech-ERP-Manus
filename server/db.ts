@@ -1158,8 +1158,25 @@ export async function getProjectTransactions(projectId: number) {
   return await db
     .select()
     .from(projectTransactions)
-    .where(eq(projectTransactions.projectId, projectId))
+    .where(and(
+      eq(projectTransactions.projectId, projectId),
+      eq(projectTransactions.isArchived, false)
+    ))
     .orderBy(desc(projectTransactions.transactionDate));
+}
+
+export async function getArchivedProjectTransactions(projectId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(projectTransactions)
+    .where(and(
+      eq(projectTransactions.projectId, projectId),
+      eq(projectTransactions.isArchived, true)
+    ))
+    .orderBy(desc(projectTransactions.archivedAt));
 }
 
 export async function getProjectFinancialSummary(projectId: number) {
@@ -1233,6 +1250,28 @@ export async function deleteProjectTransaction(id: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(projectTransactions).where(eq(projectTransactions.id, id));
+}
+
+export async function archiveProjectTransaction(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(projectTransactions).set({
+    isArchived: true,
+    archivedAt: new Date(),
+    archivedBy: userId,
+  }).where(eq(projectTransactions.id, id));
+}
+
+export async function restoreProjectTransaction(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(projectTransactions).set({
+    isArchived: false,
+    archivedAt: null,
+    archivedBy: null,
+  }).where(eq(projectTransactions.id, id));
 }
 
 // ============ Income & Expenditure Module ============

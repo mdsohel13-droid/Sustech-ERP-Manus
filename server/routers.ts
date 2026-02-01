@@ -693,6 +693,26 @@ export const appRouter = router({
         });
         return { success: true };
       }),
+
+    getArchivedTransactions: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getArchivedProjectTransactions(input.projectId);
+      }),
+
+    archiveTransaction: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveProjectTransaction(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    restoreTransaction: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreProjectTransaction(input.id);
+        return { success: true };
+      }),
   }),
 
   // ============ Customer Module ============
