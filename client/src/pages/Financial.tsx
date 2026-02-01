@@ -34,8 +34,6 @@ export default function Financial() {
   const [editingCell, setEditingCell] = useState<{id: string; field: string} | null>(null);
   const [bulkDeletingAR, setBulkDeletingAR] = useState(false);
   const [bulkDeletingAP, setBulkDeletingAP] = useState(false);
-  const [arActiveTab, setArActiveTab] = useState<"active" | "archive">("active");
-  const [apActiveTab, setApActiveTab] = useState<"active" | "archive">("active");
   const [arSearchTerm, setArSearchTerm] = useState("");
   const [apSearchTerm, setApSearchTerm] = useState("");
 
