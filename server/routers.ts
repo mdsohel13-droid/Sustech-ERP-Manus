@@ -221,6 +221,24 @@ export const appRouter = router({
         }
         return { success: true, deleted: input.ids.length };
       }),
+
+    archiveAR: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveAR(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    restoreAR: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreAR(input.id);
+        return { success: true };
+      }),
+
+    getArchivedAR: protectedProcedure.query(async () => {
+      return await db.getArchivedAR();
+    }),
     
     getARSummary: protectedProcedure.query(async () => {
       return await db.getARSummary();
@@ -344,6 +362,24 @@ export const appRouter = router({
         }
         return { success: true, deleted: input.ids.length };
       }),
+
+    archiveAP: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveAP(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    restoreAP: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.restoreAP(input.id);
+        return { success: true };
+      }),
+
+    getArchivedAP: protectedProcedure.query(async () => {
+      return await db.getArchivedAP();
+    }),
     
     getAPSummary: protectedProcedure.query(async () => {
       return await db.getAPSummary();
@@ -1841,12 +1877,12 @@ Provide 2-3 actionable business insights.`;
 
     archive: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        await db.archiveIncomeExpenditure(input.id);
+      .mutation(async ({ ctx, input }) => {
+        await db.archiveIncomeExpenditure(input.id, ctx.user.id);
         return { success: true };
       }),
 
-    restore: protectedProcedure
+    restore: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.restoreIncomeExpenditure(input.id);

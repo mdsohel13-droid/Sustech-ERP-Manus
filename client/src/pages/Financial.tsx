@@ -11,7 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell, Edit, Trash2, Download } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, AlertCircle, ArrowRight, FileText, Bell, Edit, Trash2, Download, Archive, ArchiveRestore, Eye, Search } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { format } from "date-fns";
 import { useState } from "react";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { InlineEditCell } from "@/components/InlineEditCell";
@@ -25,11 +27,17 @@ import { toast } from "sonner";
 export default function Financial() {
   const { currency } = useCurrency();
   const utils = trpc.useUtils();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; item: any; type: 'ar' | 'ap'}>({show: false, item: null, type: 'ar'});
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editingCell, setEditingCell] = useState<{id: string; field: string} | null>(null);
   const [bulkDeletingAR, setBulkDeletingAR] = useState(false);
   const [bulkDeletingAP, setBulkDeletingAP] = useState(false);
+  const [arActiveTab, setArActiveTab] = useState<"active" | "archive">("active");
+  const [apActiveTab, setApActiveTab] = useState<"active" | "archive">("active");
+  const [arSearchTerm, setArSearchTerm] = useState("");
+  const [apSearchTerm, setApSearchTerm] = useState("");
 
   const notifyOverdueMutation = trpc.financial.notifyOverdueAR.useMutation({
     onSuccess: (data) => {
@@ -126,10 +134,49 @@ export default function Financial() {
   // Queries
   const { data: arData } = trpc.financial.getAllAR.useQuery();
   const { data: apData } = trpc.financial.getAllAP.useQuery();
+  const { data: archivedARData = [] } = trpc.financial.getArchivedAR.useQuery();
+  const { data: archivedAPData = [] } = trpc.financial.getArchivedAP.useQuery();
   const { data: incomeData } = trpc.incomeExpenditure.getAll.useQuery();
   
   const arBatchSelection = useTableBatchSelection(arData || []);
   const apBatchSelection = useTableBatchSelection(apData || []);
+
+  // Archive mutations
+  const archiveARMutation = trpc.financial.archiveAR.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getArchivedAR.invalidate();
+      toast.success("Receivable archived");
+    },
+    onError: () => toast.error("Failed to archive receivable"),
+  });
+
+  const restoreARMutation = trpc.financial.restoreAR.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getArchivedAR.invalidate();
+      toast.success("Receivable restored");
+    },
+    onError: () => toast.error("Failed to restore receivable"),
+  });
+
+  const archiveAPMutation = trpc.financial.archiveAP.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAP.invalidate();
+      utils.financial.getArchivedAP.invalidate();
+      toast.success("Payable archived");
+    },
+    onError: () => toast.error("Failed to archive payable"),
+  });
+
+  const restoreAPMutation = trpc.financial.restoreAP.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAP.invalidate();
+      utils.financial.getArchivedAP.invalidate();
+      toast.success("Payable restored");
+    },
+    onError: () => toast.error("Failed to restore payable"),
+  });
 
   // Filter income and expenditure
   const incomeRecords = incomeData?.filter(item => item.type === 'income') || [];
@@ -590,9 +637,12 @@ export default function Financial() {
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex gap-1 justify-center">
                             <Button variant="ghost" size="sm" onClick={() => setEditingItem(ar)} title="Edit">
                               <Edit className="w-4 h-4 text-blue-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => archiveARMutation.mutate({ id: ar.id })} title="Archive">
+                              <Archive className="w-4 h-4 text-amber-600" />
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ar, type: 'ar'})} title="Delete">
                               <Trash2 className="w-4 h-4 text-red-600" />
@@ -605,6 +655,80 @@ export default function Financial() {
                 </Table>
               ) : (
                 <p className="text-muted-foreground text-center py-8">No outstanding receivables</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Archived Receivables */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Archived Receivables ({archivedARData.length})</CardTitle>
+                  <CardDescription>Previously archived accounts receivable</CardDescription>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search archived..."
+                    value={arSearchTerm}
+                    onChange={(e) => setArSearchTerm(e.target.value)}
+                    className="pl-8 h-9 w-48 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {archivedARData.length > 0 ? (
+                <Table className="w-full table-fixed">
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100">
+                      <TableHead className="w-[140px] text-xs">Customer</TableHead>
+                      <TableHead className="w-[100px] text-xs">Invoice</TableHead>
+                      <TableHead className="w-[90px] text-xs">Due Date</TableHead>
+                      <TableHead className="w-[80px] text-xs">Status</TableHead>
+                      <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
+                      <TableHead className="w-[90px] text-xs">Archived</TableHead>
+                      <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {archivedARData
+                      .filter((ar: any) =>
+                        ar.customerName.toLowerCase().includes(arSearchTerm.toLowerCase()) ||
+                        (ar.invoiceNumber && ar.invoiceNumber.toLowerCase().includes(arSearchTerm.toLowerCase()))
+                      )
+                      .map((ar: any, idx: number) => (
+                      <TableRow key={ar.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                        <TableCell className="w-[140px] max-w-[140px] overflow-hidden">
+                          <div className="text-xs line-clamp-2">{ar.customerName}</div>
+                        </TableCell>
+                        <TableCell className="w-[100px] text-xs">{ar.invoiceNumber || "-"}</TableCell>
+                        <TableCell className="w-[90px] text-xs">{ar.dueDate ? format(new Date(ar.dueDate), "MMM dd, yy") : "-"}</TableCell>
+                        <TableCell className="w-[80px]">
+                          <Badge variant="outline" className="text-[10px]">{ar.status}</Badge>
+                        </TableCell>
+                        <TableCell className="w-[100px] text-xs text-right font-medium">{formatCurrency(parseFloat(ar.amount || '0'), currency)}</TableCell>
+                        <TableCell className="w-[90px] text-xs text-slate-500">{ar.archivedAt ? format(new Date(ar.archivedAt), "MMM dd, yy") : "-"}</TableCell>
+                        <TableCell className="w-[80px] text-center">
+                          <div className="flex gap-1 justify-center">
+                            {isAdmin && (
+                              <Button variant="ghost" size="sm" onClick={() => restoreARMutation.mutate({ id: ar.id })} title="Restore">
+                                <ArchiveRestore className="w-4 h-4 text-green-600" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ar, type: 'ar'})} title="Delete Permanently">
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-muted-foreground text-center py-6 text-sm">No archived receivables</p>
               )}
             </CardContent>
           </Card>
@@ -684,9 +808,12 @@ export default function Financial() {
                           {formatCurrency(parseFloat(ap.amount || '0'), currency)}
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex gap-1 justify-center">
                             <Button variant="ghost" size="sm" onClick={() => setEditingItem(ap)} title="Edit">
                               <Edit className="w-4 h-4 text-blue-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => archiveAPMutation.mutate({ id: ap.id })} title="Archive">
+                              <Archive className="w-4 h-4 text-amber-600" />
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ap, type: 'ap'})} title="Delete">
                               <Trash2 className="w-4 h-4 text-red-600" />
@@ -699,6 +826,80 @@ export default function Financial() {
                 </Table>
               ) : (
                 <p className="text-muted-foreground text-center py-8">No outstanding payables</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Archived Payables */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Archived Payables ({archivedAPData.length})</CardTitle>
+                  <CardDescription>Previously archived accounts payable</CardDescription>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search archived..."
+                    value={apSearchTerm}
+                    onChange={(e) => setApSearchTerm(e.target.value)}
+                    className="pl-8 h-9 w-48 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {archivedAPData.length > 0 ? (
+                <Table className="w-full table-fixed">
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100">
+                      <TableHead className="w-[140px] text-xs">Vendor</TableHead>
+                      <TableHead className="w-[100px] text-xs">Invoice</TableHead>
+                      <TableHead className="w-[90px] text-xs">Due Date</TableHead>
+                      <TableHead className="w-[80px] text-xs">Status</TableHead>
+                      <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
+                      <TableHead className="w-[90px] text-xs">Archived</TableHead>
+                      <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {archivedAPData
+                      .filter((ap: any) =>
+                        ap.vendorName.toLowerCase().includes(apSearchTerm.toLowerCase()) ||
+                        (ap.invoiceNumber && ap.invoiceNumber.toLowerCase().includes(apSearchTerm.toLowerCase()))
+                      )
+                      .map((ap: any, idx: number) => (
+                      <TableRow key={ap.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                        <TableCell className="w-[140px] max-w-[140px] overflow-hidden">
+                          <div className="text-xs line-clamp-2">{ap.vendorName}</div>
+                        </TableCell>
+                        <TableCell className="w-[100px] text-xs">{ap.invoiceNumber || "-"}</TableCell>
+                        <TableCell className="w-[90px] text-xs">{ap.dueDate ? format(new Date(ap.dueDate), "MMM dd, yy") : "-"}</TableCell>
+                        <TableCell className="w-[80px]">
+                          <Badge variant="outline" className="text-[10px]">{ap.status}</Badge>
+                        </TableCell>
+                        <TableCell className="w-[100px] text-xs text-right font-medium">{formatCurrency(parseFloat(ap.amount || '0'), currency)}</TableCell>
+                        <TableCell className="w-[90px] text-xs text-slate-500">{ap.archivedAt ? format(new Date(ap.archivedAt), "MMM dd, yy") : "-"}</TableCell>
+                        <TableCell className="w-[80px] text-center">
+                          <div className="flex gap-1 justify-center">
+                            {isAdmin && (
+                              <Button variant="ghost" size="sm" onClick={() => restoreAPMutation.mutate({ id: ap.id })} title="Restore">
+                                <ArchiveRestore className="w-4 h-4 text-green-600" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ap, type: 'ap'})} title="Delete Permanently">
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-muted-foreground text-center py-6 text-sm">No archived payables</p>
               )}
             </CardContent>
           </Card>

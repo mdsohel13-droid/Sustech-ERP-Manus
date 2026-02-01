@@ -85,6 +85,9 @@ export const accountsReceivable = pgTable("accounts_receivable", {
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  isArchived: boolean("is_archived").default(false).notNull(),
+  archivedAt: timestamp("archived_at"),
+  archivedBy: integer("archived_by"),
 });
 
 export type AccountsReceivable = typeof accountsReceivable.$inferSelect;
@@ -105,6 +108,9 @@ export const accountsPayable = pgTable("accounts_payable", {
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  isArchived: boolean("is_archived").default(false).notNull(),
+  archivedAt: timestamp("archived_at"),
+  archivedBy: integer("archived_by"),
 });
 
 export type AccountsPayable = typeof accountsPayable.$inferSelect;
@@ -624,6 +630,7 @@ export const incomeExpenditure = pgTable("income_expenditure", {
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   isArchived: boolean("isArchived").default(false).notNull(),
   archivedAt: timestamp("archivedAt"),
+  archivedBy: integer("archivedBy"),
 });
 
 export type IncomeExpenditure = typeof incomeExpenditure.$inferSelect;

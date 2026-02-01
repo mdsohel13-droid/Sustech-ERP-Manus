@@ -378,12 +378,16 @@ export default function Projects() {
                 <TableBody>
                   {filteredProjects.map((project, idx) => (
                     <TableRow key={project.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
-                      <TableCell className="py-2 px-2 w-[200px]">
-                        <button onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }} className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight line-clamp-3 overflow-hidden">
-                          {project.name}
-                        </button>
+                      <TableCell className="py-2 px-2 w-[200px] max-w-[200px] overflow-hidden">
+                        <div className="max-w-full overflow-hidden">
+                          <button onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }} className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight line-clamp-3 block max-w-full">
+                            {project.name}
+                          </button>
+                        </div>
                       </TableCell>
-                      <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-3 overflow-hidden w-[140px]">{project.customerName}</TableCell>
+                      <TableCell className="py-2 px-2 w-[140px] max-w-[140px] overflow-hidden">
+                        <div className="text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-3 max-w-full">{project.customerName}</div>
+                      </TableCell>
                       <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 w-[100px] truncate">{formatCurrency(project.value, project.currency || currency)}</TableCell>
                       <TableCell className="py-2 px-2 w-[100px]">
                         <Badge className={`${stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"} text-[10px] px-1.5 py-0.5 font-medium whitespace-nowrap`}>
@@ -485,15 +489,19 @@ export default function Projects() {
                       )
                       .map((project, idx) => (
                       <TableRow key={project.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
-                        <TableCell className="py-2 px-2 w-[180px]">
-                          <button 
-                            onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }}
-                            className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight line-clamp-3 overflow-hidden"
-                          >
-                            {project.name}
-                          </button>
+                        <TableCell className="py-2 px-2 w-[180px] max-w-[180px] overflow-hidden">
+                          <div className="max-w-full overflow-hidden">
+                            <button 
+                              onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }}
+                              className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight line-clamp-3 block max-w-full"
+                            >
+                              {project.name}
+                            </button>
+                          </div>
                         </TableCell>
-                        <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-3 overflow-hidden w-[130px]">{project.customerName}</TableCell>
+                        <TableCell className="py-2 px-2 w-[130px] max-w-[130px] overflow-hidden">
+                          <div className="text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-3 max-w-full">{project.customerName}</div>
+                        </TableCell>
                         <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 w-[100px] truncate">{formatCurrency(project.value, project.currency || currency)}</TableCell>
                         <TableCell className="py-2 px-2 w-[90px]">
                           <Badge className={`${stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"} text-[10px] px-1.5 py-0.5 font-medium whitespace-nowrap`}>
