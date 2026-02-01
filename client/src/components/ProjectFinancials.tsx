@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X, Receipt, CreditCard, FileText, ArrowUpRight, Wallet, Building, BookOpen, Link2, ExternalLink, Archive, ArchiveRestore, Search } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X, Receipt, CreditCard, FileText, ArrowUpRight, Wallet, Building, BookOpen, Link2, ExternalLink, Archive, ArchiveRestore, Search, ChevronDown } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -575,96 +576,101 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                 </div>
 
                 {/* Archived Transactions Section */}
-                <Card className="mt-4">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Archive className="h-5 w-5 text-muted-foreground" />
-                        <CardTitle className="text-lg">Archived Transactions ({archivedTransactions.length})</CardTitle>
-                      </div>
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <input
-                          type="text"
-                          placeholder="Search archived..."
-                          value={txnSearchTerm}
-                          onChange={(e) => setTxnSearchTerm(e.target.value)}
-                          className="pl-8 h-9 w-48 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                        />
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {archivedTransactions.length > 0 ? (
-                      <Table className="w-full table-fixed">
-                        <TableHeader>
-                          <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100">
-                            <TableHead className="w-[100px] text-xs">Date</TableHead>
-                            <TableHead className="w-[80px] text-xs">Type</TableHead>
-                            <TableHead className="w-[150px] text-xs">Description</TableHead>
-                            <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
-                            <TableHead className="w-[90px] text-xs">Archived</TableHead>
-                            <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {archivedTransactions
-                            .filter((t: any) =>
-                              (t.description && t.description.toLowerCase().includes(txnSearchTerm.toLowerCase())) ||
-                              (t.category && t.category.toLowerCase().includes(txnSearchTerm.toLowerCase()))
-                            )
-                            .map((transaction: any, idx: number) => (
-                            <TableRow key={transaction.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                              <TableCell className="text-xs">{format(new Date(transaction.transactionDate), "MMM dd, yy")}</TableCell>
-                              <TableCell>
-                                <Badge className={`text-[10px] ${getTypeColor(transaction.transactionType)}`}>
-                                  {transaction.transactionType.toUpperCase()}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="max-w-[150px] overflow-hidden">
-                                <div className="text-xs line-clamp-2">{transaction.description || "-"}</div>
-                              </TableCell>
-                              <TableCell className="text-xs text-right font-medium">
-                                {formatCurrency(Number(transaction.amount), transaction.currency)}
-                              </TableCell>
-                              <TableCell className="text-xs text-slate-500">
-                                {transaction.archivedAt ? format(new Date(transaction.archivedAt), "MMM dd, yy") : "-"}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <div className="flex gap-1 justify-center">
-                                  {isAdmin && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      onClick={() => restoreTransactionMutation.mutate({ id: transaction.id })}
-                                      title="Restore"
-                                    >
-                                      <ArchiveRestore className="w-4 h-4 text-green-600" />
-                                    </Button>
-                                  )}
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => {
-                                      if (confirm("Delete this transaction permanently?")) {
-                                        deleteMutation.mutate({ id: transaction.id });
-                                      }
-                                    }}
-                                    title="Delete Permanently"
-                                  >
-                                    <Trash2 className="w-4 h-4 text-red-600" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <p className="text-muted-foreground text-center py-4 text-sm">No archived transactions</p>
-                    )}
-                  </CardContent>
-                </Card>
+                {archivedTransactions.length > 0 && (
+                  <Collapsible className="mt-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CollapsibleTrigger className="flex items-center gap-2 hover:opacity-80 cursor-pointer">
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [&[data-state=open]>svg]:rotate-180" />
+                            <Archive className="h-5 w-5 text-muted-foreground" />
+                            <CardTitle className="text-lg">Archived Transactions ({archivedTransactions.length})</CardTitle>
+                          </CollapsibleTrigger>
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <input
+                              type="text"
+                              placeholder="Search archived..."
+                              value={txnSearchTerm}
+                              onChange={(e) => setTxnSearchTerm(e.target.value)}
+                              className="pl-8 h-9 w-48 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CollapsibleContent>
+                        <CardContent>
+                          <Table className="w-full table-fixed">
+                            <TableHeader>
+                              <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100">
+                                <TableHead className="w-[100px] text-xs">Date</TableHead>
+                                <TableHead className="w-[80px] text-xs">Type</TableHead>
+                                <TableHead className="w-[150px] text-xs">Description</TableHead>
+                                <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
+                                <TableHead className="w-[90px] text-xs">Archived</TableHead>
+                                <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {archivedTransactions
+                                .filter((t: any) =>
+                                  (t.description && t.description.toLowerCase().includes(txnSearchTerm.toLowerCase())) ||
+                                  (t.category && t.category.toLowerCase().includes(txnSearchTerm.toLowerCase()))
+                                )
+                                .map((transaction: any, idx: number) => (
+                                <TableRow key={transaction.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                                  <TableCell className="text-xs">
+                                    <div className="truncate">{format(new Date(transaction.transactionDate), "MMM dd, yy")}</div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge className={`text-[10px] ${getTypeColor(transaction.transactionType)}`}>
+                                      {transaction.transactionType.toUpperCase()}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="max-w-[150px]">
+                                    <div className="text-xs line-clamp-2 truncate">{transaction.description || "-"}</div>
+                                  </TableCell>
+                                  <TableCell className="text-xs text-right font-medium">
+                                    <div className="truncate">{formatCurrency(Number(transaction.amount), transaction.currency)}</div>
+                                  </TableCell>
+                                  <TableCell className="text-xs text-slate-500">
+                                    <div className="truncate">{transaction.archivedAt ? format(new Date(transaction.archivedAt), "MMM dd, yy") : "-"}</div>
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <div className="flex gap-1 justify-center">
+                                      {isAdmin && (
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          onClick={() => restoreTransactionMutation.mutate({ id: transaction.id })}
+                                          title="Restore"
+                                        >
+                                          <ArchiveRestore className="w-4 h-4 text-green-600" />
+                                        </Button>
+                                      )}
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => {
+                                          if (confirm("Delete this transaction permanently?")) {
+                                            deleteMutation.mutate({ id: transaction.id });
+                                          }
+                                        }}
+                                        title="Delete Permanently"
+                                      >
+                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                )}
               </TabsContent>
 
               <TabsContent value="receivables" className="space-y-4">
@@ -730,53 +736,62 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                     ar.invoiceNumber?.toLowerCase().includes(projectName.toLowerCase().substring(0, 10))
                   );
                   return linkedArchivedAR.length > 0 ? (
-                    <Card className="mt-4">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                          <Archive className="h-5 w-5 text-muted-foreground" />
-                          <CardTitle className="text-lg">Archived Receivables ({linkedArchivedAR.length})</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <Table className="w-full table-fixed">
-                          <TableHeader>
-                            <TableRow className="bg-gradient-to-r from-green-50 to-green-100">
-                              <TableHead className="w-[140px] text-xs">Customer</TableHead>
-                              <TableHead className="w-[100px] text-xs">Invoice</TableHead>
-                              <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
-                              <TableHead className="w-[90px] text-xs">Archived</TableHead>
-                              <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {linkedArchivedAR.map((ar: any, idx: number) => (
-                              <TableRow key={ar.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                                <TableCell className="text-xs">{ar.customerName}</TableCell>
-                                <TableCell className="text-xs">{ar.invoiceNumber || "-"}</TableCell>
-                                <TableCell className="text-xs text-right font-medium text-green-600">
-                                  {formatCurrency(Number(ar.amount), ar.currency)}
-                                </TableCell>
-                                <TableCell className="text-xs text-slate-500">
-                                  {ar.archivedAt ? format(new Date(ar.archivedAt), "MMM dd, yy") : "-"}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {isAdmin && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      onClick={() => restoreARMutation.mutate({ id: ar.id })}
-                                      title="Restore"
-                                    >
-                                      <ArchiveRestore className="w-4 h-4 text-green-600" />
-                                    </Button>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
+                    <Collapsible className="mt-4">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CollapsibleTrigger className="flex items-center gap-2 hover:opacity-80 cursor-pointer">
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                            <Archive className="h-5 w-5 text-muted-foreground" />
+                            <CardTitle className="text-lg">Archived Receivables ({linkedArchivedAR.length})</CardTitle>
+                          </CollapsibleTrigger>
+                        </CardHeader>
+                        <CollapsibleContent>
+                          <CardContent>
+                            <Table className="w-full table-fixed">
+                              <TableHeader>
+                                <TableRow className="bg-gradient-to-r from-green-50 to-green-100">
+                                  <TableHead className="w-[140px] text-xs">Customer</TableHead>
+                                  <TableHead className="w-[100px] text-xs">Invoice</TableHead>
+                                  <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
+                                  <TableHead className="w-[90px] text-xs">Archived</TableHead>
+                                  <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {linkedArchivedAR.map((ar: any, idx: number) => (
+                                  <TableRow key={ar.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                                    <TableCell className="text-xs max-w-[140px]">
+                                      <div className="truncate">{ar.customerName}</div>
+                                    </TableCell>
+                                    <TableCell className="text-xs max-w-[100px]">
+                                      <div className="truncate">{ar.invoiceNumber || "-"}</div>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-right font-medium text-green-600">
+                                      <div className="truncate">{formatCurrency(Number(ar.amount), ar.currency)}</div>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-slate-500">
+                                      <div className="truncate">{ar.archivedAt ? format(new Date(ar.archivedAt), "MMM dd, yy") : "-"}</div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      {isAdmin && (
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          onClick={() => restoreARMutation.mutate({ id: ar.id })}
+                                          title="Restore"
+                                        >
+                                          <ArchiveRestore className="w-4 h-4 text-green-600" />
+                                        </Button>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
                   ) : null;
                 })()}
 
@@ -852,53 +867,62 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                     ap.invoiceNumber?.toLowerCase().includes(projectName.toLowerCase().substring(0, 10))
                   );
                   return linkedArchivedAP.length > 0 ? (
-                    <Card className="mt-4">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                          <Archive className="h-5 w-5 text-muted-foreground" />
-                          <CardTitle className="text-lg">Archived Payables ({linkedArchivedAP.length})</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <Table className="w-full table-fixed">
-                          <TableHeader>
-                            <TableRow className="bg-gradient-to-r from-red-50 to-red-100">
-                              <TableHead className="w-[140px] text-xs">Vendor</TableHead>
-                              <TableHead className="w-[100px] text-xs">Invoice</TableHead>
-                              <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
-                              <TableHead className="w-[90px] text-xs">Archived</TableHead>
-                              <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {linkedArchivedAP.map((ap: any, idx: number) => (
-                              <TableRow key={ap.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                                <TableCell className="text-xs">{ap.vendorName}</TableCell>
-                                <TableCell className="text-xs">{ap.invoiceNumber || "-"}</TableCell>
-                                <TableCell className="text-xs text-right font-medium text-red-600">
-                                  {formatCurrency(Number(ap.amount), ap.currency)}
-                                </TableCell>
-                                <TableCell className="text-xs text-slate-500">
-                                  {ap.archivedAt ? format(new Date(ap.archivedAt), "MMM dd, yy") : "-"}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {isAdmin && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      onClick={() => restoreAPMutation.mutate({ id: ap.id })}
-                                      title="Restore"
-                                    >
-                                      <ArchiveRestore className="w-4 h-4 text-green-600" />
-                                    </Button>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
+                    <Collapsible className="mt-4">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CollapsibleTrigger className="flex items-center gap-2 hover:opacity-80 cursor-pointer">
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
+                            <Archive className="h-5 w-5 text-muted-foreground" />
+                            <CardTitle className="text-lg">Archived Payables ({linkedArchivedAP.length})</CardTitle>
+                          </CollapsibleTrigger>
+                        </CardHeader>
+                        <CollapsibleContent>
+                          <CardContent>
+                            <Table className="w-full table-fixed">
+                              <TableHeader>
+                                <TableRow className="bg-gradient-to-r from-red-50 to-red-100">
+                                  <TableHead className="w-[140px] text-xs">Vendor</TableHead>
+                                  <TableHead className="w-[100px] text-xs">Invoice</TableHead>
+                                  <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
+                                  <TableHead className="w-[90px] text-xs">Archived</TableHead>
+                                  <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {linkedArchivedAP.map((ap: any, idx: number) => (
+                                  <TableRow key={ap.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                                    <TableCell className="text-xs max-w-[140px]">
+                                      <div className="truncate">{ap.vendorName}</div>
+                                    </TableCell>
+                                    <TableCell className="text-xs max-w-[100px]">
+                                      <div className="truncate">{ap.invoiceNumber || "-"}</div>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-right font-medium text-red-600">
+                                      <div className="truncate">{formatCurrency(Number(ap.amount), ap.currency)}</div>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-slate-500">
+                                      <div className="truncate">{ap.archivedAt ? format(new Date(ap.archivedAt), "MMM dd, yy") : "-"}</div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      {isAdmin && (
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          onClick={() => restoreAPMutation.mutate({ id: ap.id })}
+                                          title="Restore"
+                                        >
+                                          <ArchiveRestore className="w-4 h-4 text-green-600" />
+                                        </Button>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
                   ) : null;
                 })()}
 
