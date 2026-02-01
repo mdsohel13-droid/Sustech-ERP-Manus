@@ -408,6 +408,10 @@ export default function Financial() {
           <TabsTrigger value="pl">P&L Statement</TabsTrigger>
           <TabsTrigger value="receivables">Receivables</TabsTrigger>
           <TabsTrigger value="payables">Payables</TabsTrigger>
+          <TabsTrigger value="archive" className="flex items-center gap-1">
+            <Archive className="h-4 w-4" />
+            Archive ({archivedARData.length + archivedAPData.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pl" className="space-y-4">
@@ -899,6 +903,158 @@ export default function Financial() {
               ) : (
                 <p className="text-muted-foreground text-center py-6 text-sm">No archived payables</p>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Archive Tab */}
+        <TabsContent value="archive" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Archive className="h-5 w-5" />
+                    Archived Records
+                  </CardTitle>
+                  <CardDescription>View and restore archived receivables and payables</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Archived Receivables */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-lg">Archived Receivables ({archivedARData.length})</h3>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search receivables..."
+                      value={arSearchTerm}
+                      onChange={(e) => setArSearchTerm(e.target.value)}
+                      className="pl-8 h-9 w-48 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                    />
+                  </div>
+                </div>
+                {archivedARData.length > 0 ? (
+                  <Table className="w-full table-fixed">
+                    <TableHeader>
+                      <TableRow className="bg-gradient-to-r from-green-50 to-green-100">
+                        <TableHead className="w-[140px] text-xs">Customer</TableHead>
+                        <TableHead className="w-[100px] text-xs">Invoice</TableHead>
+                        <TableHead className="w-[90px] text-xs">Due Date</TableHead>
+                        <TableHead className="w-[80px] text-xs">Status</TableHead>
+                        <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
+                        <TableHead className="w-[90px] text-xs">Archived</TableHead>
+                        <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {archivedARData
+                        .filter((ar: any) =>
+                          ar.customerName.toLowerCase().includes(arSearchTerm.toLowerCase()) ||
+                          (ar.invoiceNumber && ar.invoiceNumber.toLowerCase().includes(arSearchTerm.toLowerCase()))
+                        )
+                        .map((ar: any, idx: number) => (
+                        <TableRow key={ar.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                          <TableCell className="w-[140px] max-w-[140px] overflow-hidden">
+                            <div className="text-xs line-clamp-2">{ar.customerName}</div>
+                          </TableCell>
+                          <TableCell className="w-[100px] text-xs">{ar.invoiceNumber || "-"}</TableCell>
+                          <TableCell className="w-[90px] text-xs">{ar.dueDate ? format(new Date(ar.dueDate), "MMM dd, yy") : "-"}</TableCell>
+                          <TableCell className="w-[80px]">
+                            <Badge variant="outline" className="text-[10px]">{ar.status}</Badge>
+                          </TableCell>
+                          <TableCell className="w-[100px] text-xs text-right font-medium text-green-600">{formatCurrency(parseFloat(ar.amount || '0'), currency)}</TableCell>
+                          <TableCell className="w-[90px] text-xs text-slate-500">{ar.archivedAt ? format(new Date(ar.archivedAt), "MMM dd, yy") : "-"}</TableCell>
+                          <TableCell className="w-[80px] text-center">
+                            <div className="flex gap-1 justify-center">
+                              {isAdmin && (
+                                <Button variant="ghost" size="sm" onClick={() => restoreARMutation.mutate({ id: ar.id })} title="Restore">
+                                  <ArchiveRestore className="w-4 h-4 text-green-600" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ar, type: 'ar'})} title="Delete Permanently">
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4 text-sm bg-slate-50 rounded">No archived receivables</p>
+                )}
+              </div>
+
+              <div className="border-t pt-6">
+                {/* Archived Payables */}
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-lg">Archived Payables ({archivedAPData.length})</h3>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search payables..."
+                      value={apSearchTerm}
+                      onChange={(e) => setApSearchTerm(e.target.value)}
+                      className="pl-8 h-9 w-48 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                    />
+                  </div>
+                </div>
+                {archivedAPData.length > 0 ? (
+                  <Table className="w-full table-fixed">
+                    <TableHeader>
+                      <TableRow className="bg-gradient-to-r from-red-50 to-red-100">
+                        <TableHead className="w-[140px] text-xs">Vendor</TableHead>
+                        <TableHead className="w-[100px] text-xs">Invoice</TableHead>
+                        <TableHead className="w-[90px] text-xs">Due Date</TableHead>
+                        <TableHead className="w-[80px] text-xs">Status</TableHead>
+                        <TableHead className="w-[100px] text-xs text-right">Amount</TableHead>
+                        <TableHead className="w-[90px] text-xs">Archived</TableHead>
+                        <TableHead className="w-[80px] text-xs text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {archivedAPData
+                        .filter((ap: any) =>
+                          ap.vendorName.toLowerCase().includes(apSearchTerm.toLowerCase()) ||
+                          (ap.invoiceNumber && ap.invoiceNumber.toLowerCase().includes(apSearchTerm.toLowerCase()))
+                        )
+                        .map((ap: any, idx: number) => (
+                        <TableRow key={ap.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                          <TableCell className="w-[140px] max-w-[140px] overflow-hidden">
+                            <div className="text-xs line-clamp-2">{ap.vendorName}</div>
+                          </TableCell>
+                          <TableCell className="w-[100px] text-xs">{ap.invoiceNumber || "-"}</TableCell>
+                          <TableCell className="w-[90px] text-xs">{ap.dueDate ? format(new Date(ap.dueDate), "MMM dd, yy") : "-"}</TableCell>
+                          <TableCell className="w-[80px]">
+                            <Badge variant="outline" className="text-[10px]">{ap.status}</Badge>
+                          </TableCell>
+                          <TableCell className="w-[100px] text-xs text-right font-medium text-red-600">{formatCurrency(parseFloat(ap.amount || '0'), currency)}</TableCell>
+                          <TableCell className="w-[90px] text-xs text-slate-500">{ap.archivedAt ? format(new Date(ap.archivedAt), "MMM dd, yy") : "-"}</TableCell>
+                          <TableCell className="w-[80px] text-center">
+                            <div className="flex gap-1 justify-center">
+                              {isAdmin && (
+                                <Button variant="ghost" size="sm" onClick={() => restoreAPMutation.mutate({ id: ap.id })} title="Restore">
+                                  <ArchiveRestore className="w-4 h-4 text-green-600" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ap, type: 'ap'})} title="Delete Permanently">
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4 text-sm bg-slate-50 rounded">No archived payables</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
