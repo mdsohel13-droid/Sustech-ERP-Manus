@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown, Archive, ArchiveRestore } from "lucide-react";
+import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown, Archive, ArchiveRestore, Eye } from "lucide-react";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
@@ -360,46 +360,46 @@ export default function Projects() {
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <Table className="w-full">
+              <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                    <TableHead className="font-semibold text-xs py-2 px-2 min-w-[200px] max-w-[280px]">Project</TableHead>
-                    <TableHead className="font-semibold text-xs py-2 px-2 min-w-[120px]">Customer</TableHead>
-                    <TableHead className="font-semibold text-xs py-2 px-2 min-w-[90px] cursor-pointer hover:text-primary" onClick={() => { setSortField('value'); setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc'); }}>
+                    <TableHead className="font-semibold text-xs py-2 px-2 w-[200px]">Project</TableHead>
+                    <TableHead className="font-semibold text-xs py-2 px-2 w-[140px]">Customer</TableHead>
+                    <TableHead className="font-semibold text-xs py-2 px-2 w-[100px] cursor-pointer hover:text-primary" onClick={() => { setSortField('value'); setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc'); }}>
                       Value <ArrowUpDown className="inline h-2.5 w-2.5 ml-0.5" />
                     </TableHead>
-                    <TableHead className="font-semibold text-xs py-2 px-2 min-w-[110px]">Status</TableHead>
-                    <TableHead className="font-semibold text-xs py-2 px-2 text-center min-w-[70px]">Priority</TableHead>
-                    <TableHead className="font-semibold text-xs py-2 px-2 min-w-[90px]">Opening Date</TableHead>
-                    <TableHead className="font-semibold text-xs py-2 px-2 min-w-[90px]">Planned Completion</TableHead>
-                    <TableHead className="font-semibold text-xs py-2 px-2 text-center min-w-[70px]">Actions</TableHead>
+                    <TableHead className="font-semibold text-xs py-2 px-2 w-[100px]">Status</TableHead>
+                    <TableHead className="font-semibold text-xs py-2 px-2 text-center w-[70px]">Priority</TableHead>
+                    <TableHead className="font-semibold text-xs py-2 px-2 w-[95px]">Opening Date</TableHead>
+                    <TableHead className="font-semibold text-xs py-2 px-2 w-[95px]">Planned Completion</TableHead>
+                    <TableHead className="font-semibold text-xs py-2 px-2 text-center w-[70px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredProjects.map((project, idx) => (
                     <TableRow key={project.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
-                      <TableCell className="py-2 px-2 min-w-[200px] max-w-[280px]">
-                        <button onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }} className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight whitespace-normal break-words">
+                      <TableCell className="py-2 px-2 w-[200px]">
+                        <button onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }} className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight line-clamp-3 overflow-hidden">
                           {project.name}
                         </button>
                       </TableCell>
-                      <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 whitespace-normal break-words leading-tight min-w-[120px]">{project.customerName}</TableCell>
-                      <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 min-w-[90px]">{formatCurrency(project.value, project.currency || currency)}</TableCell>
-                      <TableCell className="py-2 px-2 min-w-[110px]">
+                      <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-3 overflow-hidden w-[140px]">{project.customerName}</TableCell>
+                      <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 w-[100px] truncate">{formatCurrency(project.value, project.currency || currency)}</TableCell>
+                      <TableCell className="py-2 px-2 w-[100px]">
                         <Badge className={`${stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"} text-[10px] px-1.5 py-0.5 font-medium whitespace-nowrap`}>
                           {stageLabels[project.stage as ProjectStage]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-2 px-2 text-center min-w-[70px]">
+                      <TableCell className="py-2 px-2 text-center w-[70px]">
                         <Badge className={`${getPriorityColor(project.priority)} text-[10px] px-1.5 py-0.5 font-medium capitalize`}>{project.priority}</Badge>
                       </TableCell>
-                      <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap min-w-[90px]">
+                      <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap w-[95px]">
                         {project.startDate ? format(new Date(project.startDate), "MMM dd, yy") : "-"}
                       </TableCell>
-                      <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap min-w-[90px]">
+                      <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap w-[95px]">
                         {project.expectedCloseDate ? format(new Date(project.expectedCloseDate), "MMM dd, yy") : "-"}
                       </TableCell>
-                      <TableCell className="py-2 px-2 min-w-[70px]">
+                      <TableCell className="py-2 px-2 w-[70px]">
                         <div className="flex items-center justify-center gap-0.5">
                           <Button variant="ghost" size="icon" className="h-7 w-7" title="Financials" onClick={() => { setSelectedProject(project); setFinancialsOpen(true); }}>
                             <Wallet className="h-3.5 w-3.5 text-emerald-600" />
@@ -443,48 +443,90 @@ export default function Projects() {
 
         <TabsContent value="archive" className="space-y-6">
           <Card className="overflow-hidden">
-            <CardHeader className="py-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Archive className="h-4 w-4" />
-                Archived Projects
-              </CardTitle>
+            <CardHeader className="py-3 border-b">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Archive className="h-4 w-4" />
+                  Archived Projects ({archivedProjects.length})
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search archived..."
+                      className="pl-8 h-8 w-48 text-xs"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                      <TableHead className="font-semibold text-xs w-[22%] py-2 px-2">Project Name</TableHead>
-                      <TableHead className="font-semibold text-xs w-[18%] py-2 px-2">Customer</TableHead>
-                      <TableHead className="font-semibold text-xs w-[14%] py-2 px-2">Value</TableHead>
-                      <TableHead className="font-semibold text-xs w-[16%] py-2 px-2">Last Stage</TableHead>
-                      <TableHead className="font-semibold text-xs w-[14%] py-2 px-2">Archived Date</TableHead>
-                      <TableHead className="font-semibold text-xs w-[16%] py-2 px-2 text-center">Actions</TableHead>
+                      <TableHead className="font-semibold text-xs w-[180px] py-2 px-2">Project Name</TableHead>
+                      <TableHead className="font-semibold text-xs w-[130px] py-2 px-2">Customer</TableHead>
+                      <TableHead className="font-semibold text-xs w-[100px] py-2 px-2">Value</TableHead>
+                      <TableHead className="font-semibold text-xs w-[90px] py-2 px-2">Last Stage</TableHead>
+                      <TableHead className="font-semibold text-xs w-[70px] py-2 px-2 text-center">Priority</TableHead>
+                      <TableHead className="font-semibold text-xs w-[85px] py-2 px-2">Created</TableHead>
+                      <TableHead className="font-semibold text-xs w-[85px] py-2 px-2">Archived</TableHead>
+                      <TableHead className="font-semibold text-xs w-[80px] py-2 px-2 text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {archivedProjects.map((project, idx) => (
+                    {archivedProjects
+                      .filter(p => !searchTerm || 
+                        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((project, idx) => (
                       <TableRow key={project.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
-                        <TableCell className="py-2 px-2 font-medium text-xs break-words leading-tight">{project.name}</TableCell>
-                        <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 break-words leading-tight">{project.customerName}</TableCell>
-                        <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(project.value, project.currency || currency)}</TableCell>
-                        <TableCell className="py-2 px-2">
+                        <TableCell className="py-2 px-2 w-[180px]">
+                          <button 
+                            onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }}
+                            className="font-medium text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight line-clamp-3 overflow-hidden"
+                          >
+                            {project.name}
+                          </button>
+                        </TableCell>
+                        <TableCell className="py-2 px-2 text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-3 overflow-hidden w-[130px]">{project.customerName}</TableCell>
+                        <TableCell className="py-2 px-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 w-[100px] truncate">{formatCurrency(project.value, project.currency || currency)}</TableCell>
+                        <TableCell className="py-2 px-2 w-[90px]">
                           <Badge className={`${stageColors[project.stage as ProjectStage]?.badge || "bg-gray-100"} text-[10px] px-1.5 py-0.5 font-medium whitespace-nowrap`}>
                             {stageLabels[project.stage as ProjectStage]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        <TableCell className="py-2 px-2 text-center w-[70px]">
+                          <Badge className={`${getPriorityColor(project.priority)} text-[10px] px-1.5 py-0.5 font-medium capitalize`}>{project.priority}</Badge>
+                        </TableCell>
+                        <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap w-[85px]">
+                          {project.createdAt ? format(new Date(project.createdAt), "MMM dd, yy") : "-"}
+                        </TableCell>
+                        <TableCell className="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap w-[85px]">
                           {project.archivedAt ? format(new Date(project.archivedAt), "MMM dd, yy") : "-"}
                         </TableCell>
-                        <TableCell className="py-2 px-2">
+                        <TableCell className="py-2 px-2 w-[80px]">
                           <div className="flex items-center justify-center gap-0.5">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="h-7 w-7"
+                              title="View Details"
+                              onClick={() => { setDetailProject(project); setDetailDialogOpen(true); }}
+                            >
+                              <Eye className="h-3.5 w-3.5 text-slate-600" />
+                            </Button>
                             {isAdmin && (
                               <>
                                 <Button 
                                   variant="ghost" 
                                   size="icon"
                                   className="h-7 w-7"
-                                  title="Restore"
+                                  title="Restore Project"
                                   onClick={() => restoreMutation.mutate({ id: project.id })}
                                 >
                                   <ArchiveRestore className="h-3.5 w-3.5 text-blue-600" />
@@ -493,7 +535,7 @@ export default function Projects() {
                                   variant="ghost" 
                                   size="icon"
                                   className="h-7 w-7 text-red-600 hover:text-red-700"
-                                  title="Delete"
+                                  title="Permanently Delete"
                                   onClick={() => { 
                                     if (confirm("Permanently delete this project? This cannot be undone.")) 
                                       deleteMutation.mutate({ id: project.id }); 
@@ -509,8 +551,18 @@ export default function Projects() {
                   ))}
                   {archivedProjects.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No archived projects. Projects that are archived or completed will appear here.
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No archived projects. Projects that are archived will appear here.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {archivedProjects.length > 0 && archivedProjects.filter(p => !searchTerm || 
+                        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+                      ).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No archived projects match your search.
                       </TableCell>
                     </TableRow>
                   )}
