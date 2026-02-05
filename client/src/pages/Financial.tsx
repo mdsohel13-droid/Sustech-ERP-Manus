@@ -646,9 +646,6 @@ export default function Financial() {
                             <Button variant="ghost" size="sm" onClick={() => archiveARMutation.mutate({ id: ar.id })} title="Archive">
                               <Archive className="w-4 h-4 text-amber-600" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ar, type: 'ar'})} title="Delete">
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -816,9 +813,6 @@ export default function Financial() {
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => archiveAPMutation.mutate({ id: ap.id })} title="Archive">
                               <Archive className="w-4 h-4 text-amber-600" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({show: true, item: ap, type: 'ap'})} title="Delete">
-                              <Trash2 className="w-4 h-4 text-red-600" />
                             </Button>
                           </div>
                         </TableCell>

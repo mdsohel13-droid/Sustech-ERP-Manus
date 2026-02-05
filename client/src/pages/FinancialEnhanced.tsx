@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { trpc } from '@/lib/trpc';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { format, differenceInDays, parseISO, subMonths } from 'date-fns';
-import { Plus, Edit, Trash2, Eye, TrendingUp, TrendingDown, AlertCircle, DollarSign, CreditCard, Receipt, Wallet, ArrowUpRight, ArrowDownRight, RefreshCw, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, TrendingUp, TrendingDown, AlertCircle, DollarSign, CreditCard, Receipt, Wallet, ArrowUpRight, ArrowDownRight, RefreshCw, FileText, Archive } from 'lucide-react';
+import { toast } from 'sonner';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 export function FinancialEnhanced() {
@@ -54,11 +55,14 @@ export function FinancialEnhanced() {
     },
   });
 
-  const deleteARMutation = trpc.financial.deleteAR.useMutation({
+  const archiveARMutation = trpc.financial.archiveAR.useMutation({
     onSuccess: () => {
       utils.financial.getAllAR.invalidate();
       utils.financial.getARSummary.invalidate();
+      utils.financial.getArchivedAR.invalidate();
+      toast.success("Receivable archived successfully");
     },
+    onError: () => toast.error("Failed to archive receivable"),
   });
 
   const createAPMutation = trpc.financial.createAP.useMutation({
@@ -79,11 +83,14 @@ export function FinancialEnhanced() {
     },
   });
 
-  const deleteAPMutation = trpc.financial.deleteAP.useMutation({
+  const archiveAPMutation = trpc.financial.archiveAP.useMutation({
     onSuccess: () => {
       utils.financial.getAllAP.invalidate();
       utils.financial.getAPSummary.invalidate();
+      utils.financial.getArchivedAP.invalidate();
+      toast.success("Payable archived successfully");
     },
+    onError: () => toast.error("Failed to archive payable"),
   });
 
   const [showARDialog, setShowARDialog] = useState(false);
@@ -530,8 +537,8 @@ export function FinancialEnhanced() {
                               <Button size="sm" variant="ghost" onClick={() => openEditAR(item)}>
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button size="sm" variant="ghost" className="text-red-600" onClick={() => deleteARMutation.mutate({ id: item.id })}>
-                                <Trash2 className="w-4 h-4" />
+                              <Button size="sm" variant="ghost" className="text-amber-600" onClick={() => archiveARMutation.mutate({ id: item.id })} title="Archive">
+                                <Archive className="w-4 h-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -593,8 +600,8 @@ export function FinancialEnhanced() {
                               <Button size="sm" variant="ghost" onClick={() => openEditAP(item)}>
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button size="sm" variant="ghost" className="text-red-600" onClick={() => deleteAPMutation.mutate({ id: item.id })}>
-                                <Trash2 className="w-4 h-4" />
+                              <Button size="sm" variant="ghost" className="text-amber-600" onClick={() => archiveAPMutation.mutate({ id: item.id })} title="Archive">
+                                <Archive className="w-4 h-4" />
                               </Button>
                             </div>
                           </TableCell>
