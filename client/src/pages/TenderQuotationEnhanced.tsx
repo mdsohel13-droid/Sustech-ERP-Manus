@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit2, Trash2, Eye, MoreHorizontal, Search, Calendar, Filter, FileText, Building2, Clock, CheckCircle, Archive, RotateCcw } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, MoreHorizontal, Search, Calendar, Filter, FileText, Building2, Clock, CheckCircle, Archive, RotateCcw, UserPlus } from 'lucide-react';
 import { format, parseISO, isAfter, isBefore, addDays } from 'date-fns';
 import { toast } from 'sonner';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -35,6 +35,11 @@ export default function TenderQuotationEnhanced() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [clientFilter, setClientFilter] = useState<string>('all');
   const [timelineFilter, setTimelineFilter] = useState<string>('all');
+  const [quickAddClientOpen, setQuickAddClientOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [pendingClientSelect, setPendingClientSelect] = useState<((name: string) => void) | null>(null);
 
   const { data: allTenderQuotations = [], isLoading } = trpc.tenderQuotation.getAll.useQuery();
   const { data: customers = [] } = trpc.customers.getAll.useQuery();
@@ -78,6 +83,22 @@ export default function TenderQuotationEnhanced() {
     onSuccess: () => {
       utils.tenderQuotation.getAll.invalidate();
       toast.success('Restored successfully');
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const createClientMutation = trpc.customers.create.useMutation({
+    onSuccess: () => {
+      utils.customers.getAll.invalidate();
+      if (pendingClientSelect) {
+        pendingClientSelect(newClientName);
+        setPendingClientSelect(null);
+      }
+      setQuickAddClientOpen(false);
+      setNewClientName('');
+      setNewClientEmail('');
+      setNewClientPhone('');
+      toast.success('Client added successfully');
     },
     onError: (err) => toast.error(err.message),
   });
@@ -262,16 +283,30 @@ export default function TenderQuotationEnhanced() {
           </div>
           <div className="space-y-2">
             <Label>Client</Label>
-            <Select value={formData.clientName} onValueChange={(v) => setFormData({ ...formData, clientName: v })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select client" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c: any) => (
-                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={formData.clientName} onValueChange={(v) => setFormData({ ...formData, clientName: v })}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((c: any) => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setPendingClientSelect((name: string) => setFormData({ ...formData, clientName: name }));
+                  setQuickAddClientOpen(true);
+                }}
+                title="Add New Client"
+              >
+                <UserPlus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -763,6 +798,71 @@ export default function TenderQuotationEnhanced() {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Client Dialog */}
+      <Dialog open={quickAddClientOpen} onOpenChange={setQuickAddClientOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Client</DialogTitle>
+            <DialogDescription>
+              Quickly add a new client to select in the form.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="clientName">Client Name *</Label>
+              <Input
+                id="clientName"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                placeholder="Enter client name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clientEmail">Email</Label>
+              <Input
+                id="clientEmail"
+                type="email"
+                value={newClientEmail}
+                onChange={(e) => setNewClientEmail(e.target.value)}
+                placeholder="client@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clientPhone">Phone</Label>
+              <Input
+                id="clientPhone"
+                value={newClientPhone}
+                onChange={(e) => setNewClientPhone(e.target.value)}
+                placeholder="+1 234 567 8900"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickAddClientOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!newClientName.trim()) {
+                  toast.error('Client name is required');
+                  return;
+                }
+                createClientMutation.mutate({
+                  name: newClientName.trim(),
+                  email: newClientEmail.trim() || undefined,
+                  phone: newClientPhone.trim() || undefined,
+                  status: 'warm',
+                });
+              }}
+              disabled={!newClientName.trim() || createClientMutation.isPending}
+            >
+              {createClientMutation.isPending ? 'Adding...' : 'Add Client'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

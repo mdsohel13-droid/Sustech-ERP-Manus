@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { InfoPopup } from "@/components/ui/info-popup";
-import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2, Edit, Archive, RotateCcw, DollarSign, Users, Calendar, Clock, AlertTriangle, Package, User, Phone, MoreHorizontal } from "lucide-react";
+import { Plus, TrendingUp, Target, BarChart3, Paperclip, FileText, Trash2, Edit, Archive, RotateCcw, DollarSign, Users, Calendar, Clock, AlertTriangle, Package, User, Phone, MoreHorizontal, UserPlus } from "lucide-react";
 import { InlineEditCell } from "@/components/InlineEditCell";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { ProductCombobox } from "@/components/ui/product-combobox";
@@ -40,6 +40,10 @@ export default function Sales() {
   const [isWalkInCustomer, setIsWalkInCustomer] = useState(false);
   const [trackingProductId, setTrackingProductId] = useState("");
   const [saleDate, setSaleDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [quickAddClientOpen, setQuickAddClientOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
 
   const utils = trpc.useUtils();
   const { data: products } = trpc.sales.getAllProducts.useQuery();
@@ -155,6 +159,18 @@ export default function Sales() {
       setBulkDeleting(false);
       toast.error(`Failed to delete: ${error.message}`);
     },
+  });
+
+  const createCustomerMutation = trpc.customers.create.useMutation({
+    onSuccess: () => {
+      utils.customers.getAll.invalidate();
+      setQuickAddClientOpen(false);
+      setNewClientName('');
+      setNewClientEmail('');
+      setNewClientPhone('');
+      toast.success('Client added successfully');
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   const handleBulkDelete = () => {
@@ -759,15 +775,27 @@ export default function Sales() {
                     {/* Customer Name */}
                     <div className="grid gap-2">
                       <Label htmlFor="customerName">Customer Name (Optional)</Label>
-                      <CustomerCombobox
-                        customers={customers || []}
-                        value={selectedCustomer}
-                        onValueChange={(value, isWalkIn) => {
-                          setSelectedCustomer(value);
-                          setIsWalkInCustomer(isWalkIn);
-                        }}
-                        placeholder="Search customers or walk-in..."
-                      />
+                      <div className="flex gap-2">
+                        <CustomerCombobox
+                          customers={customers || []}
+                          value={selectedCustomer}
+                          onValueChange={(value, isWalkIn) => {
+                            setSelectedCustomer(value);
+                            setIsWalkInCustomer(isWalkIn);
+                          }}
+                          placeholder="Search customers or walk-in..."
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setQuickAddClientOpen(true)}
+                          title="Add New Client"
+                        >
+                          <UserPlus className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <input type="hidden" name="customer" value={isWalkInCustomer ? selectedCustomer.replace("walkin:", "") : ""} />
                       <input type="hidden" name="customerId" value={!isWalkInCustomer && selectedCustomer ? selectedCustomer : ""} />
                     </div>
@@ -1460,6 +1488,70 @@ export default function Sales() {
         onCancel={() => setDeleteConfirm({show: false, item: null, type: 'product'})}
         isLoading={deleteProductMutation.isPending || deleteTrackingMutation.isPending || permanentlyDeleteMutation.isPending}
       />
+
+      {/* Quick Add Client Dialog */}
+      <Dialog open={quickAddClientOpen} onOpenChange={setQuickAddClientOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Client</DialogTitle>
+            <DialogDescription>
+              Quickly add a new client to select in the form.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="clientName">Client Name *</Label>
+              <Input
+                id="clientName"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                placeholder="Enter client name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="clientEmail">Email</Label>
+              <Input
+                id="clientEmail"
+                type="email"
+                value={newClientEmail}
+                onChange={(e) => setNewClientEmail(e.target.value)}
+                placeholder="client@example.com"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="clientPhone">Phone</Label>
+              <Input
+                id="clientPhone"
+                value={newClientPhone}
+                onChange={(e) => setNewClientPhone(e.target.value)}
+                placeholder="+1 234 567 8900"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickAddClientOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!newClientName.trim()) {
+                  toast.error('Client name is required');
+                  return;
+                }
+                createCustomerMutation.mutate({
+                  name: newClientName.trim(),
+                  email: newClientEmail.trim() || undefined,
+                  phone: newClientPhone.trim() || undefined,
+                  status: 'warm',
+                });
+              }}
+              disabled={!newClientName.trim() || createCustomerMutation.isPending}
+            >
+              {createCustomerMutation.isPending ? 'Adding...' : 'Add Client'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

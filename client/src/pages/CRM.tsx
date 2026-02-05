@@ -35,7 +35,8 @@ import {
   BarChart3,
   Archive,
   RotateCcw,
-  Trash2
+  Trash2,
+  UserPlus
 } from 'lucide-react';
 import {
   AreaChart,
@@ -96,6 +97,11 @@ export default function CRM() {
     leadId: undefined as number | undefined,
     opportunityId: undefined as number | undefined,
   });
+
+  const [quickAddClientOpen, setQuickAddClientOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
 
   const utils = trpc.useUtils();
   
@@ -194,6 +200,18 @@ export default function CRM() {
       toast.success('Activity logged');
     },
     onError: (error) => toast.error(error.message)
+  });
+
+  const createCustomerMutation = trpc.customers.create.useMutation({
+    onSuccess: () => {
+      utils.customers.getAll.invalidate();
+      setQuickAddClientOpen(false);
+      setNewClientName('');
+      setNewClientEmail('');
+      setNewClientPhone('');
+      toast.success('Client added successfully');
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   const resetLeadForm = () => {
@@ -1016,17 +1034,28 @@ export default function CRM() {
             </div>
             <div className="space-y-2">
               <Label>Account</Label>
-              <Select 
-                value={opportunityForm.customerId?.toString() || ''} 
-                onValueChange={(v) => setOpportunityForm({...opportunityForm, customerId: parseInt(v)})}
-              >
-                <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
-                <SelectContent>
-                  {customers.map((c: any) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select 
+                  value={opportunityForm.customerId?.toString() || ''} 
+                  onValueChange={(v) => setOpportunityForm({...opportunityForm, customerId: parseInt(v)})}
+                >
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Select customer" /></SelectTrigger>
+                  <SelectContent>
+                    {customers.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuickAddClientOpen(true)}
+                  title="Add New Client"
+                >
+                  <UserPlus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1226,6 +1255,67 @@ export default function CRM() {
             <Button variant="outline" onClick={() => setShowOpportunityDetailDialog(false)}>Close</Button>
             <Button onClick={() => { openEditOpportunity(selectedOpportunity); setShowOpportunityDetailDialog(false); }}>
               <Edit2 className="w-4 h-4 mr-1" /> Edit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Client Dialog */}
+      <Dialog open={quickAddClientOpen} onOpenChange={setQuickAddClientOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Client</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="clientName">Client Name *</Label>
+              <Input
+                id="clientName"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                placeholder="Enter client name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clientEmail">Email</Label>
+              <Input
+                id="clientEmail"
+                type="email"
+                value={newClientEmail}
+                onChange={(e) => setNewClientEmail(e.target.value)}
+                placeholder="client@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clientPhone">Phone</Label>
+              <Input
+                id="clientPhone"
+                value={newClientPhone}
+                onChange={(e) => setNewClientPhone(e.target.value)}
+                placeholder="+1 234 567 8900"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickAddClientOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!newClientName.trim()) {
+                  toast.error('Client name is required');
+                  return;
+                }
+                createCustomerMutation.mutate({
+                  name: newClientName.trim(),
+                  email: newClientEmail.trim() || undefined,
+                  phone: newClientPhone.trim() || undefined,
+                  status: 'warm',
+                });
+              }}
+              disabled={!newClientName.trim() || createCustomerMutation.isPending}
+            >
+              {createCustomerMutation.isPending ? 'Adding...' : 'Add Client'}
             </Button>
           </DialogFooter>
         </DialogContent>
