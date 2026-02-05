@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X, Receipt, CreditCard, FileText, ArrowUpRight, Wallet, Building, BookOpen, Link2, ExternalLink, Archive, ArchiveRestore, Search, ChevronDown } from "lucide-react";
+import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X, Receipt, CreditCard, FileText, ArrowUpRight, Wallet, Building, BookOpen, Link2, ExternalLink, Archive, ArchiveRestore, Search, ChevronDown, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -158,6 +158,22 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
       toast.success("Payable restored");
     },
     onError: () => toast.error("Failed to restore payable"),
+  });
+
+  const updateARStatusMutation = trpc.financial.updateAR.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAR.invalidate();
+      toast.success("Receivable status updated");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update status"),
+  });
+
+  const updateAPStatusMutation = trpc.financial.updateAP.useMutation({
+    onSuccess: () => {
+      utils.financial.getAllAP.invalidate();
+      toast.success("Payable status updated");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update status"),
   });
 
   const createTypeMutation = trpc.transactionTypes.create.useMutation({
@@ -707,14 +723,49 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                             <Badge className={getStatusColor(ar.status)}>{ar.status}</Badge>
                           </td>
                           <td className="p-4 text-center">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => archiveARMutation.mutate({ id: ar.id })}
-                              title="Archive"
-                            >
-                              <Archive className="h-4 w-4 text-amber-600" />
-                            </Button>
+                            <div className="flex items-center justify-center gap-1">
+                              {ar.status !== "paid" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updateARStatusMutation.mutate({ id: ar.id, status: "paid" })}
+                                  title="Mark as Paid"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {ar.status === "pending" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updateARStatusMutation.mutate({ id: ar.id, status: "overdue" })}
+                                  title="Mark as Overdue"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <AlertTriangle className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {ar.status === "overdue" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updateARStatusMutation.mutate({ id: ar.id, status: "pending" })}
+                                  title="Mark as Pending"
+                                  className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                                >
+                                  <Clock className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => archiveARMutation.mutate({ id: ar.id })}
+                                title="Archive"
+                              >
+                                <Archive className="h-4 w-4 text-amber-600" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -838,14 +889,49 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                             <Badge className={getStatusColor(ap.status)}>{ap.status}</Badge>
                           </td>
                           <td className="p-4 text-center">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => archiveAPMutation.mutate({ id: ap.id })}
-                              title="Archive"
-                            >
-                              <Archive className="h-4 w-4 text-amber-600" />
-                            </Button>
+                            <div className="flex items-center justify-center gap-1">
+                              {ap.status !== "paid" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updateAPStatusMutation.mutate({ id: ap.id, status: "paid" })}
+                                  title="Mark as Paid"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {ap.status === "pending" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updateAPStatusMutation.mutate({ id: ap.id, status: "overdue" })}
+                                  title="Mark as Overdue"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <AlertTriangle className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {ap.status === "overdue" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => updateAPStatusMutation.mutate({ id: ap.id, status: "pending" })}
+                                  title="Mark as Pending"
+                                  className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                                >
+                                  <Clock className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => archiveAPMutation.mutate({ id: ap.id })}
+                                title="Archive"
+                              >
+                                <Archive className="h-4 w-4 text-amber-600" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
