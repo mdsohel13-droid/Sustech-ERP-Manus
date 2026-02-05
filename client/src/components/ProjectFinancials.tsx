@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X, Receipt, CreditCard, FileText, ArrowUpRight, Wallet, Building, BookOpen, Link2, ExternalLink, Archive, ArchiveRestore, Search, ChevronDown, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Plus, DollarSign, TrendingUp, TrendingDown, Settings, Edit, Trash2, X, Receipt, CreditCard, FileText, ArrowUpRight, Wallet, Building, BookOpen, Link2, ExternalLink, Archive, ArchiveRestore, Search, ChevronDown, CheckCircle, Clock, AlertTriangle, Banknote } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -34,6 +35,12 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
   const [linkARDialogOpen, setLinkARDialogOpen] = useState(false);
   const [linkAPDialogOpen, setLinkAPDialogOpen] = useState(false);
   const [txnSearchTerm, setTxnSearchTerm] = useState("");
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentRecord, setPaymentRecord] = useState<{ id: number; type: "ar" | "ap"; name: string; totalAmount: string; paidAmount: string; currency: string } | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "bank_transfer" | "check" | "card" | "mobile_payment" | "other">("bank_transfer");
+  const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [paymentNotes, setPaymentNotes] = useState("");
 
   const [txnType, setTxnType] = useState("");
   const [txnCurrency, setTxnCurrency] = useState("BDT");
@@ -175,6 +182,70 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
     },
     onError: (error) => toast.error(error.message || "Failed to update status"),
   });
+
+  const recordARPaymentMutation = trpc.financial.recordARPayment.useMutation({
+    onSuccess: (result) => {
+      utils.financial.getAllAR.invalidate();
+      toast.success(`Payment recorded! Remaining balance: ${formatCurrency(Number(result.remainingBalance), paymentRecord?.currency || "BDT")}`);
+      closePaymentDialog();
+    },
+    onError: (error) => toast.error(error.message || "Failed to record payment"),
+  });
+
+  const recordAPPaymentMutation = trpc.financial.recordAPPayment.useMutation({
+    onSuccess: (result) => {
+      utils.financial.getAllAP.invalidate();
+      toast.success(`Payment recorded! Remaining balance: ${formatCurrency(Number(result.remainingBalance), paymentRecord?.currency || "BDT")}`);
+      closePaymentDialog();
+    },
+    onError: (error) => toast.error(error.message || "Failed to record payment"),
+  });
+
+  const openPaymentDialog = (id: number, type: "ar" | "ap", name: string, totalAmount: string, paidAmount: string, currency: string) => {
+    setPaymentRecord({ id, type, name, totalAmount, paidAmount, currency });
+    const remaining = parseFloat(totalAmount) - parseFloat(paidAmount || "0");
+    setPaymentAmount(remaining.toFixed(2));
+    setPaymentDate(format(new Date(), "yyyy-MM-dd"));
+    setPaymentMethod("bank_transfer");
+    setPaymentNotes("");
+    setPaymentDialogOpen(true);
+  };
+
+  const closePaymentDialog = () => {
+    setPaymentDialogOpen(false);
+    setPaymentRecord(null);
+    setPaymentAmount("");
+    setPaymentNotes("");
+  };
+
+  const handleRecordPayment = () => {
+    if (!paymentRecord) return;
+    
+    if (paymentRecord.type === "ar") {
+      recordARPaymentMutation.mutate({
+        id: paymentRecord.id,
+        paymentAmount,
+        paymentMethod,
+        paymentDate,
+        paymentNotes: paymentNotes || undefined,
+      });
+    } else {
+      recordAPPaymentMutation.mutate({
+        id: paymentRecord.id,
+        paymentAmount,
+        paymentMethod,
+        paymentDate,
+        paymentNotes: paymentNotes || undefined,
+      });
+    }
+  };
+
+  const setFullPayment = () => {
+    if (paymentRecord) {
+      const remaining = parseFloat(paymentRecord.totalAmount) - parseFloat(paymentRecord.paidAmount || "0");
+      setPaymentAmount(remaining.toFixed(2));
+    }
+  };
 
   const createTypeMutation = trpc.transactionTypes.create.useMutation({
     onSuccess: () => {
@@ -728,11 +799,11 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  onClick={() => updateARStatusMutation.mutate({ id: ar.id, status: "paid" })}
-                                  title="Mark as Paid"
+                                  onClick={() => openPaymentDialog(ar.id, "ar", ar.customerName, ar.amount, ar.paidAmount || "0", ar.currency)}
+                                  title="Record Payment"
                                   className="text-green-600 hover:text-green-700 hover:bg-green-50"
                                 >
-                                  <CheckCircle className="h-4 w-4" />
+                                  <Banknote className="h-4 w-4" />
                                 </Button>
                               )}
                               {ar.status === "pending" && (
@@ -894,11 +965,11 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  onClick={() => updateAPStatusMutation.mutate({ id: ap.id, status: "paid" })}
-                                  title="Mark as Paid"
+                                  onClick={() => openPaymentDialog(ap.id, "ap", ap.vendorName, ap.amount, ap.paidAmount || "0", ap.currency)}
+                                  title="Record Payment"
                                   className="text-green-600 hover:text-green-700 hover:bg-green-50"
                                 >
-                                  <CheckCircle className="h-4 w-4" />
+                                  <Banknote className="h-4 w-4" />
                                 </Button>
                               )}
                               {ap.status === "pending" && (
@@ -1385,6 +1456,116 @@ export function ProjectFinancials({ projectId, projectName, open, onOpenChange }
           </div>
         </div>
       )}
+
+      {/* Payment Recording Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Banknote className="h-5 w-5 text-green-600" />
+              Record Payment
+            </DialogTitle>
+            <DialogDescription>
+              {paymentRecord?.type === "ar" ? "Record payment received from" : "Record payment made to"}: <strong>{paymentRecord?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          
+          {paymentRecord && (
+            <div className="space-y-4">
+              {/* Payment Summary */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total Amount:</span>
+                  <span className="font-semibold">{formatCurrency(Number(paymentRecord.totalAmount), paymentRecord.currency)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Already Paid:</span>
+                  <span className="font-medium text-green-600">{formatCurrency(Number(paymentRecord.paidAmount || 0), paymentRecord.currency)}</span>
+                </div>
+                <div className="flex justify-between text-sm border-t pt-2">
+                  <span className="text-muted-foreground font-medium">Remaining Balance:</span>
+                  <span className="font-bold text-orange-600">
+                    {formatCurrency(Number(paymentRecord.totalAmount) - Number(paymentRecord.paidAmount || 0), paymentRecord.currency)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Payment Amount */}
+              <div className="space-y-2">
+                <Label htmlFor="paymentAmount">Payment Amount ({paymentRecord.currency})</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="paymentAmount"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={Number(paymentRecord.totalAmount) - Number(paymentRecord.paidAmount || 0)}
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="flex-1"
+                    placeholder="Enter amount"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={setFullPayment}>
+                    Full Payment
+                  </Button>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="space-y-2">
+                <Label htmlFor="paymentMethod">Payment Method</Label>
+                <Select value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="check">Check</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="mobile_payment">Mobile Payment</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Payment Date */}
+              <div className="space-y-2">
+                <Label htmlFor="paymentDate">Payment Date</Label>
+                <Input
+                  id="paymentDate"
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                />
+              </div>
+
+              {/* Payment Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="paymentNotes">Notes (Optional)</Label>
+                <Textarea
+                  id="paymentNotes"
+                  value={paymentNotes}
+                  onChange={(e) => setPaymentNotes(e.target.value)}
+                  placeholder="Reference number, transaction ID, etc."
+                  rows={2}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={closePaymentDialog}>Cancel</Button>
+            <Button 
+              onClick={handleRecordPayment}
+              disabled={!paymentAmount || parseFloat(paymentAmount) <= 0 || recordARPaymentMutation.isPending || recordAPPaymentMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {(recordARPaymentMutation.isPending || recordAPPaymentMutation.isPending) ? "Recording..." : "Record Payment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -160,11 +160,19 @@ export const appRouter = router({
         status: z.enum(["pending", "overdue", "paid"]).optional(),
         invoiceNumber: z.string().optional(),
         notes: z.string().optional(),
+        paidAmount: z.string().optional(),
+        paymentDate: z.string().optional(),
+        paymentMethod: z.string().optional(),
+        paymentNotes: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const oldRecord = await db.getARById(input.id);
-        const { id, dueDate, ...data } = input;
-        await db.updateAR(id, { ...data, ...(dueDate ? { dueDate: new Date(dueDate) as any } : {}) });
+        const { id, dueDate, paymentDate, ...data } = input;
+        await db.updateAR(id, { 
+          ...data, 
+          ...(dueDate ? { dueDate: new Date(dueDate) as any } : {}),
+          ...(paymentDate ? { paymentDate: new Date(paymentDate) as any } : {}),
+        });
         
         await db.createAuditLog({
           userId: ctx.user.id,
@@ -180,6 +188,70 @@ export const appRouter = router({
         });
         
         return { success: true };
+      }),
+    
+    recordARPayment: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        paymentAmount: z.string().refine(val => parseFloat(val) > 0, "Payment amount must be positive"),
+        paymentMethod: z.enum(["cash", "bank_transfer", "check", "card", "mobile_payment", "other"]),
+        paymentDate: z.string(),
+        paymentNotes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const record = await db.getARById(input.id);
+        if (!record) throw new Error("AR record not found");
+        
+        const totalAmount = parseFloat(record.amount);
+        const currentPaid = parseFloat(record.paidAmount || "0");
+        const newPayment = parseFloat(input.paymentAmount);
+        const remainingBalance = totalAmount - currentPaid;
+        
+        if (newPayment > remainingBalance) {
+          throw new Error(`Payment amount (${newPayment}) exceeds remaining balance (${remainingBalance.toFixed(2)})`);
+        }
+        
+        const paymentDateObj = new Date(input.paymentDate);
+        if (isNaN(paymentDateObj.getTime())) {
+          throw new Error("Invalid payment date");
+        }
+        
+        const totalPaid = currentPaid + newPayment;
+        
+        let newStatus: "pending" | "overdue" | "paid" = record.status;
+        if (totalPaid >= totalAmount) {
+          newStatus = "paid";
+        }
+        
+        await db.updateAR(input.id, {
+          paidAmount: totalPaid.toFixed(2),
+          paymentDate: new Date(input.paymentDate) as any,
+          paymentMethod: input.paymentMethod,
+          paymentNotes: input.paymentNotes ? 
+            (record.paymentNotes ? `${record.paymentNotes}\n${input.paymentNotes}` : input.paymentNotes) : 
+            record.paymentNotes,
+          status: newStatus,
+        });
+        
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "update",
+          module: "financial",
+          entityType: "accounts_receivable",
+          entityId: String(input.id),
+          entityName: record.customerName,
+          oldValues: JSON.stringify({ paidAmount: currentPaid, status: record.status }),
+          newValues: JSON.stringify({ paidAmount: totalPaid, status: newStatus, paymentMethod: input.paymentMethod }),
+          changes: `Payment recorded: ${input.paymentAmount}`,
+          status: "success",
+        });
+        
+        return { 
+          success: true, 
+          totalPaid: totalPaid.toFixed(2), 
+          remainingBalance: (totalAmount - totalPaid).toFixed(2),
+          status: newStatus 
+        };
       }),
     
     deleteAR: protectedProcedure
@@ -318,11 +390,83 @@ export const appRouter = router({
         status: z.enum(["pending", "overdue", "paid"]).optional(),
         invoiceNumber: z.string().optional(),
         notes: z.string().optional(),
+        paidAmount: z.string().optional(),
+        paymentDate: z.string().optional(),
+        paymentMethod: z.string().optional(),
+        paymentNotes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, dueDate, ...data } = input;
-        await db.updateAP(id, { ...data, ...(dueDate ? { dueDate: new Date(dueDate) as any } : {}) });
+        const { id, dueDate, paymentDate, ...data } = input;
+        await db.updateAP(id, { 
+          ...data, 
+          ...(dueDate ? { dueDate: new Date(dueDate) as any } : {}),
+          ...(paymentDate ? { paymentDate: new Date(paymentDate) as any } : {}),
+        });
         return { success: true };
+      }),
+    
+    recordAPPayment: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        paymentAmount: z.string().refine(val => parseFloat(val) > 0, "Payment amount must be positive"),
+        paymentMethod: z.enum(["cash", "bank_transfer", "check", "card", "mobile_payment", "other"]),
+        paymentDate: z.string(),
+        paymentNotes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const record = await db.getAPById(input.id);
+        if (!record) throw new Error("AP record not found");
+        
+        const totalAmount = parseFloat(record.amount);
+        const currentPaid = parseFloat(record.paidAmount || "0");
+        const newPayment = parseFloat(input.paymentAmount);
+        const remainingBalance = totalAmount - currentPaid;
+        
+        if (newPayment > remainingBalance) {
+          throw new Error(`Payment amount (${newPayment}) exceeds remaining balance (${remainingBalance.toFixed(2)})`);
+        }
+        
+        const paymentDateObj = new Date(input.paymentDate);
+        if (isNaN(paymentDateObj.getTime())) {
+          throw new Error("Invalid payment date");
+        }
+        
+        const totalPaid = currentPaid + newPayment;
+        
+        let newStatus: "pending" | "overdue" | "paid" = record.status;
+        if (totalPaid >= totalAmount) {
+          newStatus = "paid";
+        }
+        
+        await db.updateAP(input.id, {
+          paidAmount: totalPaid.toFixed(2),
+          paymentDate: new Date(input.paymentDate) as any,
+          paymentMethod: input.paymentMethod,
+          paymentNotes: input.paymentNotes ? 
+            (record.paymentNotes ? `${record.paymentNotes}\n${input.paymentNotes}` : input.paymentNotes) : 
+            record.paymentNotes,
+          status: newStatus,
+        });
+        
+        await db.createAuditLog({
+          userId: ctx.user.id,
+          action: "update",
+          module: "financial",
+          entityType: "accounts_payable",
+          entityId: String(input.id),
+          entityName: record.vendorName,
+          oldValues: JSON.stringify({ paidAmount: currentPaid, status: record.status }),
+          newValues: JSON.stringify({ paidAmount: totalPaid, status: newStatus, paymentMethod: input.paymentMethod }),
+          changes: `Payment recorded: ${input.paymentAmount}`,
+          status: "success",
+        });
+        
+        return { 
+          success: true, 
+          totalPaid: totalPaid.toFixed(2), 
+          remainingBalance: (totalAmount - totalPaid).toFixed(2),
+          status: newStatus 
+        };
       }),
     
     deleteAP: protectedProcedure
