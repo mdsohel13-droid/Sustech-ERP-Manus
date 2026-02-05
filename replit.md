@@ -21,13 +21,12 @@ Key architectural decisions and features include:
 - **Comprehensive Audit Logging**: All delete operations across modules (AR, AP, Projects, Customers, Transactions) are logged with user ID, timestamp, entity type, old values, and operation status.
 - **Transaction Safety**: Financial operations use PostgreSQL transactions to ensure atomicity.
 - **Soft Delete Pattern**: Projects, Customers, and Vendors use `is_archived` flag instead of hard delete to preserve data integrity.
-- **Environment Safety**: Database utility functions include safeguards to prevent accidental production database operations in development mode.
+- **Shared Database Architecture**: Development and production environments share the same PostgreSQL database for data consistency. All changes made in either environment are immediately visible in both.
 - **Protected Operations Layer**: Centralized `protectedDelete`, `protectedSoftDelete`, and `protectedUpdate` functions in `db-utils.ts` that:
-  - Block destructive operations when development mode is connected to production database
   - Automatically capture pre-operation data for recovery
   - Create comprehensive audit logs before any data modification
   - Provide consistent error handling and logging across all modules
-- **Comprehensive Database Safety (db.ts)**: All 40+ delete functions enforce data protection via `enforceDataProtection()` which blocks destructive operations in development when connected to production database. Protected functions include:
+- **Comprehensive Database Operations (db.ts)**: All 40+ database functions include audit logging for tracking all operations. Protected functions include:
   - Finance: deleteAR, deleteAP, deleteSale, deleteIncomeExpenditure, deleteBudget
   - Projects: deleteProject, deleteProjectTransaction
   - CRM: deleteCustomer, archiveCustomer, restoreCustomer

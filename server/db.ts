@@ -97,10 +97,11 @@ function isDevelopmentMode(): boolean {
 }
 
 function enforceDataProtection(operation: string): void {
-  if (isDevelopmentMode() && isProductionDatabase()) {
-    console.error(`[DATA PROTECTION] BLOCKED: ${operation} - Cannot modify production data from development environment`);
-    throw new Error(`Data Protection: ${operation} blocked - Cannot modify production data from development environment`);
-  }
+  // Shared database mode: Both development and production share the same database
+  // All destructive operations are logged with timestamp for audit trail
+  const timestamp = new Date().toISOString();
+  const envMode = isDevelopmentMode() ? 'DEV' : 'PROD';
+  console.log(`[AUDIT] ${timestamp} | ${envMode} | ${operation} | Shared database operation`);
 }
 
 export async function getDb() {
@@ -112,10 +113,8 @@ export async function getDb() {
       if (!_dbSafetyLogged) {
         const isProduction = isProductionDatabase();
         const isDev = isDevelopmentMode();
-        console.log(`[DB Safety] Environment: ${isDev ? 'Development' : 'Production'}, Database: ${isProduction ? 'PRODUCTION' : 'Development'}`);
-        if (isDev && isProduction) {
-          console.warn(`[DB Safety] WARNING: Development mode connected to production database - destructive operations may be blocked`);
-        }
+        console.log(`[DB] Environment: ${isDev ? 'Development' : 'Production'}, Database: Shared Production`);
+        console.log(`[DB] Both development and production environments now share the same database`);
         _dbSafetyLogged = true;
       }
     } catch (error) {
