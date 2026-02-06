@@ -37,6 +37,7 @@ export default function RecentActivityFeed({ actionItems, tenders, users }: Rece
       time: a.updatedAt || a.createdAt,
     })),
   ]
+    .filter(a => a.time)
     .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
     .slice(0, 6);
 
