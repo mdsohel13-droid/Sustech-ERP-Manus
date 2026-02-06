@@ -2143,3 +2143,232 @@ export const projectMaterialConsumption = pgTable("project_material_consumption"
 
 export type ProjectMaterialConsumption = typeof projectMaterialConsumption.$inferSelect;
 export type InsertProjectMaterialConsumption = typeof projectMaterialConsumption.$inferInsert;
+
+/**
+ * ============================================
+ * Phase 1 SCM Upgrade - New Tables
+ * ============================================
+ */
+
+export const rfqTypeEnum = pgEnum("rfq_type", ["standard", "emergency", "framework"]);
+export const rfqStatusEnum = pgEnum("rfq_status", ["draft", "sent", "responses_received", "evaluated", "closed"]);
+export const rfqResponseStatusEnum = pgEnum("rfq_response_status", ["received", "evaluated", "accepted", "rejected"]);
+export const shipmentTypeEnum = pgEnum("shipment_type", ["inbound", "outbound", "transfer"]);
+export const shipmentStatusEnum = pgEnum("shipment_status", ["pending", "picked", "packed", "shipped", "in_transit", "delivered", "exception"]);
+export const warehouseTypeEnum = pgEnum("warehouse_type", ["hq", "project_site", "distribution", "returns"]);
+export const riskLevelEnum = pgEnum("risk_level", ["low", "medium", "high", "critical"]);
+export const abcClassEnum = pgEnum("abc_class", ["A", "B", "C"]);
+export const xyzClassEnum = pgEnum("xyz_class", ["X", "Y", "Z"]);
+export const lotQualityEnum = pgEnum("lot_quality", ["accepted", "quarantine", "rejected"]);
+
+/**
+ * RFQ (Request for Quotation) - Send RFQs to multiple vendors and compare bids
+ */
+export const rfqs = pgTable("rfqs", {
+  id: serial("id").primaryKey(),
+  rfqNumber: varchar("rfq_number", { length: 50 }).notNull().unique(),
+  rfqType: rfqTypeEnum("rfq_type").default("standard"),
+  status: rfqStatusEnum("status").default("draft"),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  requiredDeliveryDate: date("required_delivery_date"),
+  totalEstimatedValue: decimal("total_estimated_value", { precision: 15, scale: 2 }),
+  currency: varchar("currency", { length: 10 }).default("BDT"),
+  notes: text("notes"),
+  closingDate: date("closing_date"),
+  isArchived: boolean("is_archived").default(false),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type RFQ = typeof rfqs.$inferSelect;
+export type InsertRFQ = typeof rfqs.$inferInsert;
+
+/**
+ * RFQ Lines - Individual items requested in an RFQ
+ */
+export const rfqLines = pgTable("rfq_lines", {
+  id: serial("id").primaryKey(),
+  rfqId: integer("rfq_id").notNull(),
+  productId: integer("product_id"),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 4 }).notNull(),
+  unitOfMeasure: varchar("unit_of_measure", { length: 50 }),
+  estimatedUnitPrice: decimal("estimated_unit_price", { precision: 15, scale: 2 }),
+  specifications: text("specifications"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type RFQLine = typeof rfqLines.$inferSelect;
+export type InsertRFQLine = typeof rfqLines.$inferInsert;
+
+/**
+ * RFQ Responses - Vendor responses to RFQs
+ */
+export const rfqResponses = pgTable("rfq_responses", {
+  id: serial("id").primaryKey(),
+  rfqId: integer("rfq_id").notNull(),
+  vendorId: integer("vendor_id").notNull(),
+  responseDate: date("response_date").notNull(),
+  validityDays: integer("validity_days"),
+  totalQuotedValue: decimal("total_quoted_value", { precision: 15, scale: 2 }),
+  currency: varchar("currency", { length: 10 }).default("BDT"),
+  paymentTerms: varchar("payment_terms", { length: 200 }),
+  deliveryDays: integer("delivery_days"),
+  notes: text("notes"),
+  status: rfqResponseStatusEnum("status").default("received"),
+  evaluationScore: decimal("evaluation_score", { precision: 5, scale: 2 }),
+  rank: integer("rank"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type RFQResponse = typeof rfqResponses.$inferSelect;
+export type InsertRFQResponse = typeof rfqResponses.$inferInsert;
+
+/**
+ * Vendor Bids - Line-level pricing from vendor responses
+ */
+export const vendorBidsTable = pgTable("vendor_bids", {
+  id: serial("id").primaryKey(),
+  rfqResponseId: integer("rfq_response_id").notNull(),
+  rfqLineId: integer("rfq_line_id").notNull(),
+  unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
+  lineTotal: decimal("line_total", { precision: 15, scale: 2 }),
+  deliveryDays: integer("delivery_days"),
+  qualityGuarantee: text("quality_guarantee"),
+  paymentTerms: varchar("payment_terms", { length: 200 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type VendorBid = typeof vendorBidsTable.$inferSelect;
+export type InsertVendorBid = typeof vendorBidsTable.$inferInsert;
+
+/**
+ * Shipments - Track inbound/outbound shipments
+ */
+export const shipments = pgTable("shipments", {
+  id: serial("id").primaryKey(),
+  shipmentNumber: varchar("shipment_number", { length: 50 }).notNull().unique(),
+  shipmentType: shipmentTypeEnum("shipment_type").notNull(),
+  sourceWarehouseId: integer("source_warehouse_id"),
+  destinationWarehouseId: integer("destination_warehouse_id"),
+  customerId: integer("customer_id"),
+  vendorId: integer("vendor_id"),
+  purchaseOrderId: integer("purchase_order_id"),
+  salesOrderId: integer("sales_order_id"),
+  shipmentDate: date("shipment_date").notNull(),
+  expectedDeliveryDate: date("expected_delivery_date"),
+  actualDeliveryDate: date("actual_delivery_date"),
+  status: shipmentStatusEnum("status").default("pending"),
+  logisticsProvider: varchar("logistics_provider", { length: 200 }),
+  trackingNumber: varchar("tracking_number", { length: 200 }),
+  freightCost: decimal("freight_cost", { precision: 15, scale: 2 }).default("0"),
+  insuranceCost: decimal("insurance_cost", { precision: 15, scale: 2 }).default("0"),
+  totalWeightKg: decimal("total_weight_kg", { precision: 10, scale: 2 }),
+  notes: text("notes"),
+  isArchived: boolean("is_archived").default(false),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Shipment = typeof shipments.$inferSelect;
+export type InsertShipment = typeof shipments.$inferInsert;
+
+/**
+ * Shipment Lines - Items in a shipment
+ */
+export const shipmentLines = pgTable("shipment_lines", {
+  id: serial("id").primaryKey(),
+  shipmentId: integer("shipment_id").notNull(),
+  productId: integer("product_id").notNull(),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  quantity: decimal("quantity", { precision: 15, scale: 4 }).notNull(),
+  weightKg: decimal("weight_kg", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type ShipmentLine = typeof shipmentLines.$inferSelect;
+export type InsertShipmentLine = typeof shipmentLines.$inferInsert;
+
+/**
+ * Shipment Tracking Events - Status updates for shipments
+ */
+export const shipmentTracking = pgTable("shipment_tracking", {
+  id: serial("id").primaryKey(),
+  shipmentId: integer("shipment_id").notNull(),
+  trackingEvent: varchar("tracking_event", { length: 200 }).notNull(),
+  eventLocation: varchar("event_location", { length: 500 }),
+  eventTimestamp: timestamp("event_timestamp").notNull(),
+  eventDescription: text("event_description"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type ShipmentTrackingEvent = typeof shipmentTracking.$inferSelect;
+export type InsertShipmentTrackingEvent = typeof shipmentTracking.$inferInsert;
+
+/**
+ * Supplier Risk Scores - Rule-based risk assessment for vendors
+ */
+export const supplierRiskScores = pgTable("supplier_risk_scores", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull(),
+  riskScore: decimal("risk_score", { precision: 5, scale: 2 }).notNull(),
+  riskLevel: riskLevelEnum("risk_level").notNull(),
+  onTimeDeliveryRate: decimal("on_time_delivery_rate", { precision: 5, scale: 2 }),
+  qualityScore: decimal("quality_score", { precision: 5, scale: 2 }),
+  priceCompetitiveness: decimal("price_competitiveness", { precision: 5, scale: 2 }),
+  responsiveness: decimal("responsiveness", { precision: 5, scale: 2 }),
+  complianceScore: decimal("compliance_score", { precision: 5, scale: 2 }),
+  assessmentDate: date("assessment_date").notNull(),
+  notes: text("notes"),
+  assessedBy: integer("assessed_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SupplierRiskScore = typeof supplierRiskScores.$inferSelect;
+export type InsertSupplierRiskScore = typeof supplierRiskScores.$inferInsert;
+
+/**
+ * Inventory Lots - Batch/lot tracking for products
+ */
+export const inventoryLots = pgTable("inventory_lots", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  warehouseId: integer("warehouse_id").notNull(),
+  lotNumber: varchar("lot_number", { length: 100 }).notNull(),
+  serialNumber: varchar("serial_number", { length: 100 }),
+  quantity: decimal("quantity", { precision: 15, scale: 4 }).notNull(),
+  manufactureDate: date("manufacture_date"),
+  expiryDate: date("expiry_date"),
+  supplierBatchNumber: varchar("supplier_batch_number", { length: 100 }),
+  qualityStatus: lotQualityEnum("quality_status").default("accepted"),
+  locationInWarehouse: varchar("location_in_warehouse", { length: 200 }),
+  purchaseReceiptId: integer("purchase_receipt_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type InventoryLot = typeof inventoryLots.$inferSelect;
+export type InsertInventoryLot = typeof inventoryLots.$inferInsert;
+
+/**
+ * Supply Chain Audit Trail - Hash-based immutable records (blockchain equivalent)
+ */
+export const scmAuditTrail = pgTable("scm_audit_trail", {
+  id: serial("id").primaryKey(),
+  entityType: varchar("entity_type", { length: 100 }).notNull(),
+  entityId: integer("entity_id").notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  dataSnapshot: text("data_snapshot").notNull(),
+  dataHash: varchar("data_hash", { length: 64 }).notNull(),
+  previousHash: varchar("previous_hash", { length: 64 }),
+  performedBy: integer("performed_by"),
+  performedAt: timestamp("performed_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type ScmAuditTrail = typeof scmAuditTrail.$inferSelect;
+export type InsertScmAuditTrail = typeof scmAuditTrail.$inferInsert;

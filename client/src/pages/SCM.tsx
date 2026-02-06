@@ -17,7 +17,13 @@ import {
   Calculator,
   ClipboardList,
   Plus,
+  Shield,
+  ScrollText,
 } from "lucide-react";
+import RFQTab from "./scm/RFQTab";
+import ShipmentsTab from "./scm/ShipmentsTab";
+import SupplierRiskTab from "./scm/SupplierRiskTab";
+import AuditTrailTab from "./scm/AuditTrailTab";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -266,6 +272,22 @@ export default function SCM() {
           <TabsTrigger value="sales-orders" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Sales Orders
+          </TabsTrigger>
+          <TabsTrigger value="rfq" className="flex items-center gap-2">
+            <ScrollText className="h-4 w-4" />
+            RFQ
+          </TabsTrigger>
+          <TabsTrigger value="shipments" className="flex items-center gap-2">
+            <Truck className="h-4 w-4" />
+            Shipments
+          </TabsTrigger>
+          <TabsTrigger value="supplier-risk" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Supplier Risk
+          </TabsTrigger>
+          <TabsTrigger value="audit-trail" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Audit Trail
           </TabsTrigger>
         </TabsList>
 
@@ -562,6 +584,22 @@ export default function SCM() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="rfq" className="space-y-4">
+          <RFQTab />
+        </TabsContent>
+
+        <TabsContent value="shipments" className="space-y-4">
+          <ShipmentsTab />
+        </TabsContent>
+
+        <TabsContent value="supplier-risk" className="space-y-4">
+          <SupplierRiskTab />
+        </TabsContent>
+
+        <TabsContent value="audit-trail" className="space-y-4">
+          <AuditTrailTab />
         </TabsContent>
       </Tabs>
 

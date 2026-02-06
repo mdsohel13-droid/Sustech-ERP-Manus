@@ -10,6 +10,7 @@ import { ObjectStorageService } from "./replit_integrations/object_storage";
 import * as db from "./db";
 import { generateQuotationPDF, generateInvoicePDF } from "./_core/pdfGenerator";
 import * as scm from "./scm";
+import * as scmDb from "./scm-db";
 
 // Password strength validation
 function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
@@ -4189,6 +4190,277 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
       .mutation(async ({ input }) => {
         return await scm.updateWbsBudget(input.wbsId, input.newBudget);
       }),
+
+    // ============ RFQ Endpoints ============
+    createRFQ: protectedProcedure
+      .input(z.object({
+        title: z.string(),
+        description: z.string().optional(),
+        requiredDeliveryDate: z.string().optional(),
+        rfqType: z.enum(["standard", "emergency", "framework"]).optional(),
+        createdBy: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scmDb.createRFQ({ ...input, createdBy: input.createdBy || ctx.user?.id });
+      }),
+
+    getAllRFQs: protectedProcedure.query(async () => {
+      return await scmDb.getAllRFQs();
+    }),
+
+    getRFQById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await scmDb.getRFQById(input.id);
+      }),
+
+    updateRFQ: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        requiredDeliveryDate: z.string().optional(),
+        status: z.string().optional(),
+        priority: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await scmDb.updateRFQ(id, data);
+      }),
+
+    deleteRFQ: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await scmDb.deleteRFQ(input.id);
+      }),
+
+    addRFQLine: protectedProcedure
+      .input(z.object({
+        rfqId: z.number(),
+        productId: z.number().optional(),
+        productName: z.string(),
+        quantity: z.string(),
+        unitOfMeasure: z.string().optional(),
+        estimatedUnitPrice: z.string().optional(),
+        specifications: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await scmDb.addRFQLine(input);
+      }),
+
+    getRFQLines: protectedProcedure
+      .input(z.object({ rfqId: z.number() }))
+      .query(async ({ input }) => {
+        return await scmDb.getRFQLines(input.rfqId);
+      }),
+
+    deleteRFQLine: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await scmDb.deleteRFQLine(input.id);
+      }),
+
+    addRFQResponse: protectedProcedure
+      .input(z.object({
+        rfqId: z.number(),
+        vendorId: z.number(),
+        totalQuotedValue: z.string().optional(),
+        deliveryDays: z.number().optional(),
+        paymentTerms: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await scmDb.addRFQResponse({ ...input, responseDate: new Date().toISOString().split("T")[0] });
+      }),
+
+    getRFQResponses: protectedProcedure
+      .input(z.object({ rfqId: z.number() }))
+      .query(async ({ input }) => {
+        return await scmDb.getRFQResponses(input.rfqId);
+      }),
+
+    evaluateRFQResponses: protectedProcedure
+      .input(z.object({ rfqId: z.number() }))
+      .mutation(async ({ input }) => {
+        return await scmDb.evaluateRFQResponses(input.rfqId);
+      }),
+
+    acceptRFQResponse: protectedProcedure
+      .input(z.object({ responseId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await scmDb.acceptRFQResponse(input.responseId, ctx.user?.id);
+      }),
+
+    addVendorBid: protectedProcedure
+      .input(z.object({
+        rfqResponseId: z.number(),
+        rfqLineId: z.number(),
+        unitPrice: z.string(),
+        lineTotal: z.string().optional(),
+        deliveryDays: z.number().optional(),
+        qualityGuarantee: z.string().optional(),
+        paymentTerms: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await scmDb.addVendorBid(input);
+      }),
+
+    getVendorBids: protectedProcedure
+      .input(z.object({ rfqResponseId: z.number() }))
+      .query(async ({ input }) => {
+        return await scmDb.getVendorBids(input.rfqResponseId);
+      }),
+
+    // ============ Shipment Endpoints ============
+    createShipment: protectedProcedure
+      .input(z.object({
+        shipmentType: z.string(),
+        sourceWarehouseId: z.number().optional(),
+        destinationWarehouseId: z.number().optional(),
+        purchaseOrderId: z.number().optional(),
+        vendorId: z.number().optional(),
+        logisticsProvider: z.string().optional(),
+        trackingNumber: z.string().optional(),
+        shipmentDate: z.string(),
+        expectedDeliveryDate: z.string().optional(),
+        notes: z.string().optional(),
+        createdBy: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scmDb.createShipment({ ...input, createdBy: input.createdBy || ctx.user?.id });
+      }),
+
+    getAllShipments: protectedProcedure.query(async () => {
+      return await scmDb.getAllShipments();
+    }),
+
+    getShipmentById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await scmDb.getShipmentById(input.id);
+      }),
+
+    updateShipment: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        logisticsProvider: z.string().optional(),
+        trackingNumber: z.string().optional(),
+        expectedDeliveryDate: z.string().optional(),
+        notes: z.string().optional(),
+        status: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await scmDb.updateShipment(id, data);
+      }),
+
+    updateShipmentStatus: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scmDb.updateShipmentStatus(input.id, input.status, ctx.user?.id);
+      }),
+
+    addShipmentLine: protectedProcedure
+      .input(z.object({
+        shipmentId: z.number(),
+        productId: z.number(),
+        productName: z.string(),
+        quantity: z.string(),
+        weightKg: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await scmDb.addShipmentLine(input);
+      }),
+
+    getShipmentLines: protectedProcedure
+      .input(z.object({ shipmentId: z.number() }))
+      .query(async ({ input }) => {
+        return await scmDb.getShipmentLines(input.shipmentId);
+      }),
+
+    addShipmentTrackingEvent: protectedProcedure
+      .input(z.object({
+        shipmentId: z.number(),
+        trackingEvent: z.string(),
+        eventDescription: z.string().optional(),
+        eventLocation: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await scmDb.addShipmentTrackingEvent({ ...input, eventTimestamp: new Date(), createdBy: ctx.user?.id });
+      }),
+
+    getShipmentTrackingEvents: protectedProcedure
+      .input(z.object({ shipmentId: z.number() }))
+      .query(async ({ input }) => {
+        return await scmDb.getShipmentTrackingEvents(input.shipmentId);
+      }),
+
+    // ============ Supplier Risk Endpoints ============
+    calculateSupplierRiskScore: protectedProcedure
+      .input(z.object({ vendorId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await scmDb.calculateSupplierRiskScore(input.vendorId, ctx.user?.id);
+      }),
+
+    getSupplierRiskScores: protectedProcedure
+      .input(z.object({ vendorId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await scmDb.getSupplierRiskScores(input?.vendorId);
+      }),
+
+    getLatestRiskScoresForAllVendors: protectedProcedure.query(async () => {
+      return await scmDb.getLatestRiskScoresForAllVendors();
+    }),
+
+    // ============ Inventory Lots ============
+    createInventoryLot: protectedProcedure
+      .input(z.object({
+        lotNumber: z.string(),
+        productId: z.number(),
+        warehouseId: z.number(),
+        quantity: z.string(),
+        manufactureDate: z.string().optional(),
+        expiryDate: z.string().optional(),
+        supplierBatchNumber: z.string().optional(),
+        locationInWarehouse: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await scmDb.createInventoryLot(input);
+      }),
+
+    getInventoryLots: protectedProcedure
+      .input(z.object({
+        productId: z.number().optional(),
+        warehouseId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await scmDb.getInventoryLots(input?.productId, input?.warehouseId);
+      }),
+
+    // ============ SCM Audit Trail ============
+    getScmAuditTrail: protectedProcedure
+      .input(z.object({
+        entityType: z.string().optional(),
+        entityId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await scmDb.getScmAuditTrail(input?.entityType, input?.entityId);
+      }),
+
+    verifyAuditChain: adminProcedure
+      .input(z.object({ entityType: z.string() }))
+      .query(async ({ input }) => {
+        return await scmDb.verifyAuditChain(input.entityType);
+      }),
+
+    // ============ SCM Dashboard KPIs ============
+    getSCMDashboardKPIs: protectedProcedure.query(async () => {
+      return await scmDb.getSCMDashboardKPIs();
+    }),
   }),
 });
 
