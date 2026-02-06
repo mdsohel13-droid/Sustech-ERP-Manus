@@ -53,7 +53,7 @@ Key architectural decisions and features include:
   - **Project Costing with WBS**: Work Breakdown Structure for project cost allocation and material consumption tracking
   - **Perpetual Inventory Ledger**: Every stock move recorded as ledger entry for accurate valuation
 
-**SCM Database Tables:**
+**SCM Database Tables (Original):**
 - `scm_product_extensions`: Valuation method, item type, EOQ parameters
 - `scm_inventory_ledger`: Perpetual inventory moves with valuation
 - `sales_orders` / `sales_order_items`: ATP-ready sales orders
@@ -64,12 +64,38 @@ Key architectural decisions and features include:
 - `project_wbs`: Work Breakdown Structure hierarchy
 - `project_material_consumption`: Project cost tracking
 
+**SCM Phase 1 Upgrade Tables (NEW):**
+- `rfqs`: RFQ management with auto-numbering (RFQ-YYYY-####), type (standard/emergency/framework), status lifecycle (draft→sent→evaluation→awarded→closed)
+- `rfq_lines`: Line items per RFQ with product, quantity, unit of measure, estimated price
+- `rfq_responses`: Vendor responses with quoted value, delivery days, payment terms, evaluation scoring
+- `vendor_bids`: Line-level vendor pricing for RFQ responses with quality guarantee
+- `shipments`: Shipment tracking with auto-numbering (IN/OUT/TRF-YYYY-####), type (inbound/outbound/transfer), full logistics details
+- `shipment_lines`: Line items per shipment with product, quantity, weight
+- `shipment_tracking`: Event-based tracking with location, timestamp, description
+- `supplier_risk_scores`: Rule-based vendor risk scoring with weighted formula (on-time 35%, quality 25%, price 15%, responsiveness 15%, compliance 10%)
+- `inventory_lots`: Lot/batch tracking with serial numbers, manufacture/expiry dates, quality status, warehouse location
+- `scm_audit_trail`: SHA-256 hash-chained immutable audit records (blockchain equivalent) for tamper-evident supply chain tracking
+
+**SCM Phase 1 Database Functions (server/scm-db.ts):**
+- RFQ: createRFQ, getAllRFQs, getRFQById, updateRFQStatus, addRFQLine, getRFQLines, addRFQResponse, getRFQResponses, evaluateRFQResponses (weighted scoring), acceptRFQResponse (auto-converts to PO), addVendorBid, getVendorBids
+- Shipments: createShipment, getAllShipments, getShipmentById, updateShipmentStatus, addShipmentLine, getShipmentLines, addTrackingEvent, getTrackingEvents
+- Supplier Risk: calculateSupplierRiskScore, getSupplierRiskHistory, getLatestRiskScoresForAllVendors
+- Inventory Lots: createInventoryLot, getInventoryLots
+- Audit Trail: addScmAuditEntry (with SHA-256 hash chaining), getScmAuditTrail, verifyAuditChain
+- Dashboard: getScmDashboardKPIs
+
 **SCM API Endpoints (server/routers.ts → scm namespace):**
-- `scm.calculateATP`, `scm.getCurrentStock`, `scm.reserveStock`
-- `scm.checkReplenishment`, `scm.checkAllReplenishments`, `scm.createReplenishmentRequest`
-- `scm.approveReplenishmentRequest`, `scm.convertToPurchaseOrder`
-- `scm.createWbs`, `scm.getWbsTree`, `scm.getProjectCostSummary`
-- `scm.consumeMaterialForProject`, `scm.getProjectMaterialHistory`
+- Original: `scm.calculateATP`, `scm.getCurrentStock`, `scm.reserveStock`, `scm.checkReplenishment`, `scm.checkAllReplenishments`, `scm.createReplenishmentRequest`, `scm.approveReplenishmentRequest`, `scm.convertToPurchaseOrder`, `scm.createWbs`, `scm.getWbsTree`, `scm.getProjectCostSummary`, `scm.consumeMaterialForProject`, `scm.getProjectMaterialHistory`
+- Phase 1 RFQ: `scm.createRFQ`, `scm.getAllRFQs`, `scm.getRFQById`, `scm.updateRFQStatus`, `scm.addRFQLine`, `scm.getRFQLines`, `scm.addRFQResponse`, `scm.getRFQResponses`, `scm.evaluateRFQResponses`, `scm.acceptRFQResponse`, `scm.addVendorBid`, `scm.getVendorBids`
+- Phase 1 Shipments: `scm.createShipment`, `scm.getAllShipments`, `scm.getShipmentById`, `scm.updateShipmentStatus`, `scm.addShipmentLine`, `scm.getShipmentLines`, `scm.addTrackingEvent`, `scm.getTrackingEvents`
+- Phase 1 Supplier Risk: `scm.calculateSupplierRiskScore`, `scm.getSupplierRiskHistory`, `scm.getAllVendorRiskScores`
+- Phase 1 Inventory/Audit: `scm.createInventoryLot`, `scm.getInventoryLots`, `scm.getScmAuditTrail`, `scm.verifyAuditChain`, `scm.getScmDashboardKPIs`
+
+**SCM Phase 1 UI Components (client/src/pages/scm/):**
+- `RFQTab.tsx`: Full RFQ lifecycle management with create/list/detail views, line items, vendor responses, weighted evaluation, accept-to-PO conversion
+- `ShipmentsTab.tsx`: Shipment tracking with create/list/detail, status progression, tracking event timeline
+- `SupplierRiskTab.tsx`: Vendor risk dashboard with scoring, recalculation, formula display
+- `AuditTrailTab.tsx`: Hash-chain audit trail viewer with chain integrity verification
 
 ## External Dependencies
 - **OAuth Provider**: `oauth.emergentagent.com` for authentication.
