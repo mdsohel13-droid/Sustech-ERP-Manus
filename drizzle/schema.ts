@@ -49,6 +49,8 @@ export const commissionTypeEnum = pgEnum("commission_type", ["percentage", "fixe
 export const commissionHistoryStatusEnum = pgEnum("commission_history_status", ["pending", "approved", "paid", "cancelled"]);
 export const commissionTransactionStatusEnum = pgEnum("commission_transaction_status", ["earned", "pending", "paid"]);
 export const payoutStatusEnum = pgEnum("payout_status", ["draft", "approved", "processed", "completed", "cancelled"]);
+export const approvalStatusEnum = pgEnum("approval_status", ["pending_approval", "approved", "rejected"]);
+export const paymentRecordTypeEnum = pgEnum("payment_record_type", ["ar_payment", "ap_payment"]);
 
 /**
  * Core user table backing auth flow.
@@ -86,6 +88,10 @@ export const accountsReceivable = pgTable("accounts_receivable", {
   paymentDate: date("paymentDate"),
   paymentMethod: varchar("paymentMethod", { length: 50 }),
   paymentNotes: text("paymentNotes"),
+  approvalStatus: approvalStatusEnum("approval_status").default("approved"),
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -113,6 +119,10 @@ export const accountsPayable = pgTable("accounts_payable", {
   paymentDate: date("paymentDate"),
   paymentMethod: varchar("paymentMethod", { length: 50 }),
   paymentNotes: text("paymentNotes"),
+  approvalStatus: approvalStatusEnum("ap_approval_status").default("approved"),
+  approvedBy: integer("ap_approved_by"),
+  approvedAt: timestamp("ap_approved_at"),
+  rejectionReason: text("ap_rejection_reason"),
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -1091,6 +1101,43 @@ export const budgets = pgTable("budgets", {
 
 export type Budget = typeof budgets.$inferSelect;
 export type InsertBudget = typeof budgets.$inferInsert;
+
+/**
+ * Payment History - Track individual payments against AR/AP entries
+ */
+export const paymentHistory = pgTable("payment_history", {
+  id: serial("id").primaryKey(),
+  recordType: paymentRecordTypeEnum("record_type").notNull(),
+  referenceId: integer("reference_id").notNull(),
+  paymentDate: date("payment_date").notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("BDT").notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
+  referenceNumber: varchar("reference_number", { length: 100 }),
+  bankAccount: varchar("bank_account", { length: 100 }),
+  notes: text("notes"),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type PaymentHistory = typeof paymentHistory.$inferSelect;
+export type InsertPaymentHistory = typeof paymentHistory.$inferInsert;
+
+/**
+ * Journal Entry Lines - Multi-line journal entries for double-entry accounting
+ */
+export const journalEntryLines = pgTable("journal_entry_lines", {
+  id: serial("id").primaryKey(),
+  journalEntryId: integer("journal_entry_id").notNull(),
+  accountId: integer("account_id").notNull(),
+  debitAmount: decimal("debit_amount", { precision: 15, scale: 2 }).default("0").notNull(),
+  creditAmount: decimal("credit_amount", { precision: 15, scale: 2 }).default("0").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type JournalEntryLine = typeof journalEntryLines.$inferSelect;
+export type InsertJournalEntryLine = typeof journalEntryLines.$inferInsert;
 
 /**
  * Module Permissions

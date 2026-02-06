@@ -32,7 +32,9 @@ import {
   Eye,
   Edit,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Shield,
+  Banknote
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -64,8 +66,16 @@ export default function Finance() {
   const [addAROpen, setAddAROpen] = useState(false);
   const [addAPOpen, setAddAPOpen] = useState(false);
   const [addJournalOpen, setAddJournalOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentTarget, setPaymentTarget] = useState<{ id: number; type: 'ar' | 'ap'; name: string; amount: number; paidAmount: number } | null>(null);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState<{ id: number; type: 'ar' | 'ap' } | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [budgetMonth, setBudgetMonth] = useState(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`);
+  const [addBudgetOpen, setAddBudgetOpen] = useState(false);
 
   const utils = trpc.useUtils();
+  const { data: currentUser } = trpc.auth.me.useQuery();
 
   const { data: stats, isLoading: statsLoading } = trpc.financial.getDashboardStats.useQuery({ period });
   const { data: monthlyTrend = [] } = trpc.financial.getMonthlyTrend.useQuery({ months: 12 });
@@ -96,6 +106,100 @@ export default function Finance() {
       utils.financial.getAgingReport.invalidate();
       setAddAPOpen(false);
     }
+  });
+
+  const { data: pendingApprovals } = trpc.fin.getPendingApprovals.useQuery();
+
+  const approveARMutation = trpc.fin.approveAR.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "AR entry approved");
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getAllAP.invalidate();
+      utils.fin.getPendingApprovals.invalidate();
+    },
+    onError: (err) => toast.error("Error", err.message),
+  });
+
+  const rejectARMutation = trpc.fin.rejectAR.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "AR entry rejected");
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getAllAP.invalidate();
+      utils.fin.getPendingApprovals.invalidate();
+      setRejectDialogOpen(false);
+      setRejectReason('');
+    },
+    onError: (err) => toast.error("Error", err.message),
+  });
+
+  const approveAPMutation = trpc.fin.approveAP.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "AP entry approved");
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getAllAP.invalidate();
+      utils.fin.getPendingApprovals.invalidate();
+    },
+    onError: (err) => toast.error("Error", err.message),
+  });
+
+  const rejectAPMutation = trpc.fin.rejectAP.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "AP entry rejected");
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getAllAP.invalidate();
+      utils.fin.getPendingApprovals.invalidate();
+      setRejectDialogOpen(false);
+      setRejectReason('');
+    },
+    onError: (err) => toast.error("Error", err.message),
+  });
+
+  const recordARPaymentMutation = trpc.fin.recordARPayment.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "AR payment recorded");
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getAllAP.invalidate();
+      utils.fin.getPendingApprovals.invalidate();
+      setPaymentDialogOpen(false);
+      setPaymentTarget(null);
+    },
+    onError: (err) => toast.error("Error", err.message),
+  });
+
+  const recordAPPaymentMutation = trpc.fin.recordAPPayment.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "AP payment recorded");
+      utils.financial.getAllAR.invalidate();
+      utils.financial.getAllAP.invalidate();
+      utils.fin.getPendingApprovals.invalidate();
+      setPaymentDialogOpen(false);
+      setPaymentTarget(null);
+    },
+    onError: (err) => toast.error("Error", err.message),
+  });
+
+  const { data: paymentHistory } = trpc.fin.getPaymentHistory.useQuery(
+    { recordType: paymentTarget?.type === 'ar' ? 'ar_payment' : 'ap_payment', referenceId: paymentTarget?.id || 0 },
+    { enabled: !!paymentTarget }
+  );
+
+  const { data: budgetVariance } = trpc.fin.getBudgetVarianceAnalysis.useQuery({ monthYear: budgetMonth });
+
+  const createBudget = trpc.budget.create.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "Budget entry created");
+      utils.fin.getBudgetVarianceAnalysis.invalidate();
+      setAddBudgetOpen(false);
+    },
+    onError: (err) => toast.error("Error", err.message),
+  });
+
+  const deleteBudget = trpc.budget.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Success", "Budget entry deleted");
+      utils.fin.getBudgetVarianceAnalysis.invalidate();
+    },
+    onError: (err) => toast.error("Error", err.message),
   });
 
   const formatCompact = (value: number) => {
@@ -1026,10 +1130,12 @@ export default function Finance() {
                 <TableHead>Due Date</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Approval</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {arData.slice(0, 5).map((ar: any) => (
+              {arData.slice(0, 10).map((ar: any) => (
                 <TableRow key={ar.id}>
                   <TableCell className="font-medium">{ar.invoiceNumber || `INV-${ar.id}`}</TableCell>
                   <TableCell>{ar.customerName}</TableCell>
@@ -1040,11 +1146,43 @@ export default function Finance() {
                       {ar.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Badge className={
+                        ar.approval_status === 'approved' ? 'bg-green-100 text-green-800' :
+                        ar.approval_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }>
+                        {ar.approval_status === 'pending_approval' ? 'Pending' : ar.approval_status || 'approved'}
+                      </Badge>
+                      {ar.approval_status === 'pending_approval' && (currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+                        <div className="flex gap-1 ml-1">
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-green-600" onClick={() => approveARMutation.mutate({ id: ar.id })}>
+                            <CheckCircle className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-red-600" onClick={() => { setRejectTarget({ id: ar.id, type: 'ar' }); setRejectDialogOpen(true); }}>
+                            <AlertTriangle className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {(ar.approval_status === 'approved' || !ar.approval_status) && ar.status !== 'paid' && (
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => {
+                        setPaymentTarget({ id: ar.id, type: 'ar', name: ar.customerName, amount: Number(ar.amount), paidAmount: Number(ar.paidAmount || 0) });
+                        setPaymentDialogOpen(true);
+                      }}>
+                        <Banknote className="w-3 h-3 mr-1" />
+                        Record Payment
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
               {arData.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No receivables found. Click "Add Receivable" to create one.
                   </TableCell>
                 </TableRow>
@@ -1053,6 +1191,97 @@ export default function Finance() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={paymentDialogOpen} onOpenChange={(open) => { setPaymentDialogOpen(open); if (!open) setPaymentTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              {paymentTarget && `Recording payment for ${paymentTarget.name} - Remaining: ${formatCurrency(paymentTarget.amount - paymentTarget.paidAmount, currency)}`}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (!paymentTarget) return;
+            const formData = new FormData(e.currentTarget);
+            const mutation = paymentTarget.type === 'ar' ? recordARPaymentMutation : recordAPPaymentMutation;
+            mutation.mutate({
+              ...(paymentTarget.type === 'ar' ? { arId: paymentTarget.id } : { apId: paymentTarget.id }),
+              paymentDate: formData.get('paymentDate') as string,
+              amount: formData.get('amount') as string,
+              paymentMethod: formData.get('paymentMethod') as string,
+              referenceNumber: formData.get('referenceNumber') as string || undefined,
+              bankAccount: formData.get('bankAccount') as string || undefined,
+              notes: formData.get('notes') as string || undefined,
+            } as any);
+          }} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="paymentDate">Payment Date</Label>
+                <Input id="paymentDate" name="paymentDate" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
+              </div>
+              <div>
+                <Label htmlFor="amount">Amount ({paymentTarget && `max: ${formatCurrency(paymentTarget.amount - paymentTarget.paidAmount, currency)}`})</Label>
+                <Input id="amount" name="amount" type="number" step="0.01" max={paymentTarget ? paymentTarget.amount - paymentTarget.paidAmount : undefined} required />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="paymentMethod">Payment Method</Label>
+              <select id="paymentMethod" name="paymentMethod" className="w-full border rounded px-3 py-2 bg-background" required>
+                <option value="cash">Cash</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="check">Check</option>
+                <option value="mobile_payment">Mobile Payment</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="referenceNumber">Reference Number</Label>
+                <Input id="referenceNumber" name="referenceNumber" />
+              </div>
+              <div>
+                <Label htmlFor="bankAccount">Bank Account</Label>
+                <Input id="bankAccount" name="bankAccount" />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea id="notes" name="notes" />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => { setPaymentDialogOpen(false); setPaymentTarget(null); }}>Cancel</Button>
+              <Button type="submit" disabled={recordARPaymentMutation.isPending || recordAPPaymentMutation.isPending}>
+                {(recordARPaymentMutation.isPending || recordAPPaymentMutation.isPending) ? 'Recording...' : 'Record Payment'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rejectDialogOpen} onOpenChange={(open) => { setRejectDialogOpen(open); if (!open) { setRejectTarget(null); setRejectReason(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Entry</DialogTitle>
+            <DialogDescription>Provide a reason for rejection</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="rejectReason">Rejection Reason</Label>
+              <Textarea id="rejectReason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setRejectDialogOpen(false); setRejectTarget(null); setRejectReason(''); }}>Cancel</Button>
+              <Button variant="destructive" disabled={!rejectReason || rejectARMutation.isPending || rejectAPMutation.isPending} onClick={() => {
+                if (!rejectTarget) return;
+                if (rejectTarget.type === 'ar') rejectARMutation.mutate({ id: rejectTarget.id, reason: rejectReason });
+                else rejectAPMutation.mutate({ id: rejectTarget.id, reason: rejectReason });
+              }}>
+                {(rejectARMutation.isPending || rejectAPMutation.isPending) ? 'Rejecting...' : 'Reject'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
@@ -1212,6 +1441,194 @@ export default function Finance() {
     </div>
   );
 
+  const BUDGET_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+
+  const renderBudgetTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Budget vs Actual</h2>
+          <p className="text-muted-foreground">Budget variance analysis for {budgetMonth}</p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Input type="month" value={budgetMonth} onChange={(e) => setBudgetMonth(e.target.value)} className="w-44" />
+          <Dialog open={addBudgetOpen} onOpenChange={setAddBudgetOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Budget
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Budget Entry</DialogTitle>
+                <DialogDescription>Create a new budget line item</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                createBudget.mutate({
+                  monthYear: formData.get('monthYear') as string,
+                  type: formData.get('type') as 'income' | 'expenditure',
+                  category: formData.get('category') as string,
+                  budgetAmount: formData.get('budgetAmount') as string,
+                  notes: formData.get('notes') as string || undefined,
+                });
+              }} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="monthYear">Month</Label>
+                    <Input id="monthYear" name="monthYear" type="month" defaultValue={budgetMonth} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="type">Type</Label>
+                    <select id="type" name="type" className="w-full border rounded px-3 py-2 bg-background" required>
+                      <option value="income">Income</option>
+                      <option value="expenditure">Expenditure</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Input id="category" name="category" required />
+                </div>
+                <div>
+                  <Label htmlFor="budgetAmount">Budget Amount</Label>
+                  <Input id="budgetAmount" name="budgetAmount" type="number" step="0.01" required />
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea id="notes" name="notes" />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setAddBudgetOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={createBudget.isPending}>
+                    {createBudget.isPending ? 'Creating...' : 'Create'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="border-t-4 border-t-blue-500">
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
+            <p className="text-2xl font-bold text-blue-600">{formatCurrency(Number(budgetVariance?.summary?.totalBudget || 0), currency)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-t-4 border-t-emerald-500">
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">Total Actual</p>
+            <p className="text-2xl font-bold text-emerald-600">{formatCurrency(Number(budgetVariance?.summary?.totalActual || 0), currency)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-t-4 border-t-amber-500">
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">Total Variance</p>
+            <p className={`text-2xl font-bold ${Number(budgetVariance?.summary?.totalVariance || 0) >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
+              {formatCurrency(Number(budgetVariance?.summary?.totalVariance || 0), currency)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-t-4 border-t-red-500">
+          <CardContent className="pt-4">
+            <p className="text-xs text-muted-foreground mb-1">Over Budget</p>
+            <p className="text-2xl font-bold text-red-600">{budgetVariance?.summary?.overBudgetCount || 0} items</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {budgetVariance?.items && budgetVariance.items.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Budget vs Actual by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={budgetVariance.items.map((item: any) => ({
+                  category: item.category,
+                  budget: Number(item.budgetAmount),
+                  actual: Number(item.actual),
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="category" tick={{ fontSize: 10 }} />
+                  <YAxis tickFormatter={(v) => formatCompact(v)} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                  <Legend />
+                  <Bar dataKey="budget" name="Budget" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="actual" name="Actual" fill="#10B981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Variance Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Category</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Budget</TableHead>
+                <TableHead className="text-right">Actual</TableHead>
+                <TableHead className="text-right">Variance</TableHead>
+                <TableHead className="text-right">% Used</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {budgetVariance?.items?.map((item: any) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.category}</TableCell>
+                  <TableCell>
+                    <Badge variant={item.type === 'income' ? 'default' : 'secondary'}>{item.type}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">{formatCurrency(Number(item.budgetAmount), currency)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(Number(item.actual), currency)}</TableCell>
+                  <TableCell className={`text-right font-medium ${Number(item.variance) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {formatCurrency(Number(item.variance), currency)}
+                  </TableCell>
+                  <TableCell className="text-right">{item.percentUsed}%</TableCell>
+                  <TableCell>
+                    <Badge className={
+                      item.status === 'on_track' ? 'bg-green-100 text-green-800' :
+                      item.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }>
+                      {item.status === 'on_track' ? 'On Track' : item.status === 'warning' ? 'Warning' : 'Over Budget'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs text-red-600" onClick={() => deleteBudget.mutate({ id: item.id })}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!budgetVariance?.items || budgetVariance.items.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    No budget entries for {budgetMonth}. Click "Add Budget" to create one.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <DashboardLayout>
       <div className="flex h-full">
@@ -1257,6 +1674,9 @@ export default function Finance() {
           >
             <Clock className="w-4 h-4 mr-2" />
             AR-AP
+            {(pendingApprovals?.totalPending || 0) > 0 && (
+              <Badge className="ml-auto bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals?.totalPending}</Badge>
+            )}
           </Button>
           <Button 
             variant={activeTab === 'forecasting' ? 'secondary' : 'ghost'} 
@@ -1265,6 +1685,14 @@ export default function Finance() {
           >
             <TrendingUp className="w-4 h-4 mr-2" />
             Forecasting
+          </Button>
+          <Button 
+            variant={activeTab === 'budget' ? 'secondary' : 'ghost'} 
+            className="w-full justify-start text-sm"
+            onClick={() => setActiveTab('budget')}
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Budget
           </Button>
 
           <div className="pt-6 border-t mt-4">
@@ -1318,6 +1746,7 @@ export default function Finance() {
           {activeTab === 'cashFlow' && renderCashFlowTab()}
           {activeTab === 'aging' && renderAgingTab()}
           {activeTab === 'forecasting' && renderForecastingTab()}
+          {activeTab === 'budget' && renderBudgetTab()}
         </div>
 
         {activeTab === 'overview' && (

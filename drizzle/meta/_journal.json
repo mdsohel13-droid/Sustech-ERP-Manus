@@ -120,6 +120,13 @@
       "when": 1770404908123,
       "tag": "0016_fair_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1770407520639,
+      "tag": "0017_vengeful_whiplash",
+      "breakpoints": true
     }
   ]
 }

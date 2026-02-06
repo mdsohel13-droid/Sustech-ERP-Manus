@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle, BookOpen, CreditCard, ArrowRightLeft, Settings } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle, BookOpen, CreditCard, ArrowRightLeft, Settings, ChevronDown, ChevronRight, Check } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, Line } from "recharts";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
@@ -36,6 +36,12 @@ export default function Accounting() {
   const [journalDialogOpen, setJournalDialogOpen] = useState(false);
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [journalLines, setJournalLines] = useState<Array<{ accountId: number; debitAmount: string; creditAmount: string; description: string }>>([
+    { accountId: 0, debitAmount: '', creditAmount: '', description: '' },
+    { accountId: 0, debitAmount: '', creditAmount: '', description: '' },
+  ]);
+  const [expandedJournal, setExpandedJournal] = useState<number | null>(null);
+  const [journalDeleteConfirm, setJournalDeleteConfirm] = useState<{ show: boolean; item: any }>({ show: false, item: null });
 
   const utils = trpc.useUtils();
   const { currency } = useCurrency();
@@ -47,7 +53,7 @@ export default function Accounting() {
   const { data: arData = [] } = trpc.financial.getAllAR.useQuery();
   const { data: apData = [] } = trpc.financial.getAllAP.useQuery();
   const { data: archivedEntries = [] } = trpc.incomeExpenditure.getArchived.useQuery();
-  const { data: journalEntries = [] } = trpc.financial.getAllJournalEntries.useQuery();
+  const { data: journalEntries = [] } = trpc.fin.getAllJournalEntriesWithLines.useQuery();
   const { data: financialAccounts = [] } = trpc.financial.getAccounts.useQuery();
 
   const createMutation = trpc.incomeExpenditure.create.useMutation({
@@ -122,11 +128,32 @@ export default function Accounting() {
     onError: (error) => toast.error(error.message),
   });
 
-  const createJournalMutation = trpc.financial.createJournalEntry.useMutation({
+  const createJournalMutation = trpc.fin.createJournalEntryWithLines.useMutation({
     onSuccess: () => {
-      utils.financial.getAllJournalEntries.invalidate();
+      utils.fin.getAllJournalEntriesWithLines.invalidate();
       toast.success("Journal entry created successfully");
       setJournalDialogOpen(false);
+      setJournalLines([
+        { accountId: 0, debitAmount: '', creditAmount: '', description: '' },
+        { accountId: 0, debitAmount: '', creditAmount: '', description: '' },
+      ]);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const postJournalMutation = trpc.fin.postJournalEntry.useMutation({
+    onSuccess: () => {
+      utils.fin.getAllJournalEntriesWithLines.invalidate();
+      toast.success("Journal entry posted successfully");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const deleteJournalMutation = trpc.fin.deleteJournalEntry.useMutation({
+    onSuccess: () => {
+      utils.fin.getAllJournalEntriesWithLines.invalidate();
+      toast.success("Journal entry deleted");
+      setJournalDeleteConfirm({ show: false, item: null });
     },
     onError: (error) => toast.error(error.message),
   });
@@ -180,16 +207,50 @@ export default function Accounting() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
+    const validLines = journalLines.filter(l => l.accountId > 0 && (Number(l.debitAmount) > 0 || Number(l.creditAmount) > 0));
+    if (validLines.length < 2) {
+      toast.error("At least 2 valid lines are required");
+      return;
+    }
+
+    const totalDebits = validLines.reduce((sum, l) => sum + Number(l.debitAmount || 0), 0);
+    const totalCredits = validLines.reduce((sum, l) => sum + Number(l.creditAmount || 0), 0);
+    if (Math.abs(totalDebits - totalCredits) > 0.01) {
+      toast.error(`Debits (${totalDebits.toFixed(2)}) must equal Credits (${totalCredits.toFixed(2)})`);
+      return;
+    }
+
     createJournalMutation.mutate({
-      entryNumber: formData.get("entryNumber") as string,
       entryDate: formData.get("entryDate") as string,
       description: formData.get("description") as string,
-      reference: formData.get("reference") as string || undefined,
-      debitAccountId: parseInt(formData.get("debitAccountId") as string),
-      creditAccountId: parseInt(formData.get("creditAccountId") as string),
-      amount: formData.get("amount") as string,
+      reference: (formData.get("reference") as string) || undefined,
+      lines: validLines.map(l => ({
+        accountId: l.accountId,
+        debitAmount: l.debitAmount || "0",
+        creditAmount: l.creditAmount || "0",
+        description: l.description || undefined,
+      })),
     });
   };
+
+  const addJournalLine = () => {
+    setJournalLines([...journalLines, { accountId: 0, debitAmount: '', creditAmount: '', description: '' }]);
+  };
+
+  const removeJournalLine = (index: number) => {
+    if (journalLines.length <= 2) return;
+    setJournalLines(journalLines.filter((_, i) => i !== index));
+  };
+
+  const updateJournalLine = (index: number, field: string, value: string | number) => {
+    const updated = [...journalLines];
+    updated[index] = { ...updated[index], [field]: value };
+    setJournalLines(updated);
+  };
+
+  const journalTotalDebits = journalLines.reduce((sum, l) => sum + Number(l.debitAmount || 0), 0);
+  const journalTotalCredits = journalLines.reduce((sum, l) => sum + Number(l.creditAmount || 0), 0);
+  const journalIsBalanced = Math.abs(journalTotalDebits - journalTotalCredits) <= 0.01;
 
   const incomeEntries = allEntries?.filter((e: any) => e.type === "income") || [];
   const expenditureEntries = allEntries?.filter((e: any) => e.type === "expenditure") || [];
@@ -792,33 +853,109 @@ export default function Accounting() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10"></TableHead>
                     <TableHead>Entry #</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>Debit Account</TableHead>
-                    <TableHead>Credit Account</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Reference</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {journalEntries.length > 0 ? (
                     journalEntries.map((entry: any) => (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-mono text-sm">{entry.entryNumber}</TableCell>
-                        <TableCell>{entry.entryDate ? format(new Date(entry.entryDate), 'MMM dd, yyyy') : '-'}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{entry.description}</TableCell>
-                        <TableCell className="text-sm">{getAccountName(entry.debitAccountId)}</TableCell>
-                        <TableCell className="text-sm">{getAccountName(entry.creditAccountId)}</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(Number(entry.amount || 0), currency)}</TableCell>
-                        <TableCell>
-                          <Badge variant={entry.isPosted ? "default" : "secondary"}>
-                            {entry.isPosted ? "Posted" : "Draft"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{entry.reference || '-'}</TableCell>
-                      </TableRow>
+                      <>
+                        <TableRow key={entry.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedJournal(expandedJournal === entry.id ? null : entry.id)}>
+                          <TableCell>
+                            {expandedJournal === entry.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{entry.entryNumber}</TableCell>
+                          <TableCell>{entry.entryDate ? format(new Date(entry.entryDate), 'MMM dd, yyyy') : '-'}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{entry.description}</TableCell>
+                          <TableCell className="text-right font-medium">{formatCurrency(Number(entry.amount || 0), currency)}</TableCell>
+                          <TableCell>
+                            {entry.isPosted ? (
+                              <Badge className="bg-green-100 text-green-800 border-green-300">
+                                <Check className="h-3 w-3 mr-1" />
+                                Posted
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                                Draft
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{entry.reference || '-'}</TableCell>
+                          <TableCell className="text-right">
+                            {!entry.isPosted && (
+                              <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => postJournalMutation.mutate({ id: entry.id })}
+                                  disabled={postJournalMutation.isPending}
+                                  className="text-green-700 border-green-300 hover:bg-green-50"
+                                >
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Post
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setJournalDeleteConfirm({ show: true, item: entry })}
+                                  className="text-red-700 border-red-300 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                        {expandedJournal === entry.id && (
+                          <TableRow key={`${entry.id}-lines`}>
+                            <TableCell colSpan={8} className="bg-muted/30 p-0">
+                              <div className="p-4">
+                                <p className="text-sm font-medium mb-2 text-muted-foreground">Line Items</p>
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Account</TableHead>
+                                      <TableHead className="text-right">Debit</TableHead>
+                                      <TableHead className="text-right">Credit</TableHead>
+                                      <TableHead>Description</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {(entry.lines || []).map((line: any, idx: number) => (
+                                      <TableRow key={idx}>
+                                        <TableCell className="text-sm">
+                                          {line.account ? `${line.account.accountCode} - ${line.account.accountName}` : `Account #${line.accountId}`}
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
+                                          {Number(line.debitAmount) > 0 ? formatCurrency(Number(line.debitAmount), currency) : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
+                                          {Number(line.creditAmount) > 0 ? formatCurrency(Number(line.creditAmount), currency) : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">{line.description || '-'}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                    {(!entry.lines || entry.lines.length === 0) && (
+                                      <TableRow>
+                                        <TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-2">
+                                          No line items
+                                        </TableCell>
+                                      </TableRow>
+                                    )}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
                     ))
                   ) : (
                     <TableRow>
@@ -1071,109 +1208,196 @@ export default function Accounting() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={journalDialogOpen} onOpenChange={setJournalDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={journalDialogOpen} onOpenChange={(open) => {
+        setJournalDialogOpen(open);
+        if (!open) {
+          setJournalLines([
+            { accountId: 0, debitAmount: '', creditAmount: '', description: '' },
+            { accountId: 0, debitAmount: '', creditAmount: '', description: '' },
+          ]);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create Journal Entry</DialogTitle>
+            <DialogTitle>Create Multi-Line Journal Entry</DialogTitle>
             <DialogDescription>
-              Record a double-entry accounting transaction
+              Record a double-entry accounting transaction with multiple line items
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleJournalSubmit}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="entryNumber">Entry Number *</Label>
-                  <Input 
-                    id="entryNumber" 
-                    name="entryNumber" 
-                    placeholder="JE-2026-001"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="entryDate">Date *</Label>
-                  <Input 
-                    id="entryDate" 
-                    name="entryDate" 
-                    type="date" 
+                  <Label htmlFor="entryDate">Entry Date *</Label>
+                  <Input
+                    id="entryDate"
+                    name="entryDate"
+                    type="date"
                     defaultValue={format(new Date(), 'yyyy-MM-dd')}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="debitAccountId">Debit Account *</Label>
-                  <Select name="debitAccountId" required>
-                    <SelectTrigger><SelectValue placeholder="Select debit account" /></SelectTrigger>
-                    <SelectContent>
-                      {financialAccounts.map((account: any) => (
-                        <SelectItem key={account.id} value={account.id.toString()}>
-                          {account.accountCode} - {account.accountName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="creditAccountId">Credit Account *</Label>
-                  <Select name="creditAccountId" required>
-                    <SelectTrigger><SelectValue placeholder="Select credit account" /></SelectTrigger>
-                    <SelectContent>
-                      {financialAccounts.map((account: any) => (
-                        <SelectItem key={account.id} value={account.id.toString()}>
-                          {account.accountCode} - {account.accountName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="amount">Amount *</Label>
-                  <Input 
-                    id="amount" 
-                    name="amount" 
-                    type="number" 
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
                     required
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="reference">Reference</Label>
-                  <Input 
-                    id="reference" 
-                    name="reference" 
+                  <Input
+                    id="reference"
+                    name="reference"
                     placeholder="e.g., INV-001, PO-001"
                   />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description *</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    placeholder="Describe the journal entry..."
+                    required
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea 
-                  id="description" 
-                  name="description" 
-                  placeholder="Describe the journal entry..."
-                  rows={3}
-                  required
-                />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-medium">Line Items</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addJournalLine}>
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Line
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[35%]">Account *</TableHead>
+                      <TableHead className="w-[18%]">Debit</TableHead>
+                      <TableHead className="w-[18%]">Credit</TableHead>
+                      <TableHead className="w-[22%]">Description</TableHead>
+                      <TableHead className="w-[7%]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {journalLines.map((line, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="p-1">
+                          <Select
+                            value={line.accountId > 0 ? line.accountId.toString() : undefined}
+                            onValueChange={(val) => updateJournalLine(index, 'accountId', parseInt(val))}
+                          >
+                            <SelectTrigger className="h-9"><SelectValue placeholder="Select account" /></SelectTrigger>
+                            <SelectContent>
+                              {financialAccounts.filter((a: any) => a.isActive).map((account: any) => (
+                                <SelectItem key={account.id} value={account.id.toString()}>
+                                  {account.accountCode} - {account.accountName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            className="h-9"
+                            value={line.debitAmount}
+                            onChange={(e) => updateJournalLine(index, 'debitAmount', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            className="h-9"
+                            value={line.creditAmount}
+                            onChange={(e) => updateJournalLine(index, 'creditAmount', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Input
+                            placeholder="Line description"
+                            className="h-9"
+                            value={line.description}
+                            onChange={(e) => updateJournalLine(index, 'description', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={() => removeJournalLine(index)}
+                            disabled={journalLines.length <= 2}
+                          >
+                            <Trash2 className="h-3 w-3 text-red-500" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-muted/50 font-medium">
+                      <TableCell className="text-right p-2">Totals:</TableCell>
+                      <TableCell className="p-2">{formatCurrency(journalTotalDebits, currency)}</TableCell>
+                      <TableCell className="p-2">{formatCurrency(journalTotalCredits, currency)}</TableCell>
+                      <TableCell colSpan={2} className="p-2">
+                        {!journalIsBalanced && (journalTotalDebits > 0 || journalTotalCredits > 0) && (
+                          <span className="text-red-600 text-sm flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            Difference: {formatCurrency(Math.abs(journalTotalDebits - journalTotalCredits), currency)}
+                          </span>
+                        )}
+                        {journalIsBalanced && (journalTotalDebits > 0 || journalTotalCredits > 0) && (
+                          <span className="text-green-600 text-sm flex items-center gap-1">
+                            <Check className="h-3 w-3" />
+                            Balanced
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setJournalDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createJournalMutation.isPending}>
+              <Button type="submit" disabled={createJournalMutation.isPending || !journalIsBalanced}>
                 {createJournalMutation.isPending ? "Creating..." : "Create Entry"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={journalDeleteConfirm.show} onOpenChange={(open) => !open && setJournalDeleteConfirm({ show: false, item: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Delete Journal Entry
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete journal entry {journalDeleteConfirm.item?.entryNumber}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (journalDeleteConfirm.item) {
+                  deleteJournalMutation.mutate({ id: journalDeleteConfirm.item.id });
+                }
+              }}
+              disabled={deleteJournalMutation.isPending}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={deleteConfirm.show} onOpenChange={(open) => !open && setDeleteConfirm({ show: false, item: null, type: 'archive' })}>
         <AlertDialogContent>

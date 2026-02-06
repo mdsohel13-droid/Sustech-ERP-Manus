@@ -11,6 +11,7 @@ import * as db from "./db";
 import { generateQuotationPDF, generateInvoicePDF } from "./_core/pdfGenerator";
 import * as scm from "./scm";
 import * as scmDb from "./scm-db";
+import * as finDb from "./finance-db";
 
 // Password strength validation
 function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
@@ -4460,6 +4461,130 @@ Provide concise, actionable insights. Format responses with markdown when helpfu
     // ============ SCM Dashboard KPIs ============
     getSCMDashboardKPIs: protectedProcedure.query(async () => {
       return await scmDb.getSCMDashboardKPIs();
+    }),
+  }),
+
+  // ============================================================================
+  // FINANCE MODULE ENHANCEMENTS
+  // ============================================================================
+  fin: router({
+    // ============ AR/AP Approval Workflow ============
+    approveAR: managerProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await finDb.approveAR(input.id, ctx.user?.id!);
+      }),
+
+    rejectAR: managerProcedure
+      .input(z.object({ id: z.number(), reason: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        return await finDb.rejectAR(input.id, ctx.user?.id!, input.reason);
+      }),
+
+    approveAP: managerProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await finDb.approveAP(input.id, ctx.user?.id!);
+      }),
+
+    rejectAP: managerProcedure
+      .input(z.object({ id: z.number(), reason: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        return await finDb.rejectAP(input.id, ctx.user?.id!, input.reason);
+      }),
+
+    getPendingApprovals: protectedProcedure.query(async () => {
+      return await finDb.getPendingApprovals();
+    }),
+
+    // ============ Payment Recording ============
+    recordARPayment: protectedProcedure
+      .input(z.object({
+        arId: z.number(),
+        paymentDate: z.string(),
+        amount: z.string(),
+        paymentMethod: z.string(),
+        referenceNumber: z.string().optional(),
+        bankAccount: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await finDb.recordARPayment({ ...input, createdBy: ctx.user?.id! });
+      }),
+
+    recordAPPayment: protectedProcedure
+      .input(z.object({
+        apId: z.number(),
+        paymentDate: z.string(),
+        amount: z.string(),
+        paymentMethod: z.string(),
+        referenceNumber: z.string().optional(),
+        bankAccount: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await finDb.recordAPPayment({ ...input, createdBy: ctx.user?.id! });
+      }),
+
+    getPaymentHistory: protectedProcedure
+      .input(z.object({
+        recordType: z.enum(["ar_payment", "ap_payment"]),
+        referenceId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await finDb.getPaymentHistory(input.recordType, input.referenceId);
+      }),
+
+    // ============ Enhanced Journal Entries ============
+    createJournalEntryWithLines: protectedProcedure
+      .input(z.object({
+        entryDate: z.string(),
+        description: z.string(),
+        reference: z.string().optional(),
+        currency: z.string().optional(),
+        lines: z.array(z.object({
+          accountId: z.number(),
+          debitAmount: z.string(),
+          creditAmount: z.string(),
+          description: z.string().optional(),
+        })).min(2),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await finDb.createJournalEntryWithLines({ ...input, createdBy: ctx.user?.id! });
+      }),
+
+    getAllJournalEntriesWithLines: protectedProcedure.query(async () => {
+      return await finDb.getAllJournalEntriesWithLines();
+    }),
+
+    getJournalEntryWithLines: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await finDb.getJournalEntryWithLines(input.id);
+      }),
+
+    postJournalEntry: managerProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await finDb.postJournalEntry(input.id);
+      }),
+
+    deleteJournalEntry: managerProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await finDb.deleteJournalEntry(input.id);
+      }),
+
+    // ============ Budget Variance Analysis ============
+    getBudgetVarianceAnalysis: protectedProcedure
+      .input(z.object({ monthYear: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return await finDb.getBudgetVarianceAnalysis(input?.monthYear);
+      }),
+
+    // ============ Finance Dashboard KPIs ============
+    getDashboardKPIs: protectedProcedure.query(async () => {
+      return await finDb.getFinanceDashboardKPIs();
     }),
   }),
 });
