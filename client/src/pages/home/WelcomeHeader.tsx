@@ -1,7 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, BarChart3, AlertTriangle, Calendar, CheckCircle2 } from "lucide-react";
+import { Bell, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 
@@ -10,6 +9,36 @@ interface WelcomeHeaderProps {
   lowStockCount: number;
   overdueActions: number;
   weeklyTarget: number;
+}
+
+function MiniGauge({ value, maxValue, label, color, size = 64 }: {
+  value: number; maxValue: number; label: string; color: string; size?: number;
+}) {
+  const pct = maxValue > 0 ? Math.min(100, (value / maxValue) * 100) : 0;
+  const r = size * 0.36;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  const vb = size;
+  return (
+    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 flex items-center gap-3">
+      <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+        <svg style={{ width: size, height: size }} className="transform -rotate-90" viewBox={`0 0 ${vb} ${vb}`}>
+          <circle cx={vb/2} cy={vb/2} r={r} stroke="rgba(255,255,255,0.15)" strokeWidth={size * 0.1} fill="none" />
+          <circle cx={vb/2} cy={vb/2} r={r} stroke={color} strokeWidth={size * 0.1} fill="none"
+            strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-white font-bold" style={{ fontSize: size * 0.22 }}>
+            {typeof value === 'number' && maxValue === 100 ? `${value}%` : value}
+          </span>
+        </div>
+      </div>
+      <div>
+        <p className="text-xs text-blue-100 font-medium">{label}</p>
+        {maxValue === 100 && <p className="text-[10px] text-emerald-200/60">of target</p>}
+      </div>
+    </div>
+  );
 }
 
 export default function WelcomeHeader({ pendingApprovals, lowStockCount, overdueActions, weeklyTarget }: WelcomeHeaderProps) {
@@ -55,33 +84,19 @@ export default function WelcomeHeader({ pendingApprovals, lowStockCount, overdue
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-              <span className="text-xs text-blue-100">Weekly Target</span>
+          <MiniGauge value={weeklyTarget} maxValue={100} label="Weekly Target" color="#34d399" />
+          <MiniGauge value={pendingApprovals} maxValue={Math.max(pendingApprovals + 5, 10)} label="Pending Approvals" color="#fbbf24" />
+          <MiniGauge value={lowStockCount} maxValue={Math.max(lowStockCount + 5, 10)} label="Stock Alerts" color={lowStockCount > 0 ? '#f87171' : '#34d399'} />
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 flex items-center gap-3">
+            <div className="relative flex-shrink-0 w-16 h-16 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center">
+                <span className="text-white text-lg font-bold">{new Date().getDate()}</span>
+              </div>
             </div>
-            <p className="text-2xl font-bold">{weeklyTarget}%</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Bell className="h-4 w-4 text-amber-300" />
-              <span className="text-xs text-blue-100">Approvals</span>
+            <div>
+              <p className="text-xs text-blue-100 font-medium">Today</p>
+              <p className="text-sm font-bold">{format(new Date(), "EEE, MMM d")}</p>
             </div>
-            <p className="text-2xl font-bold">{pendingApprovals}</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle className="h-4 w-4 text-red-300" />
-              <span className="text-xs text-blue-100">Stock Alerts</span>
-            </div>
-            <p className="text-2xl font-bold">{lowStockCount}</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="h-4 w-4 text-blue-200" />
-              <span className="text-xs text-blue-100">Today</span>
-            </div>
-            <p className="text-lg font-bold">{format(new Date(), "EEE, MMM d")}</p>
           </div>
         </div>
       </div>

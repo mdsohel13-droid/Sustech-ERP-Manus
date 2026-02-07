@@ -1,14 +1,18 @@
-import {
-  CircleDollarSign, Target, FileText, Users, ShoppingCart, Package, Briefcase, TrendingUp,
-  ArrowUpRight, ArrowDownRight, AlertTriangle, Receipt, BarChart3, PieChart,
-} from "lucide-react";
 import { useLocation } from "wouter";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 interface TopDashboardProps {
   totalRevenue: string;
+  totalRevenueNum: number;
   totalSales: string;
+  totalSalesNum: number;
   totalExpense: string;
+  totalExpenseNum: number;
   netProfit: string;
+  netProfitNum: number;
   projectsTotal: number;
   projectsRunning: number;
   projectsCompleted: number;
@@ -24,113 +28,212 @@ interface TopDashboardProps {
   lowStockCount: number;
   outOfStock: number;
   stockValue: string;
+  stockValueNum: number;
   transactionCount: number;
   invoiceCount: number;
   pendingActions: number;
   overdueActions: number;
   pendingApprovals: number;
   totalAR: string;
+  totalARNum: number;
   totalAP: string;
+  totalAPNum: number;
+  formatCurrency: (v: number) => string;
+}
+
+const formatCompact = (v: number) => {
+  if (Math.abs(v) >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+  if (Math.abs(v) >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+  return v.toFixed(0);
+};
+
+function GaugeMini({ value, maxValue, label, centerText, color, size = 90 }: {
+  value: number; maxValue: number; label: string; centerText: string; color: string; size?: number;
+}) {
+  const pct = maxValue > 0 ? Math.min(100, Math.abs(value / maxValue) * 100) : 0;
+  const r = size * 0.36;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  const vb = size;
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg style={{ width: size, height: size }} className="transform -rotate-90" viewBox={`0 0 ${vb} ${vb}`}>
+          <circle cx={vb/2} cy={vb/2} r={r} stroke="rgba(255,255,255,0.1)" strokeWidth={size * 0.08} fill="none" />
+          <circle cx={vb/2} cy={vb/2} r={r} stroke={color} strokeWidth={size * 0.08} fill="none"
+            strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-bold text-white" style={{ fontSize: size * 0.17 }}>{centerText}</span>
+        </div>
+      </div>
+      <p className="text-[10px] text-blue-200/60 mt-1 text-center font-medium">{label}</p>
+    </div>
+  );
 }
 
 export default function TopDashboard(props: TopDashboardProps) {
   const [, navigate] = useLocation();
+  const fc = props.formatCurrency;
+
+  const finBarData = [
+    { name: 'Revenue', value: props.totalRevenueNum },
+    { name: 'Sales', value: props.totalSalesNum },
+    { name: 'Expenses', value: props.totalExpenseNum },
+    { name: 'Net Profit', value: Math.max(props.netProfitNum, 0) },
+  ];
+  const finBarColors = ['#10b981', '#3b82f6', '#ef4444', '#f59e0b'];
+
+  const projectPieData = [
+    { name: 'Running', value: props.projectsRunning },
+    { name: 'Completed', value: props.projectsCompleted },
+    { name: 'Other', value: Math.max(0, props.projectsTotal - props.projectsRunning - props.projectsCompleted) },
+  ].filter(d => d.value > 0);
+  const projectColors = ['#3b82f6', '#10b981', '#64748b'];
+
+  const arApBarData = [
+    { name: 'AR', value: props.totalARNum, fill: '#0ea5e9' },
+    { name: 'AP', value: props.totalAPNum, fill: '#f97316' },
+  ];
+
+  const inventoryPieData = [
+    { name: 'In Stock', value: Math.max(0, props.totalStock - props.lowStockCount - props.outOfStock) },
+    { name: 'Low Stock', value: props.lowStockCount },
+    { name: 'Out of Stock', value: props.outOfStock },
+  ].filter(d => d.value > 0);
+  const inventoryColors = ['#10b981', '#f59e0b', '#ef4444'];
+
+  const profitMargin = props.totalRevenueNum > 0 ? (props.netProfitNum / props.totalRevenueNum * 100) : 0;
+  const tenderWinRate = props.tendersTotal > 0 ? Math.round((props.tendersWon / props.tendersTotal) * 100) : 0;
+  const crmConversion = props.totalLeads > 0 ? Math.round((props.crmClosedWon / props.totalLeads) * 100) : 0;
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#0a1628] via-[#0d1f3c] to-[#0a1628] p-4 lg:p-5 shadow-xl border border-blue-900/30">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-        <MetricTile
-          icon={CircleDollarSign} label="Revenue" value={props.totalRevenue}
-          sub="Total Income" trend="+18%" trendUp
-          gradient="from-emerald-500/20 to-emerald-600/10" iconColor="text-emerald-400"
-          borderColor="border-emerald-500/30" onClick={() => navigate("/financial")}
-        />
-        <MetricTile
-          icon={ShoppingCart} label="Sales" value={props.totalSales}
-          sub="This Period" trend="+23%" trendUp
-          gradient="from-blue-500/20 to-blue-600/10" iconColor="text-blue-400"
-          borderColor="border-blue-500/30" onClick={() => navigate("/sales")}
-        />
-        <MetricTile
-          icon={Target} label="Projects" value={props.projectsTotal.toString()}
-          sub={`${props.projectsRunning} running · ${props.projectsCompleted} done`}
-          gradient="from-violet-500/20 to-purple-600/10" iconColor="text-violet-400"
-          borderColor="border-violet-500/30" onClick={() => navigate("/projects")}
-        />
-        <MetricTile
-          icon={FileText} label="Quotations" value={props.tendersTotal.toString()}
-          sub={`${props.tendersWon} won`} trend={props.tendersWonValue} trendUp
-          gradient="from-amber-500/20 to-amber-600/10" iconColor="text-amber-400"
-          borderColor="border-amber-500/30" onClick={() => navigate("/tender-quotation")}
-        />
-        <MetricTile
-          icon={Users} label="CRM Leads" value={props.totalLeads.toString()}
-          sub={`${props.crmQualified} qualified · ${props.crmClosedWon} won`}
-          gradient="from-rose-500/20 to-pink-600/10" iconColor="text-rose-400"
-          borderColor="border-rose-500/30" onClick={() => navigate("/crm")}
-        />
-        <MetricTile
-          icon={Briefcase} label="Team" value={props.totalEmployees.toString()}
-          sub="Employees" trend="Active" trendUp
-          gradient="from-cyan-500/20 to-cyan-600/10" iconColor="text-cyan-400"
-          borderColor="border-cyan-500/30" onClick={() => navigate("/hr")}
-        />
+
+      {/* ROW 1: Financial Horizontal Bar + Key Ratio Gauges */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
+
+        {/* Financial Breakdown - Horizontal Bar */}
+        <div className="lg:col-span-5 bg-white/5 rounded-xl p-3 border border-white/5">
+          <p className="text-xs text-blue-200/60 font-semibold mb-1 uppercase tracking-wider">Financial Overview</p>
+          <div className="h-[140px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={finBarData} layout="vertical" barSize={18}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.06)" />
+                <XAxis type="number" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }} tickFormatter={formatCompact} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)', fontWeight: 600 }} width={68} />
+                <Tooltip
+                  contentStyle={{ fontSize: 11, borderRadius: 8, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  formatter={(value: number) => [fc(value), 'Amount']}
+                />
+                <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                  {finBarData.map((_, i) => <Cell key={i} fill={finBarColors[i]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Key Ratio Gauges */}
+        <div className="lg:col-span-7 bg-white/5 rounded-xl p-3 border border-white/5">
+          <p className="text-xs text-blue-200/60 font-semibold mb-2 uppercase tracking-wider">Key Indicators</p>
+          <div className="flex items-center justify-around flex-wrap gap-1">
+            <GaugeMini value={profitMargin} maxValue={100} label="Profit Margin" centerText={`${profitMargin.toFixed(1)}%`} color="#10b981" size={88} />
+            <GaugeMini value={tenderWinRate} maxValue={100} label="Tender Win Rate" centerText={`${tenderWinRate}%`} color="#f59e0b" size={88} />
+            <GaugeMini value={crmConversion} maxValue={100} label="CRM Conversion" centerText={`${crmConversion}%`} color="#0ea5e9" size={88} />
+            <GaugeMini value={props.pendingApprovals} maxValue={Math.max(props.pendingApprovals + 5, 10)} label="Approvals" centerText={`${props.pendingApprovals}`} color="#8b5cf6" size={88} />
+            <GaugeMini value={props.overdueActions} maxValue={Math.max(props.pendingActions, props.overdueActions + 3, 5)} label="Overdue Tasks" centerText={`${props.overdueActions}`} color={props.overdueActions > 0 ? '#ef4444' : '#10b981'} size={88} />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <SmallStat icon={TrendingUp} label="Net Profit" value={props.netProfit} color="text-emerald-400" bg="bg-emerald-500/10" />
-        <SmallStat icon={ArrowDownRight} label="Expenses" value={props.totalExpense} color="text-red-400" bg="bg-red-500/10" />
-        <SmallStat icon={Receipt} label="AR" value={props.totalAR} color="text-blue-400" bg="bg-blue-500/10" />
-        <SmallStat icon={Receipt} label="AP" value={props.totalAP} color="text-amber-400" bg="bg-amber-500/10" />
-        <SmallStat icon={Package} label="Stock" value={`${props.totalStock.toLocaleString()}`} color="text-teal-400" bg="bg-teal-500/10"
-          alert={props.lowStockCount > 0 ? `${props.lowStockCount} low` : undefined} />
-        <SmallStat icon={AlertTriangle} label="Actions" value={props.pendingActions.toString()} color="text-orange-400" bg="bg-orange-500/10"
-          alert={props.overdueActions > 0 ? `${props.overdueActions} overdue` : undefined} />
-        <SmallStat icon={BarChart3} label="Transactions" value={props.transactionCount.toString()} color="text-indigo-400" bg="bg-indigo-500/10" />
-        <SmallStat icon={PieChart} label="Invoices" value={props.invoiceCount.toString()} color="text-purple-400" bg="bg-purple-500/10" />
-      </div>
-    </div>
-  );
-}
+      {/* ROW 2: Projects Pie + AR/AP Bar + Inventory Donut + Tenders/CRM mini */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
-function MetricTile({ icon: Icon, label, value, sub, trend, trendUp, gradient, iconColor, borderColor, onClick }: {
-  icon: any; label: string; value: string; sub: string; trend?: string; trendUp?: boolean;
-  gradient: string; iconColor: string; borderColor: string; onClick: () => void;
-}) {
-  return (
-    <div
-      className={`bg-gradient-to-br ${gradient} border ${borderColor} rounded-xl p-3 cursor-pointer hover:scale-[1.02] transition-all duration-200 group`}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <Icon className={`h-4 w-4 ${iconColor}`} />
-        {trend && (
-          <span className={`text-[10px] font-medium flex items-center gap-0.5 ${trendUp ? 'text-emerald-400' : 'text-red-400'}`}>
-            {trendUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-            {trend}
-          </span>
-        )}
-      </div>
-      <p className="text-xl font-bold text-white leading-tight truncate">{value}</p>
-      <p className="text-[10px] text-blue-200/60 mt-1 leading-tight">{sub}</p>
-      <p className="text-[9px] text-blue-300/40 mt-0.5 font-medium uppercase tracking-wider">{label}</p>
-    </div>
-  );
-}
+        {/* Projects Donut */}
+        <div className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/[0.07] transition-colors" onClick={() => navigate("/projects")}>
+          <p className="text-xs text-blue-200/60 font-semibold mb-1 uppercase tracking-wider">Projects ({props.projectsTotal})</p>
+          <div className="h-[130px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={projectPieData.length > 0 ? projectPieData : [{ name: 'None', value: 1 }]}
+                  cx="50%" cy="50%" innerRadius={30} outerRadius={48}
+                  paddingAngle={3} dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={{ strokeWidth: 1, stroke: 'rgba(255,255,255,0.3)' }}
+                  style={{ fontSize: 9 }}
+                >
+                  {(projectPieData.length > 0 ? projectPieData : [{ name: 'None', value: 1 }]).map((_: any, i: number) => (
+                    <Cell key={i} fill={projectPieData.length > 0 ? projectColors[i % projectColors.length] : 'rgba(255,255,255,0.1)'} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ fontSize: 10, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-function SmallStat({ icon: Icon, label, value, color, bg, alert }: {
-  icon: any; label: string; value: string; color: string; bg: string; alert?: string;
-}) {
-  return (
-    <div className={`${bg} rounded-lg p-2.5 border border-white/5`}>
-      <div className="flex items-center gap-1.5 mb-1">
-        <Icon className={`h-3 w-3 ${color}`} />
-        <span className="text-[10px] text-blue-200/50 font-medium">{label}</span>
+        {/* AR vs AP Bar Chart */}
+        <div className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/[0.07] transition-colors" onClick={() => navigate("/financial")}>
+          <p className="text-xs text-blue-200/60 font-semibold mb-1 uppercase tracking-wider">AR vs AP</p>
+          <div className="h-[130px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={arApBarData} barSize={32}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)', fontWeight: 600 }} />
+                <YAxis tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }} tickFormatter={formatCompact} />
+                <Tooltip contentStyle={{ fontSize: 11, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} formatter={(value: number) => [fc(value), 'Amount']} />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {arApBarData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Inventory Donut */}
+        <div className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/[0.07] transition-colors" onClick={() => navigate("/inventory")}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider">Inventory</p>
+            <span className="text-[10px] text-teal-400 font-medium">{props.stockValue}</span>
+          </div>
+          <div className="h-[130px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={inventoryPieData.length > 0 ? inventoryPieData : [{ name: 'Empty', value: 1 }]}
+                  cx="50%" cy="50%" innerRadius={30} outerRadius={48}
+                  paddingAngle={3} dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={{ strokeWidth: 1, stroke: 'rgba(255,255,255,0.3)' }}
+                  style={{ fontSize: 9 }}
+                >
+                  {(inventoryPieData.length > 0 ? inventoryPieData : [{ name: 'Empty', value: 1 }]).map((_: any, i: number) => (
+                    <Cell key={i} fill={inventoryPieData.length > 0 ? inventoryColors[i % inventoryColors.length] : 'rgba(255,255,255,0.1)'} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ fontSize: 10, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Tenders + CRM + Team Gauges */}
+        <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+          <p className="text-xs text-blue-200/60 font-semibold mb-2 uppercase tracking-wider">Operations</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-around">
+              <GaugeMini value={props.tendersWon} maxValue={Math.max(props.tendersTotal, 1)} label={`Tenders Won`} centerText={`${props.tendersWon}/${props.tendersTotal}`} color="#f59e0b" size={72} />
+              <GaugeMini value={props.crmClosedWon} maxValue={Math.max(props.totalLeads, 1)} label={`CRM Won`} centerText={`${props.crmClosedWon}/${props.totalLeads}`} color="#0ea5e9" size={72} />
+            </div>
+            <div className="flex items-center justify-around">
+              <GaugeMini value={props.totalEmployees} maxValue={Math.max(props.totalEmployees * 1.2, 10)} label="Team" centerText={`${props.totalEmployees}`} color="#06b6d4" size={66} />
+              <GaugeMini value={props.transactionCount + props.invoiceCount} maxValue={Math.max(props.transactionCount + props.invoiceCount, 10)} label="Txns/Inv" centerText={`${props.transactionCount + props.invoiceCount}`} color="#8b5cf6" size={66} />
+            </div>
+          </div>
+        </div>
       </div>
-      <p className="text-sm font-bold text-white">{value}</p>
-      {alert && (
-        <span className="text-[9px] text-orange-400 font-medium">{alert}</span>
-      )}
     </div>
   );
 }

@@ -34,9 +34,13 @@ export default function Home() {
 
         <TopDashboard
           totalRevenue={data.formatCurrency(data.financeMetrics.totalIncome)}
+          totalRevenueNum={data.financeMetrics.totalIncome}
           totalSales={data.formatCurrency(data.financeMetrics.totalSales)}
+          totalSalesNum={data.financeMetrics.totalSales}
           totalExpense={data.formatCurrency(data.financeMetrics.totalExpense)}
+          totalExpenseNum={data.financeMetrics.totalExpense}
           netProfit={data.formatCurrency(data.financeMetrics.netProfit)}
+          netProfitNum={data.financeMetrics.netProfit}
           projectsTotal={data.projectMetrics.total}
           projectsRunning={data.projectMetrics.running}
           projectsCompleted={data.projectMetrics.completed}
@@ -52,13 +56,17 @@ export default function Home() {
           lowStockCount={data.inventoryMetrics.lowStockCount}
           outOfStock={data.inventoryMetrics.outOfStock}
           stockValue={data.formatCurrency(data.inventoryMetrics.stockValue)}
+          stockValueNum={data.inventoryMetrics.stockValue}
           transactionCount={data.incomeExpData?.length || 0}
           invoiceCount={(data.arData?.length || 0) + (data.apData?.length || 0)}
           pendingActions={data.actionMetrics.pending}
           overdueActions={data.actionMetrics.overdue}
           pendingApprovals={data.financeMetrics.pendingApprovals}
           totalAR={data.formatCurrency(data.financeMetrics.totalAR)}
+          totalARNum={data.financeMetrics.totalAR}
           totalAP={data.formatCurrency(data.financeMetrics.totalAP)}
+          totalAPNum={data.financeMetrics.totalAP}
+          formatCurrency={data.formatCurrency}
         />
 
         <RunningProjectsTable
