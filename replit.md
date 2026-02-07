@@ -45,7 +45,13 @@ Key architectural decisions and features include:
   - **Sidebar Navigation**: Split into Core and Advanced sections with period selector (MTD/YTD)
   - Enhanced with AR/AP approval workflow (manager-only approve/reject with rejection reasons), payment recording with partial payment support and auto-status updates (pending→partial→paid)
 - **Accounting Module**: Offers detailed financial tracking with KPI cards, chart of accounts overview, income/expense trends, journal entries, transaction lists, and archive functionality. Supports full CRUD for Chart of Accounts. Enhanced with multi-line double-entry journal entries (dynamic debit/credit rows with balance validation), posting workflow that updates account balances based on account type (asset/expense = debit normal), and expandable journal entry list showing line item details.
-- **Projects Module**: Provides pipeline management with stage-based KPI cards, pipeline value display, profit margin indicators, and both list and Kanban views. Integrates with the Tender/Quotation module for automatic project creation.
+- **Projects Module**: Features a Power BI-style Portfolio Dashboard (default tab) with:
+  - **Filter Bar**: Portfolio, Program, Manager, Status, Type, Priority, Health filters with clear-all
+  - **4 KPI Cards**: Total Projects, Total Tasks, Issues, Late Tasks (gradient colored)
+  - **6 Donut Charts**: By Program, Project Manager, Project Status, Health, Project Type, Priority
+  - **Data Table**: Sortable columns, search, progress bars, status/health/priority badges
+  - **Schema Extensions**: portfolio, program, projectTemplate, projectStatus (5 states), activeStage (5 phases), health (green/yellow/red), projectType (strategic/improvement/operational), durationDays, progressPercentage, totalTasks, lateTasks, issuesCount, projectManager
+  - Also retains original pipeline management with stage-based KPI cards, Kanban and List views. Integrates with Tender/Quotation module for automatic project creation.
 - **HRM Module**: Manages employees, attendance, leave, and access control. Includes KPI cards for users, admins, pending leaves, and departments. Features tabs for Users & Access, Employees, Departments, Attendance, Leaves, Performance, Job Descriptions, Onboarding, and Commission/Confidential (admin).
 - **Master Dashboard**: Provides a comprehensive overview with module KPI cards, quick actions, running projects, follow-ups, a news & events feed (with social features), a live employee tracker, and an AI Assistant widget.
 - **AI Settings**: Admin-only configuration for AI providers (OpenAI, Anthropic, Google AI, Azure OpenAI, Custom), API key management, model selection, webhook integrations, and advanced settings.

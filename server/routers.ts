@@ -716,6 +716,19 @@ export const appRouter = router({
         actualCloseDate: z.string().optional(),
         priority: z.enum(["low", "medium", "high"]).optional(),
         assignedTo: z.number().optional(),
+        portfolio: z.string().optional(),
+        program: z.string().optional(),
+        projectTemplate: z.string().optional(),
+        projectStatus: z.enum(["not_started", "in_progress", "on_hold", "completed", "cancelled"]).optional(),
+        activeStage: z.enum(["initiate", "plan", "execute", "monitor", "close"]).optional(),
+        health: z.enum(["green", "yellow", "red"]).optional(),
+        projectType: z.enum(["strategic", "improvement", "operational"]).optional(),
+        durationDays: z.number().optional(),
+        progressPercentage: z.number().optional(),
+        totalTasks: z.number().optional(),
+        lateTasks: z.number().optional(),
+        issuesCount: z.number().optional(),
+        projectManager: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, startDate, expectedCloseDate, actualCloseDate, ...data } = input;
@@ -767,6 +780,21 @@ export const appRouter = router({
     getStats: protectedProcedure.query(async () => {
       return await db.getProjectStats();
     }),
+
+    getPortfolioDashboard: protectedProcedure
+      .input(z.object({
+        portfolio: z.string().optional(),
+        program: z.string().optional(),
+        projectTemplate: z.string().optional(),
+        projectManager: z.string().optional(),
+        projectStatus: z.string().optional(),
+        projectType: z.string().optional(),
+        priority: z.string().optional(),
+        health: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getProjectPortfolioDashboard(input || {});
+      }),
     
     // Project Financial Transactions
     createTransaction: protectedProcedure

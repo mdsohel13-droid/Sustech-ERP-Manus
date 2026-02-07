@@ -495,6 +495,69 @@ export async function getProjectStats() {
   return result;
 }
 
+export async function getProjectPortfolioDashboard(filters: {
+  portfolio?: string;
+  program?: string;
+  projectTemplate?: string;
+  projectManager?: string;
+  projectStatus?: string;
+  projectType?: string;
+  priority?: string;
+  health?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const conditions: any[] = [eq(projects.isArchived, false)];
+  if (filters.portfolio) conditions.push(eq(projects.portfolio, filters.portfolio));
+  if (filters.program) conditions.push(eq(projects.program, filters.program));
+  if (filters.projectTemplate) conditions.push(eq(projects.projectTemplate, filters.projectTemplate));
+  if (filters.projectManager) conditions.push(eq(projects.projectManager, filters.projectManager));
+  if (filters.projectStatus) conditions.push(eq(projects.projectStatus, filters.projectStatus as any));
+  if (filters.projectType) conditions.push(eq(projects.projectType, filters.projectType as any));
+  if (filters.priority) conditions.push(eq(projects.priority, filters.priority as any));
+  if (filters.health) conditions.push(eq(projects.health, filters.health as any));
+
+  const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+  const allActiveProjects = await db.select().from(projects).where(eq(projects.isArchived, false));
+
+  const filteredProjects = await db.select().from(projects).where(whereClause).orderBy(desc(projects.createdAt));
+
+  const totalProjects = filteredProjects.length;
+  const totalTasks = filteredProjects.reduce((sum, p) => sum + (p.totalTasks || 0), 0);
+  const totalIssues = filteredProjects.reduce((sum, p) => sum + (p.issuesCount || 0), 0);
+  const totalLateTasks = filteredProjects.reduce((sum, p) => sum + (p.lateTasks || 0), 0);
+
+  const groupBy = (key: string) => {
+    const map: Record<string, number> = {};
+    filteredProjects.forEach((p: any) => {
+      const val = p[key] || "Unassigned";
+      map[val] = (map[val] || 0) + 1;
+    });
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  };
+
+  return {
+    kpis: { totalProjects, totalTasks, totalIssues, totalLateTasks },
+    charts: {
+      byProgram: groupBy("program"),
+      byProjectManager: groupBy("projectManager"),
+      byProjectStatus: groupBy("projectStatus"),
+      byHealth: groupBy("health"),
+      byProjectType: groupBy("projectType"),
+      byPriority: groupBy("priority"),
+    },
+    projects: filteredProjects,
+    filterOptions: {
+      portfolios: Array.from(new Set(allActiveProjects.map(p => p.portfolio).filter(Boolean))),
+      programs: Array.from(new Set(allActiveProjects.map(p => p.program).filter(Boolean))),
+      templates: Array.from(new Set(allActiveProjects.map(p => p.projectTemplate).filter(Boolean))),
+      managers: Array.from(new Set(allActiveProjects.map(p => p.projectManager).filter(Boolean))),
+    },
+  };
+}
+
 // ============ Customers ============
 export async function createCustomer(data: InsertCustomer) {
   const db = await getDb();

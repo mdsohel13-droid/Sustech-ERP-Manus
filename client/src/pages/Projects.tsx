@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown, Archive, ArchiveRestore, Eye } from "lucide-react";
+import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown, Archive, ArchiveRestore, Eye, BarChart3 } from "lucide-react";
+import PortfolioDashboard from "@/pages/projects/PortfolioDashboard";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
@@ -57,7 +58,7 @@ export default function Projects() {
   const [financialsOpen, setFinancialsOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("active");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [detailProject, setDetailProject] = useState<any>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
@@ -259,6 +260,10 @@ export default function Projects() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Portfolio Dashboard
+          </TabsTrigger>
           <TabsTrigger value="active" className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
             Active Projects ({projects.length})
@@ -268,6 +273,10 @@ export default function Projects() {
             Archive ({archivedProjects.length})
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard">
+          <PortfolioDashboard />
+        </TabsContent>
 
         <TabsContent value="active" className="space-y-6">
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">

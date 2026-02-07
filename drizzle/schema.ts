@@ -4,6 +4,10 @@ import { integer, pgEnum, pgTable, text, timestamp, varchar, decimal, boolean, d
 export const userRoleEnum = pgEnum("user_role", ["admin", "manager", "viewer", "user"]);
 export const statusEnum = pgEnum("status", ["pending", "overdue", "paid"]);
 export const projectStageEnum = pgEnum("project_stage", ["lead", "proposal", "won", "execution", "testing"]);
+export const projectHealthEnum = pgEnum("project_health", ["green", "yellow", "red"]);
+export const projectTypeEnum2 = pgEnum("project_type_v2", ["strategic", "improvement", "operational"]);
+export const projectStatusEnum = pgEnum("project_status", ["not_started", "in_progress", "on_hold", "completed", "cancelled"]);
+export const activeStageEnum = pgEnum("active_stage", ["initiate", "plan", "execute", "monitor", "close"]);
 export const priorityEnum = pgEnum("priority", ["low", "medium", "high"]);
 export const customerStatusEnum = pgEnum("customer_status", ["hot", "warm", "cold"]);
 export const interactionTypeEnum = pgEnum("interaction_type", ["call", "email", "meeting", "note"]);
@@ -175,6 +179,19 @@ export const projects = pgTable("projects", {
   isArchived: boolean("is_archived").default(false).notNull(),
   archivedAt: timestamp("archived_at"),
   archivedBy: integer("archived_by"),
+  portfolio: varchar("portfolio", { length: 255 }),
+  program: varchar("program", { length: 255 }),
+  projectTemplate: varchar("project_template", { length: 255 }),
+  projectStatus: projectStatusEnum("project_status").default("not_started"),
+  activeStage: activeStageEnum("active_stage").default("initiate"),
+  health: projectHealthEnum("health").default("green"),
+  projectType: projectTypeEnum2("project_type_v2").default("operational"),
+  durationDays: integer("duration_days"),
+  progressPercentage: integer("progress_percentage").default(0),
+  totalTasks: integer("total_tasks").default(0),
+  lateTasks: integer("late_tasks").default(0),
+  issuesCount: integer("issues_count").default(0),
+  projectManager: varchar("project_manager", { length: 255 }),
 });
 
 export type Project = typeof projects.$inferSelect;
