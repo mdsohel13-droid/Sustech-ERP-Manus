@@ -1,11 +1,9 @@
 import { useHomeDashboardData } from "./home/useHomeDashboardData";
 import { useFeedActions } from "./home/useFeedActions";
 import WelcomeHeader from "./home/WelcomeHeader";
-import KPIOverviewRow from "./home/KPIOverviewRow";
-import RevenueCard from "./home/RevenueCard";
+import TopDashboard from "./home/TopDashboard";
 import RunningProjectsTable from "./home/RunningProjectsTable";
 import TenderQuotationTable from "./home/TenderQuotationTable";
-import ProjectCardsGrid from "./home/ProjectCardsGrid";
 import TeamWorkload from "./home/TeamWorkload";
 import SalesFunnel from "./home/SalesFunnel";
 import RecentActivityFeed from "./home/RecentActivityFeed";
@@ -34,51 +32,51 @@ export default function Home() {
           weeklyTarget={weeklyTarget}
         />
 
-        <KPIOverviewRow
+        <TopDashboard
           totalRevenue={data.formatCurrency(data.financeMetrics.totalIncome)}
           totalSales={data.formatCurrency(data.financeMetrics.totalSales)}
+          totalExpense={data.formatCurrency(data.financeMetrics.totalExpense)}
+          netProfit={data.formatCurrency(data.financeMetrics.netProfit)}
           projectsTotal={data.projectMetrics.total}
           projectsRunning={data.projectMetrics.running}
+          projectsCompleted={data.projectMetrics.completed}
           tendersTotal={data.tenderMetrics.total}
           tendersWon={data.tenderMetrics.won}
+          tendersPipeline={data.formatCurrency(data.tenderMetrics.pipelineValue)}
+          tendersWonValue={data.formatCurrency(data.tenderMetrics.wonValue)}
           totalLeads={data.crmMetrics.totalLeads}
+          crmQualified={data.crmMetrics.qualified}
+          crmClosedWon={data.crmMetrics.closedWon}
           totalEmployees={data.hrmMetrics.totalEmployees}
           totalStock={data.inventoryMetrics.totalStock}
           lowStockCount={data.inventoryMetrics.lowStockCount}
-          transactionCount={data.incomeExpData?.length || 0}
-        />
-
-        <RevenueCard
-          totalRevenue={data.formatCurrency(data.financeMetrics.totalIncome)}
-          growthPercent="+12.5%"
-          pendingActions={data.actionMetrics.pending}
-          itemsToReorder={data.inventoryMetrics.lowStockCount}
+          outOfStock={data.inventoryMetrics.outOfStock}
+          stockValue={data.formatCurrency(data.inventoryMetrics.stockValue)}
           transactionCount={data.incomeExpData?.length || 0}
           invoiceCount={(data.arData?.length || 0) + (data.apData?.length || 0)}
+          pendingActions={data.actionMetrics.pending}
+          overdueActions={data.actionMetrics.overdue}
+          pendingApprovals={data.financeMetrics.pendingApprovals}
+          totalAR={data.formatCurrency(data.financeMetrics.totalAR)}
+          totalAP={data.formatCurrency(data.financeMetrics.totalAP)}
         />
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-          <RunningProjectsTable
-            projects={data.runningProjects}
-            totalProjects={data.projects?.length || 0}
-            formatCurrency={data.formatCurrency}
-          />
-          <TenderQuotationTable
-            tenders={data.activeTenders}
-            totalTenders={data.tenderData?.filter(t => !t.archivedAt).length || 0}
-            pipelineValue={data.formatCurrency(data.tenderMetrics.pipelineValue)}
-            wonValue={data.formatCurrency(data.tenderMetrics.wonValue)}
-            formatCurrency={data.formatCurrency}
-          />
-        </div>
+        <RunningProjectsTable
+          projects={data.runningProjects}
+          totalProjects={data.projects?.length || 0}
+          formatCurrency={data.formatCurrency}
+        />
+
+        <TenderQuotationTable
+          tenders={data.activeTenders}
+          totalTenders={data.tenderData?.filter(t => !t.archivedAt).length || 0}
+          pipelineValue={data.formatCurrency(data.tenderMetrics.pipelineValue)}
+          wonValue={data.formatCurrency(data.tenderMetrics.wonValue)}
+          formatCurrency={data.formatCurrency}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 space-y-5">
-            <ProjectCardsGrid
-              projects={data.runningProjects}
-              formatCurrency={data.formatCurrency}
-            />
-
             <SalesFunnel
               totalLeads={data.crmMetrics.totalLeads}
               qualified={data.crmMetrics.qualified}
