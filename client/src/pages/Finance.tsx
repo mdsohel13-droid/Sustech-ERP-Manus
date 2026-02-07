@@ -361,20 +361,21 @@ export default function Finance() {
     );
   };
 
-  const FinKPICard = ({ icon: Icon, iconBg, title, value, change, changeLabel }: { icon: any; iconBg: string; title: string; value: string; change?: string; changeLabel?: string }) => (
-    <Card className="border-0 shadow-sm bg-white">
-      <CardContent className="p-5">
+  const FinKPICard = ({ icon: Icon, iconBg, title, value, change, changeLabel, borderColor }: { icon: any; iconBg: string; title: string; value: string; change?: string; changeLabel?: string; borderColor?: string }) => (
+    <Card className={`border-0 shadow-sm bg-white ${borderColor ? `border-l-4 ${borderColor}` : ''}`}>
+      <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <div className={`p-2.5 rounded-xl ${iconBg}`}>
-            <Icon className="w-5 h-5 text-white" />
+          <div className={`p-2 rounded-lg ${iconBg}`}>
+            <Icon className="w-4 h-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground font-medium mb-1">{title}</p>
-            <p className="text-2xl font-bold text-[#0d2137] leading-tight">{value}</p>
+            <p className="text-[11px] text-muted-foreground font-medium mb-0.5 uppercase tracking-wide">{title}</p>
+            <p className="text-xl font-bold text-[#0d2137] leading-tight">{value}</p>
             {change && (
-              <p className={`text-xs font-medium mt-1 ${parseFloat(change) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                {change}
-              </p>
+              <div className="flex items-center gap-1 mt-1">
+                {parseFloat(change) >= 0 ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-red-500" />}
+                <p className={`text-[11px] font-semibold ${parseFloat(change) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{change}</p>
+              </div>
             )}
             {changeLabel && <p className="text-[10px] text-muted-foreground">{changeLabel}</p>}
           </div>
@@ -383,107 +384,131 @@ export default function Finance() {
     </Card>
   );
 
+  const getRatioStatus = (value: number, target: number) => {
+    if (value >= target) return { color: 'text-emerald-600', bg: 'bg-emerald-100', label: 'Healthy', dot: 'bg-emerald-500' };
+    if (value >= target * 0.7) return { color: 'text-amber-600', bg: 'bg-amber-100', label: 'Caution', dot: 'bg-amber-500' };
+    return { color: 'text-red-600', bg: 'bg-red-100', label: 'At Risk', dot: 'bg-red-500' };
+  };
+
   const renderOverviewTab = () => (
     <>
       <div className="text-center mb-6">
         <h1 className="text-2xl font-extrabold text-[#0d2137] tracking-tight uppercase">Financial Dashboard</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-stretch">
         <FinKPICard icon={DollarSign} iconBg="bg-teal-600" title="Total Income" value={formatCurrency(totalIncome, currency)}
-          change={`${revenueChange.isPositive ? '+' : '-'}${revenueChange.value.toFixed(1)}%`} changeLabel="vs previous month" />
+          change={`${revenueChange.isPositive ? '+' : '-'}${revenueChange.value.toFixed(1)}%`} changeLabel="vs previous month" borderColor="border-l-teal-500" />
         <FinKPICard icon={CreditCard} iconBg="bg-[#0d2137]" title="Total Expenses" value={formatCurrency(totalExpenses, currency)}
-          change={`${cogsChange.isPositive ? '+' : '-'}${cogsChange.value.toFixed(1)}%`} changeLabel="vs previous month" />
+          change={`${cogsChange.isPositive ? '+' : '-'}${cogsChange.value.toFixed(1)}%`} changeLabel="vs previous month" borderColor="border-l-[#0d2137]" />
 
         <Card className="border-0 shadow-sm bg-white flex items-center justify-center">
-          <CardContent className="p-4">
-            <FinDashDonut value={netProfitMarginVal} maxValue={100} label="Net Profit Margin %" color="#0ea5e9" targetLabel={`Target 12.0%`} />
+          <CardContent className="p-3">
+            <FinDashDonut value={netProfitMarginVal} maxValue={100} label="Net Profit Margin" color="#0ea5e9" targetLabel="Target 12.0%" />
           </CardContent>
         </Card>
 
         <FinKPICard icon={Banknote} iconBg="bg-cyan-600" title="Accounts Receivable" value={formatCurrency(totalAR, currency)}
-          change={arChangeStr} changeLabel="vs previous month" />
+          change={arChangeStr} changeLabel="vs previous month" borderColor="border-l-cyan-500" />
         <FinKPICard icon={Wallet} iconBg="bg-cyan-700" title="Accounts Payable" value={formatCurrency(totalAP, currency)}
-          change={apChangeStr} changeLabel="vs previous month" />
+          change={apChangeStr} changeLabel="vs previous month" borderColor="border-l-cyan-700" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
         <FinKPICard icon={BarChart3} iconBg="bg-[#0d2137]" title="Net Profit" value={formatCurrency(netProfit, currency)}
-          change={`${netProfitChange.isPositive ? '+' : '-'}${netProfitChange.value.toFixed(1)}%`} changeLabel="vs previous month" />
-        <FinKPICard icon={Wallet} iconBg="bg-teal-700" title="Cash at end of month" value={formatCurrency(cashAtEnd, currency)}
-          change={`${cashChange >= 0 ? '+' : ''}${cashChange.toFixed(1)}%`} changeLabel="vs previous month" />
-        <Card className="border-0 shadow-sm bg-white">
-          <CardContent className="p-5">
+          change={`${netProfitChange.isPositive ? '+' : '-'}${netProfitChange.value.toFixed(1)}%`} changeLabel="vs previous month" borderColor="border-l-violet-500" />
+        <FinKPICard icon={Wallet} iconBg="bg-teal-700" title="Cash at End of Month" value={formatCurrency(cashAtEnd, currency)}
+          change={`${cashChange >= 0 ? '+' : ''}${cashChange.toFixed(1)}%`} changeLabel="vs previous month" borderColor="border-l-emerald-500" />
+        {(() => { const qStatus = getRatioStatus(quickRatio, 1); return (
+        <Card className={`border-0 shadow-sm bg-white border-l-4 ${quickRatio >= 1 ? 'border-l-emerald-500' : quickRatio >= 0.7 ? 'border-l-amber-500' : 'border-l-red-500'}`}>
+          <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-gray-400">
-                <Target className="w-5 h-5 text-white" />
+              <div className={`p-2 rounded-lg ${quickRatio >= 1 ? 'bg-emerald-600' : quickRatio >= 0.7 ? 'bg-amber-500' : 'bg-red-500'}`}>
+                <Target className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium mb-1">Quick Ratio</p>
-                <p className="text-2xl font-bold text-[#0d2137]">{quickRatio.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground font-medium">1 or higher</p>
-                <p className="text-[10px] text-muted-foreground">Quick Ratio Target</p>
+              <div className="flex-1">
+                <p className="text-[11px] text-muted-foreground font-medium mb-0.5 uppercase tracking-wide">Quick Ratio</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xl font-bold text-[#0d2137]">{quickRatio.toFixed(2)}</p>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${qStatus.bg} ${qStatus.color}`}>{qStatus.label}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Target: 1.00 or higher</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-sm bg-white">
-          <CardContent className="p-5">
+        ); })()}
+        {(() => { const cStatus = getRatioStatus(currentRatio, 3); return (
+        <Card className={`border-0 shadow-sm bg-white border-l-4 ${currentRatio >= 3 ? 'border-l-emerald-500' : currentRatio >= 2.1 ? 'border-l-amber-500' : 'border-l-red-500'}`}>
+          <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-gray-400">
-                <Shield className="w-5 h-5 text-white" />
+              <div className={`p-2 rounded-lg ${currentRatio >= 3 ? 'bg-emerald-600' : currentRatio >= 2.1 ? 'bg-amber-500' : 'bg-red-500'}`}>
+                <Shield className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium mb-1">Current Ratio</p>
-                <p className="text-2xl font-bold text-[#0d2137]">{currentRatio.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground font-medium">3 or higher</p>
-                <p className="text-[10px] text-muted-foreground">Current Ratio Target</p>
+              <div className="flex-1">
+                <p className="text-[11px] text-muted-foreground font-medium mb-0.5 uppercase tracking-wide">Current Ratio</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xl font-bold text-[#0d2137]">{currentRatio.toFixed(2)}</p>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${cStatus.bg} ${cStatus.color}`}>{cStatus.label}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Target: 3.00 or higher</p>
               </div>
             </div>
           </CardContent>
         </Card>
+        ); })()}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <Card className="lg:col-span-1 border-0 shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-5">
+        <Card className="lg:col-span-6 border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-[#0d2137]">Income and Expenses</CardTitle>
+            <p className="text-[10px] text-muted-foreground">Monthly trend with net profit overlay</p>
           </CardHeader>
           <CardContent>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={monthlyTrend}>
+                <ComposedChart data={monthlyTrend} barGap={2}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => formatCompact(v)} />
-                  <Tooltip formatter={(value: number, name: string) => [
-                    formatCurrency(value, currency),
-                    name === 'revenue' ? 'Total Income' : name === 'cogs' ? 'Total Expenses' : 'Net Profit'
-                  ]} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} formatter={(value) => value === 'revenue' ? 'Total Income' : value === 'cogs' ? 'Total Expenses' : 'Net Profit'} />
-                  <Bar dataKey="revenue" fill="#0d3b66" radius={[3, 3, 0, 0]} name="revenue" />
-                  <Bar dataKey="cogs" fill="#5fa8d3" radius={[3, 3, 0, 0]} name="cogs" />
-                  <Line type="monotone" dataKey="netProfit" stroke="#94a3b8" strokeWidth={2} dot={{ r: 2 }} name="netProfit" />
+                  <XAxis dataKey="month" tick={{ fontSize: 9 }} axisLine={{ stroke: '#e5e7eb' }} />
+                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => formatCompact(v)} axisLine={{ stroke: '#e5e7eb' }} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
+                    formatter={(value: number, name: string) => [
+                      formatCurrency(value, currency),
+                      name === 'revenue' ? 'Total Income' : name === 'cogs' ? 'Total Expenses' : 'Net Profit'
+                    ]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} formatter={(value) => value === 'revenue' ? 'Total Income' : value === 'cogs' ? 'Total Expenses' : 'Net Profit'} />
+                  <Bar dataKey="revenue" fill="#0d3b66" radius={[4, 4, 0, 0]} name="revenue" barSize={18} />
+                  <Bar dataKey="cogs" fill="#5fa8d3" radius={[4, 4, 0, 0]} name="cogs" barSize={18} />
+                  <Line type="monotone" dataKey="netProfit" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3, fill: '#f59e0b' }} name="netProfit" />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">% of Income Budget</CardTitle>
+        <Card className="lg:col-span-3 border-0 shadow-sm">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">Income Budget</CardTitle>
+            <p className="text-[10px] text-muted-foreground text-center">% of budget achieved</p>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center">
+          <CardContent className="flex flex-col items-center justify-center pt-2">
             <FinDashDonut value={incomeActual} maxValue={budgetIncomeTotal} label="" color="#0d3b66" />
-            <div className="mt-4 w-full space-y-1">
+            <div className="mt-3 w-full space-y-1.5 px-2">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Budget</span>
-                <span className="font-medium">{formatCurrency(budgetIncomeTotal, currency)}</span>
+                <span className="font-semibold text-[#0d2137]">{formatCurrency(budgetIncomeTotal, currency)}</span>
               </div>
               <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Actual</span>
+                <span className="font-semibold text-[#0d2137]">{formatCurrency(incomeActual, currency)}</span>
+              </div>
+              <div className="h-px bg-gray-200 my-1" />
+              <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Balance</span>
-                <span className={`font-medium ${incomeActual - budgetIncomeTotal >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                <span className={`font-semibold ${incomeActual - budgetIncomeTotal >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                   {formatCurrency(incomeActual - budgetIncomeTotal, currency)}
                 </span>
               </div>
@@ -491,20 +516,26 @@ export default function Finance() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">% of Expenses Budget</CardTitle>
+        <Card className="lg:col-span-3 border-0 shadow-sm">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">Expenses Budget</CardTitle>
+            <p className="text-[10px] text-muted-foreground text-center">% of budget consumed</p>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center">
-            <FinDashDonut value={expenseActual} maxValue={budgetExpenseTotal} label="" color="#0d3b66" />
-            <div className="mt-4 w-full space-y-1">
+          <CardContent className="flex flex-col items-center justify-center pt-2">
+            <FinDashDonut value={expenseActual} maxValue={budgetExpenseTotal} label="" color={expenseActual > budgetExpenseTotal ? '#ef4444' : '#0d3b66'} />
+            <div className="mt-3 w-full space-y-1.5 px-2">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Budget</span>
-                <span className="font-medium">{formatCurrency(budgetExpenseTotal, currency)}</span>
+                <span className="font-semibold text-[#0d2137]">{formatCurrency(budgetExpenseTotal, currency)}</span>
               </div>
               <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Actual</span>
+                <span className="font-semibold text-[#0d2137]">{formatCurrency(expenseActual, currency)}</span>
+              </div>
+              <div className="h-px bg-gray-200 my-1" />
+              <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Balance</span>
-                <span className={`font-medium ${expenseActual - budgetExpenseTotal >= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                <span className={`font-semibold ${expenseActual - budgetExpenseTotal >= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
                   {formatCurrency(expenseActual - budgetExpenseTotal, currency)}
                 </span>
               </div>
@@ -513,81 +544,85 @@ export default function Finance() {
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 mt-6">
-        <Card className="border-0 shadow-sm">
+      <div className="grid lg:grid-cols-2 gap-4 mt-4">
+        <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">Total Assets</CardTitle>
+            <div>
+              <CardTitle className="text-sm font-bold text-[#0d2137]">Total Assets</CardTitle>
+              <p className="text-[10px] text-muted-foreground">Current asset breakdown</p>
+            </div>
             <span className="text-lg font-bold text-emerald-600">{formatCurrency(stats?.totalAssets || 0, currency)}</span>
           </CardHeader>
           <CardContent>
-            <p className="text-xs font-medium mb-3 text-muted-foreground">Current Assets</p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50/50">
                 <Wallet className="w-4 h-4 text-blue-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Cash & Bank</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.cashBalance || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Cash & Bank</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentAssets?.cashBalance || 0, currency)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50/50">
                 <CreditCard className="w-4 h-4 text-emerald-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Accounts Receivable</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.accountReceivables || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Accounts Receivable</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentAssets?.accountReceivables || 0, currency)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50/50">
                 <DollarSign className="w-4 h-4 text-amber-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Deposits & Prepayments</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.deposits || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Deposits & Prepayments</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentAssets?.deposits || 0, currency)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-violet-50/50">
                 <Package className="w-4 h-4 text-violet-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Inventory</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.inventory || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Inventory</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentAssets?.inventory || 0, currency)}</p>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm border-l-4 border-l-red-500">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">Total Liabilities</CardTitle>
+            <div>
+              <CardTitle className="text-sm font-bold text-[#0d2137]">Total Liabilities</CardTitle>
+              <p className="text-[10px] text-muted-foreground">Current liability breakdown</p>
+            </div>
             <span className="text-lg font-bold text-red-600">{formatCurrency(stats?.totalLiabilities || 0, currency)}</span>
           </CardHeader>
           <CardContent>
-            <p className="text-xs font-medium mb-3 text-muted-foreground">Current Liabilities</p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50/50">
                 <Users className="w-4 h-4 text-red-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Wages Payable</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.wagesPayable || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Wages Payable</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentLiabilities?.wagesPayable || 0, currency)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-orange-50/50">
                 <CreditCard className="w-4 h-4 text-orange-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Accounts Payable</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.accountPayables || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Accounts Payable</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentLiabilities?.accountPayables || 0, currency)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-pink-50/50">
                 <DollarSign className="w-4 h-4 text-pink-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Provisions & Accruals</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.provisions || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Provisions & Accruals</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentLiabilities?.provisions || 0, currency)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50/50">
                 <FileText className="w-4 h-4 text-slate-500" />
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Other Payables</p>
-                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.otherPayable || 0, currency)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Other Payables</p>
+                  <p className="text-sm font-semibold text-[#0d2137]">{formatCurrency(stats?.currentLiabilities?.otherPayable || 0, currency)}</p>
                 </div>
               </div>
             </div>
