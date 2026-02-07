@@ -940,118 +940,118 @@ export default function Finance() {
 
   return (
     <DashboardLayout>
-      <div className="flex h-full">
-        <div className="w-52 border-r bg-muted/30 p-4 space-y-1 overflow-auto">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-white" />
+      <div className="flex flex-col h-full overflow-auto">
+        <div className="border-b bg-muted/30 px-4 pt-3 pb-2">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-white" />
+              </div>
+              <p className="font-bold text-sm">Finance Dashboard</p>
             </div>
-            <div>
-              <p className="font-bold text-sm">Finance</p>
-              <p className="text-[10px] text-muted-foreground">Dashboard</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Period:</p>
+              <Button size="sm" variant={period === 'mtd' ? 'default' : 'outline'} onClick={() => setPeriod('mtd')} className="text-xs h-7 px-3">MTD</Button>
+              <Button size="sm" variant={period === 'ytd' ? 'default' : 'outline'} onClick={() => setPeriod('ytd')} className="text-xs h-7 px-3">YTD</Button>
             </div>
           </div>
-
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 mb-1">Core</p>
-          {SIDEBAR_TABS.filter(t => t.section === 'main').map(tab => (
-            <Button
-              key={tab.key}
-              variant={activeTab === tab.key ? 'secondary' : 'ghost'}
-              className="w-full justify-start text-sm"
-              onClick={() => setActiveTab(tab.key)}
-            >
-              <tab.icon className="w-4 h-4 mr-2" />
-              {tab.label}
-              {tab.badge && tab.badge > 0 && (
-                <Badge className="ml-auto bg-amber-500 text-white text-[10px] px-1.5 py-0">{tab.badge}</Badge>
-              )}
-            </Button>
-          ))}
-
-          <div className="h-px bg-border my-3" />
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 mb-1">Advanced</p>
-          {SIDEBAR_TABS.filter(t => t.section === 'advanced').map(tab => (
-            <Button
-              key={tab.key}
-              variant={activeTab === tab.key ? 'secondary' : 'ghost'}
-              className="w-full justify-start text-sm"
-              onClick={() => setActiveTab(tab.key)}
-            >
-              <tab.icon className="w-4 h-4 mr-2" />
-              {tab.label}
-            </Button>
-          ))}
-
-          <div className="pt-6 border-t mt-4">
-            <p className="text-xs text-muted-foreground mb-2">Period</p>
-            <div className="flex gap-1">
-              <Button size="sm" variant={period === 'mtd' ? 'default' : 'outline'} onClick={() => setPeriod('mtd')} className="flex-1 text-xs">MTD</Button>
-              <Button size="sm" variant={period === 'ytd' ? 'default' : 'outline'} onClick={() => setPeriod('ytd')} className="flex-1 text-xs">YTD</Button>
-            </div>
+          <div className="flex items-center gap-1 flex-wrap">
+            {SIDEBAR_TABS.filter(t => t.section === 'main').map(tab => (
+              <Button
+                key={tab.key}
+                variant={activeTab === tab.key ? 'default' : 'ghost'}
+                size="sm"
+                className={`text-xs h-8 ${activeTab === tab.key ? '' : 'text-muted-foreground'}`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-1.5" />
+                {tab.label}
+                {tab.badge && tab.badge > 0 && (
+                  <Badge className="ml-1.5 bg-amber-500 text-white text-[10px] px-1.5 py-0">{tab.badge}</Badge>
+                )}
+              </Button>
+            ))}
+            <div className="w-px h-5 bg-border mx-1" />
+            {SIDEBAR_TABS.filter(t => t.section === 'advanced').map(tab => (
+              <Button
+                key={tab.key}
+                variant={activeTab === tab.key ? 'default' : 'ghost'}
+                size="sm"
+                className={`text-xs h-8 ${activeTab === tab.key ? '' : 'text-muted-foreground'}`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-1.5" />
+                {tab.label}
+              </Button>
+            ))}
           </div>
         </div>
 
-        <div className="flex-1 p-6 space-y-6 overflow-auto">
-          {activeTab === 'overview' && <OverviewTab stats={stats} monthlyTrend={monthlyTrend} budgetVariance={budgetVariance} formatCompact={formatCompact} />}
-          {activeTab === 'balanceSheet' && renderBalanceSheetTab()}
-          {activeTab === 'cashFlow' && renderCashFlowTab()}
-          {activeTab === 'aging' && renderAgingTab()}
-          {activeTab === 'forecasting' && renderForecastingTab()}
-          {activeTab === 'budget' && renderBudgetTab()}
-          {activeTab === 'multiCurrency' && <MultiCurrencyTab />}
-          {activeTab === 'taxCompliance' && <TaxComplianceTab stats={stats} monthlyTrend={monthlyTrend} />}
-          {activeTab === 'ifrs' && <IFRSTab stats={stats} balanceSheet={balanceSheet} monthlyTrend={monthlyTrend} />}
-          {activeTab === 'anomaly' && <AnomalyDetectionTab stats={stats} monthlyTrend={monthlyTrend} arData={arData} apData={apData} />}
-        </div>
-
-        {activeTab === 'overview' && (
-          <div className="w-72 border-l bg-muted/10 p-4 space-y-4 overflow-auto">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Showing data for:</p>
-              <div className="flex items-center gap-2">
-                <select className="text-sm border rounded px-2 py-1 bg-background flex-1"><option>Last</option><option>This</option></select>
-                <input type="number" defaultValue={period === 'ytd' ? 12 : 1} className="w-12 text-sm border rounded px-2 py-1 bg-background" />
-                <select className="text-sm border rounded px-2 py-1 bg-background flex-1"><option>{period === 'ytd' ? 'Months' : 'Month'}</option><option>Quarters</option><option>Years</option></select>
-              </div>
-              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                <Calendar className="w-3 h-3" />
-                <span>{period === 'ytd' ? '1/1/2026 - 12/31/2026' : '1/1/2026 - 1/31/2026'}</span>
-              </div>
+        <div className="flex-1 overflow-auto">
+          <div className="flex">
+            <div className="flex-1 p-6 space-y-6">
+              {activeTab === 'overview' && <OverviewTab stats={stats} monthlyTrend={monthlyTrend} budgetVariance={budgetVariance} formatCompact={formatCompact} />}
+              {activeTab === 'balanceSheet' && renderBalanceSheetTab()}
+              {activeTab === 'cashFlow' && renderCashFlowTab()}
+              {activeTab === 'aging' && renderAgingTab()}
+              {activeTab === 'forecasting' && renderForecastingTab()}
+              {activeTab === 'budget' && renderBudgetTab()}
+              {activeTab === 'multiCurrency' && <MultiCurrencyTab />}
+              {activeTab === 'taxCompliance' && <TaxComplianceTab stats={stats} monthlyTrend={monthlyTrend} />}
+              {activeTab === 'ifrs' && <IFRSTab stats={stats} balanceSheet={balanceSheet} monthlyTrend={monthlyTrend} />}
+              {activeTab === 'anomaly' && <AnomalyDetectionTab stats={stats} monthlyTrend={monthlyTrend} arData={arData} apData={apData} />}
             </div>
 
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Income Statement</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
-                {incomeStatement?.items?.map((item, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs"><span>{item.name}</span><span>{formatCompact(item.value)}</span></div>
-                    <div className="h-3 bg-muted rounded-full overflow-hidden">
-                      <div className={`h-full ${item.name === 'Revenue' ? 'bg-blue-500' : item.name === 'COGS' ? 'bg-red-400' : item.name === 'Gross Profit' ? 'bg-emerald-400' : item.name === 'OPEX' ? 'bg-amber-400' : 'bg-violet-400'}`}
-                        style={{ width: `${Math.min(100, Math.abs(item.percentage))}%` }} />
-                    </div>
+            {activeTab === 'overview' && (
+              <div className="w-72 border-l bg-muted/10 p-4 space-y-4 overflow-auto">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Showing data for:</p>
+                  <div className="flex items-center gap-2">
+                    <select className="text-sm border rounded px-2 py-1 bg-background flex-1"><option>Last</option><option>This</option></select>
+                    <input type="number" defaultValue={period === 'ytd' ? 12 : 1} className="w-12 text-sm border rounded px-2 py-1 bg-background" />
+                    <select className="text-sm border rounded px-2 py-1 bg-background flex-1"><option>{period === 'ytd' ? 'Months' : 'Month'}</option><option>Quarters</option><option>Years</option></select>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                    <Calendar className="w-3 h-3" />
+                    <span>{period === 'ytd' ? '1/1/2026 - 12/31/2026' : '1/1/2026 - 1/31/2026'}</span>
+                  </div>
+                </div>
 
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Key Ratios</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Current Ratio</span><span className="font-medium">{((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Quick Ratio</span><span className="font-medium">{(((stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0)) / (stats?.totalLiabilities || 1)).toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Debt to Equity</span><span className="font-medium">{((stats?.totalLiabilities || 0) / Math.max(1, (stats?.totalAssets || 0) - (stats?.totalLiabilities || 0))).toFixed(2)}</span></div>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-2"><CardTitle className="text-sm">Income Statement</CardTitle></CardHeader>
+                  <CardContent className="space-y-2">
+                    {incomeStatement?.items?.map((item, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-xs"><span>{item.name}</span><span>{formatCompact(item.value)}</span></div>
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full ${item.name === 'Revenue' ? 'bg-blue-500' : item.name === 'COGS' ? 'bg-red-400' : item.name === 'Gross Profit' ? 'bg-emerald-400' : item.name === 'OPEX' ? 'bg-amber-400' : 'bg-violet-400'}`}
+                            style={{ width: `${Math.min(100, Math.abs(item.percentage))}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Smart Insights</CardTitle></CardHeader>
-              <CardContent className="text-xs text-muted-foreground space-y-3">
-                <p><span className="text-emerald-600 font-medium">Gross Profit Margin</span> is at {stats?.grossProfitMargin?.toFixed(1) || 0}%, {(stats?.grossProfitMargin || 0) > 30 ? ' above' : ' below'} the industry average of 30%.</p>
-                <p>Your <span className="text-blue-600 font-medium">Current Ratio</span> of {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)} indicates {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)) > 1.5 ? 'healthy liquidity' : 'potential liquidity concerns'}.</p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-2"><CardTitle className="text-sm">Key Ratios</CardTitle></CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Current Ratio</span><span className="font-medium">{((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Quick Ratio</span><span className="font-medium">{(((stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0)) / (stats?.totalLiabilities || 1)).toFixed(2)}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Debt to Equity</span><span className="font-medium">{((stats?.totalLiabilities || 0) / Math.max(1, (stats?.totalAssets || 0) - (stats?.totalLiabilities || 0))).toFixed(2)}</span></div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2"><CardTitle className="text-sm">Smart Insights</CardTitle></CardHeader>
+                  <CardContent className="text-xs text-muted-foreground space-y-3">
+                    <p><span className="text-emerald-600 font-medium">Gross Profit Margin</span> is at {stats?.grossProfitMargin?.toFixed(1) || 0}%, {(stats?.grossProfitMargin || 0) > 30 ? ' above' : ' below'} the industry average of 30%.</p>
+                    <p>Your <span className="text-blue-600 font-medium">Current Ratio</span> of {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)} indicates {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)) > 1.5 ? 'healthy liquidity' : 'potential liquidity concerns'}.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </DashboardLayout>
   );
