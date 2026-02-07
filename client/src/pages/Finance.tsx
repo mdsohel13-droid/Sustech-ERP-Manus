@@ -313,237 +313,281 @@ export default function Finance() {
     });
   };
 
+  const totalIncome = stats?.revenue || 0;
+  const totalExpenses = (stats?.cogs || 0) + (stats?.opex || 0);
+  const netProfit = stats?.netProfit || 0;
+  const netProfitMarginVal = stats?.netProfitMargin || 0;
+  const cashAtEnd = stats?.currentAssets?.cashBalance || 0;
+  const totalAR = stats?.currentAssets?.accountReceivables || 0;
+  const totalAP = stats?.currentLiabilities?.accountPayables || 0;
+  const currentAssets = (stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0) + (stats?.currentAssets?.deposits || 0) + (stats?.currentAssets?.inventory || 0);
+  const currentLiabilities = (stats?.currentLiabilities?.wagesPayable || 0) + (stats?.currentLiabilities?.accountPayables || 0) + (stats?.currentLiabilities?.provisions || 0) + (stats?.currentLiabilities?.otherPayable || 0);
+  const quickRatio = ((stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0)) / Math.max(currentLiabilities, 1);
+  const currentRatio = currentAssets / Math.max(currentLiabilities, 1);
+
+  const budgetItems = budgetVariance?.items || [];
+  const budgetIncomeTotal = budgetItems.reduce((s: number, b: any) => b.type === 'income' ? s + parseFloat(b.budgetAmount || '0') : s, 0) || totalIncome * 1.05;
+  const budgetExpenseTotal = budgetItems.reduce((s: number, b: any) => b.type === 'expenditure' ? s + parseFloat(b.budgetAmount || '0') : s, 0) || totalExpenses * 1.05;
+  const incomeActual = totalIncome;
+  const expenseActual = totalExpenses;
+
+  const prevMonthRevenue = monthlyTrend.length >= 2 ? (monthlyTrend[monthlyTrend.length - 2] as any)?.revenue || 0 : 0;
+  const prevMonthExpense = monthlyTrend.length >= 2 ? ((monthlyTrend[monthlyTrend.length - 2] as any)?.cogs || 0) : 0;
+  const arChangeStr = arTotal > 0 ? `${((totalAR - arTotal) / Math.max(arTotal, 1) * 100).toFixed(1)}%` : '0%';
+  const apChangeStr = apTotal > 0 ? `${((totalAP - apTotal) / Math.max(apTotal, 1) * 100).toFixed(1)}%` : '0%';
+  const cashChange = monthlyTrend.length >= 2 ? ((cashAtEnd - ((monthlyTrend[monthlyTrend.length - 2] as any)?.revenue || cashAtEnd)) / Math.max(cashAtEnd, 1) * 100) : 0;
+
+  const FinDashDonut = ({ value, maxValue, label, color, targetLabel }: { value: number; maxValue: number; label: string; color: string; targetLabel?: string }) => {
+    const pct = maxValue > 0 ? Math.min(100, Math.abs(value / maxValue) * 100) : 0;
+    const r = 54;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (pct / 100) * circ;
+    return (
+      <div className="flex flex-col items-center">
+        <div className="relative w-36 h-36">
+          <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 128 128">
+            <circle cx="64" cy="64" r={r} stroke="#e5e7eb" strokeWidth="12" fill="none" />
+            <circle cx="64" cy="64" r={r} stroke={color} strokeWidth="12" fill="none"
+              strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xs text-muted-foreground font-medium">{label}</span>
+            <span className="text-2xl font-bold" style={{ color }}>{pct.toFixed(1)}%</span>
+            {targetLabel && <span className="text-[10px] text-muted-foreground">{targetLabel}</span>}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const FinKPICard = ({ icon: Icon, iconBg, title, value, change, changeLabel }: { icon: any; iconBg: string; title: string; value: string; change?: string; changeLabel?: string }) => (
+    <Card className="border-0 shadow-sm bg-white">
+      <CardContent className="p-5">
+        <div className="flex items-start gap-3">
+          <div className={`p-2.5 rounded-xl ${iconBg}`}>
+            <Icon className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground font-medium mb-1">{title}</p>
+            <p className="text-2xl font-bold text-[#0d2137] leading-tight">{value}</p>
+            {change && (
+              <p className={`text-xs font-medium mt-1 ${parseFloat(change) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                {change}
+              </p>
+            )}
+            {changeLabel && <p className="text-[10px] text-muted-foreground">{changeLabel}</p>}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const renderOverviewTab = () => (
     <>
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="border-t-4 border-t-blue-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Revenue</p>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-blue-600">{formatCompact(stats?.revenue || 0)}</span>
-              {revenueChange.isPositive ? (
-                <TrendingUp className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-500" />
-              )}
-            </div>
-            <p className="text-[10px] text-muted-foreground">
-              vs {benchmark === 'lastYear' ? 'Last Year' : 'Budget'}: {revenueChange.isPositive ? '+' : '-'}{revenueChange.value.toFixed(1)}%
-            </p>
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-extrabold text-[#0d2137] tracking-tight uppercase">Financial Dashboard</h1>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
+        <FinKPICard icon={DollarSign} iconBg="bg-teal-600" title="Total Income" value={formatCurrency(totalIncome, currency)}
+          change={`${revenueChange.isPositive ? '+' : '-'}${revenueChange.value.toFixed(1)}%`} changeLabel="vs previous month" />
+        <FinKPICard icon={CreditCard} iconBg="bg-[#0d2137]" title="Total Expenses" value={formatCurrency(totalExpenses, currency)}
+          change={`${cogsChange.isPositive ? '+' : '-'}${cogsChange.value.toFixed(1)}%`} changeLabel="vs previous month" />
+
+        <Card className="border-0 shadow-sm bg-white flex items-center justify-center">
+          <CardContent className="p-4">
+            <FinDashDonut value={netProfitMarginVal} maxValue={100} label="Net Profit Margin %" color="#0ea5e9" targetLabel={`Target 12.0%`} />
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-red-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Cost of Goods Sold</p>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-red-600">{formatCompact(stats?.cogs || 0)}</span>
-              {cogsChange.isPositive ? (
-                <TrendingDown className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingUp className="w-4 h-4 text-red-500" />
-              )}
+        <FinKPICard icon={Banknote} iconBg="bg-cyan-600" title="Accounts Receivable" value={formatCurrency(totalAR, currency)}
+          change={arChangeStr} changeLabel="vs previous month" />
+        <FinKPICard icon={Wallet} iconBg="bg-cyan-700" title="Accounts Payable" value={formatCurrency(totalAP, currency)}
+          change={apChangeStr} changeLabel="vs previous month" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+        <FinKPICard icon={BarChart3} iconBg="bg-[#0d2137]" title="Net Profit" value={formatCurrency(netProfit, currency)}
+          change={`${netProfitChange.isPositive ? '+' : '-'}${netProfitChange.value.toFixed(1)}%`} changeLabel="vs previous month" />
+        <FinKPICard icon={Wallet} iconBg="bg-teal-700" title="Cash at end of month" value={formatCurrency(cashAtEnd, currency)}
+          change={`${cashChange >= 0 ? '+' : ''}${cashChange.toFixed(1)}%`} changeLabel="vs previous month" />
+        <Card className="border-0 shadow-sm bg-white">
+          <CardContent className="p-5">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-gray-400">
+                <Target className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Quick Ratio</p>
+                <p className="text-2xl font-bold text-[#0d2137]">{quickRatio.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground font-medium">1 or higher</p>
+                <p className="text-[10px] text-muted-foreground">Quick Ratio Target</p>
+              </div>
             </div>
-            <p className="text-[10px] text-muted-foreground">
-              {((stats?.cogs || 0) / (stats?.revenue || 1) * 100).toFixed(1)}% of Revenue
-            </p>
           </CardContent>
         </Card>
-
-        <Card className="border-t-4 border-t-emerald-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Gross Profit</p>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-emerald-600">{formatCompact(stats?.grossProfit || 0)}</span>
-              {grossProfitChange.isPositive ? (
-                <TrendingUp className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-500" />
-              )}
+        <Card className="border-0 shadow-sm bg-white">
+          <CardContent className="p-5">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-gray-400">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium mb-1">Current Ratio</p>
+                <p className="text-2xl font-bold text-[#0d2137]">{currentRatio.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground font-medium">3 or higher</p>
+                <p className="text-[10px] text-muted-foreground">Current Ratio Target</p>
+              </div>
             </div>
-            <p className="text-[10px] text-muted-foreground">
-              Margin: {stats?.grossProfitMargin?.toFixed(1) || 0}%
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-4 border-t-violet-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Net Profit</p>
-            <div className="flex items-center gap-2">
-              <span className={`text-2xl font-bold ${(stats?.netProfit || 0) >= 0 ? 'text-violet-600' : 'text-red-600'}`}>
-                {formatCompact(stats?.netProfit || 0)}
-              </span>
-              {netProfitChange.isPositive ? (
-                <TrendingUp className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-500" />
-              )}
-            </div>
-            <p className="text-[10px] text-muted-foreground">
-              Margin: {stats?.netProfitMargin?.toFixed(1) || 0}%
-            </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex justify-around">
-            <CircularProgress 
-              value={stats?.grossProfitMargin || 0} 
-              label="Gross Profit Margin" 
-              color={COLORS.grossProfit}
-            />
-            <CircularProgress 
-              value={stats?.operatingExpenseRatio || 0} 
-              label="Operating Expense Ratio" 
-              color={COLORS.opex}
-            />
-            <CircularProgress 
-              value={stats?.netProfitMargin || 0} 
-              label="Net Profit Margin" 
-              color={COLORS.netProfit}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <Card className="lg:col-span-1 border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-4">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500"></span> Revenue</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> COGS</span>
-              <span className="flex items-center gap-1 text-muted-foreground">— Gross Margin</span>
-            </CardTitle>
+            <CardTitle className="text-sm font-bold text-[#0d2137]">Income and Expenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={monthlyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={(v) => formatCompact(v)} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
+                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => formatCompact(v)} />
                   <Tooltip formatter={(value: number, name: string) => [
-                    name === 'grossProfitMargin' ? `${value.toFixed(1)}%` : formatCurrency(value, currency),
-                    name === 'grossProfitMargin' ? 'Gross Margin' : name === 'revenue' ? 'Revenue' : 'COGS'
+                    formatCurrency(value, currency),
+                    name === 'revenue' ? 'Total Income' : name === 'cogs' ? 'Total Expenses' : 'Net Profit'
                   ]} />
-                  <Bar yAxisId="left" dataKey="revenue" fill={COLORS.revenue} radius={[4, 4, 0, 0]} />
-                  <Bar yAxisId="left" dataKey="cogs" fill={COLORS.cogs} radius={[4, 4, 0, 0]} />
-                  <Line yAxisId="right" type="monotone" dataKey="grossProfitMargin" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} formatter={(value) => value === 'revenue' ? 'Total Income' : value === 'cogs' ? 'Total Expenses' : 'Net Profit'} />
+                  <Bar dataKey="revenue" fill="#0d3b66" radius={[3, 3, 0, 0]} name="revenue" />
+                  <Bar dataKey="cogs" fill="#5fa8d3" radius={[3, 3, 0, 0]} name="cogs" />
+                  <Line type="monotone" dataKey="netProfit" stroke="#94a3b8" strokeWidth={2} dot={{ r: 2 }} name="netProfit" />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-4">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Gross Profit</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-500"></span> OPEX</span>
-              <span className="flex items-center gap-1 text-muted-foreground">— Net Margin</span>
-            </CardTitle>
+            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">% of Income Budget</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={monthlyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={(v) => formatCompact(v)} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
-                  <Tooltip formatter={(value: number, name: string) => [
-                    name === 'netProfitMargin' ? `${value.toFixed(1)}%` : formatCurrency(value, currency),
-                    name === 'netProfitMargin' ? 'Net Margin' : name === 'grossProfit' ? 'Gross Profit' : 'OPEX'
-                  ]} />
-                  <Bar yAxisId="left" dataKey="grossProfit" fill={COLORS.grossProfit} radius={[4, 4, 0, 0]} />
-                  <Bar yAxisId="left" dataKey="opex" fill={COLORS.opex} radius={[4, 4, 0, 0]} />
-                  <Line yAxisId="right" type="monotone" dataKey="netProfitMargin" stroke="#8B5CF6" strokeWidth={2} dot={{ r: 3 }} />
-                </ComposedChart>
-              </ResponsiveContainer>
+          <CardContent className="flex flex-col items-center justify-center">
+            <FinDashDonut value={incomeActual} maxValue={budgetIncomeTotal} label="" color="#0d3b66" />
+            <div className="mt-4 w-full space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Budget</span>
+                <span className="font-medium">{formatCurrency(budgetIncomeTotal, currency)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Balance</span>
+                <span className={`font-medium ${incomeActual - budgetIncomeTotal >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {formatCurrency(incomeActual - budgetIncomeTotal, currency)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">% of Expenses Budget</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center">
+            <FinDashDonut value={expenseActual} maxValue={budgetExpenseTotal} label="" color="#0d3b66" />
+            <div className="mt-4 w-full space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Budget</span>
+                <span className="font-medium">{formatCurrency(budgetExpenseTotal, currency)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Balance</span>
+                <span className={`font-medium ${expenseActual - budgetExpenseTotal >= 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                  {formatCurrency(expenseActual - budgetExpenseTotal, currency)}
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid lg:grid-cols-2 gap-6 mt-6">
+        <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-            <span className="text-xl font-bold text-emerald-600">{formatCurrency(stats?.totalAssets || 0, currency)}</span>
+            <CardTitle className="text-sm font-bold text-[#0d2137]">Total Assets</CardTitle>
+            <span className="text-lg font-bold text-emerald-600">{formatCurrency(stats?.totalAssets || 0, currency)}</span>
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium mb-3">Current Assets</p>
-            <div className="grid grid-cols-2 gap-4">
+            <p className="text-xs font-medium mb-3 text-muted-foreground">Current Assets</p>
+            <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-blue-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Cash & Bank</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentAssets?.cashBalance || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Cash & Bank</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.cashBalance || 0, currency)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-emerald-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Accounts Receivable</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentAssets?.accountReceivables || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Accounts Receivable</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.accountReceivables || 0, currency)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-amber-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Deposits & Prepayments</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentAssets?.deposits || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Deposits & Prepayments</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.deposits || 0, currency)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-violet-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Inventory</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentAssets?.inventory || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Inventory</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentAssets?.inventory || 0, currency)}</p>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
-            <span className="text-xl font-bold text-red-600">{formatCurrency(stats?.totalLiabilities || 0, currency)}</span>
+            <CardTitle className="text-sm font-bold text-[#0d2137]">Total Liabilities</CardTitle>
+            <span className="text-lg font-bold text-red-600">{formatCurrency(stats?.totalLiabilities || 0, currency)}</span>
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium mb-3">Current Liabilities</p>
-            <div className="grid grid-cols-2 gap-4">
+            <p className="text-xs font-medium mb-3 text-muted-foreground">Current Liabilities</p>
+            <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-red-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Wages Payable</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentLiabilities?.wagesPayable || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Wages Payable</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.wagesPayable || 0, currency)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-orange-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Accounts Payable</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentLiabilities?.accountPayables || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Accounts Payable</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.accountPayables || 0, currency)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-pink-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Provisions & Accruals</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentLiabilities?.provisions || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Provisions & Accruals</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.provisions || 0, currency)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-slate-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Other Payables</p>
-                  <p className="font-medium">{formatCurrency(stats?.currentLiabilities?.otherPayable || 0, currency)}</p>
+                  <p className="text-[11px] text-muted-foreground">Other Payables</p>
+                  <p className="text-sm font-medium">{formatCurrency(stats?.currentLiabilities?.otherPayable || 0, currency)}</p>
                 </div>
               </div>
             </div>
