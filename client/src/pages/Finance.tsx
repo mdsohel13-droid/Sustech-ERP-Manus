@@ -39,7 +39,7 @@ import { formatCurrency } from "@/lib/currencyUtils";
 import { trpc } from "@/lib/trpc";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  BarChart, Bar, ComposedChart, Cell, AreaChart, Area, PieChart, Pie, Legend
+  BarChart, Bar, ComposedChart, Cell, AreaChart, Area, PieChart, Pie, Legend, LabelList
 } from "recharts";
 import { useToast } from "@/components/Toast";
 
@@ -544,8 +544,12 @@ export default function Finance() {
                 <YAxis tickFormatter={(v) => formatCompact(v)} />
                 <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
                 <Legend />
-                <Bar dataKey="ar" name="Accounts Receivable" fill={COLORS.grossProfit} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="ap" name="Accounts Payable" fill={COLORS.cogs} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="ar" name="Accounts Receivable" fill="#10B981" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="ar" position="top" formatter={(v: number) => v > 0 ? formatCompact(v) : ''} style={{ fontSize: 12, fontWeight: 600, fill: '#10B981' }} />
+                </Bar>
+                <Bar dataKey="ap" name="Accounts Payable" fill="#EF4444" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="ap" position="top" formatter={(v: number) => v > 0 ? formatCompact(v) : ''} style={{ fontSize: 12, fontWeight: 600, fill: '#EF4444' }} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
