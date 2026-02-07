@@ -81,15 +81,14 @@ export default function TenderQuotationTable({ tenders, totalTenders, pipelineVa
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/80">
                 <th className="text-left py-2 px-3 font-medium text-gray-500 text-[10px] uppercase tracking-wider w-8">#</th>
-                <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Ref #</th>
-                <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Title</th>
-                <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Customer</th>
+                <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">ID</th>
+                <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Description</th>
+                <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Client Name</th>
                 <th className="text-right py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Est. Value</th>
                 <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Status</th>
                 <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Priority</th>
                 <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Type</th>
                 <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Submission</th>
-                <th className="text-left py-2 px-2 font-medium text-gray-500 text-[10px] uppercase tracking-wider">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -97,13 +96,13 @@ export default function TenderQuotationTable({ tenders, totalTenders, pipelineVa
                 <tr key={tender.id} className="border-b border-gray-50 hover:bg-amber-50/30 cursor-pointer transition-colors" onClick={() => navigate("/tender-quotation")}>
                   <td className="py-2 px-3 text-[11px] text-gray-400 font-mono">{idx + 1}</td>
                   <td className="py-2 px-2">
-                    <p className="font-mono text-[11px] text-gray-600">{tender.referenceNumber || `QT-${tender.id}`}</p>
+                    <p className="font-mono text-[11px] text-gray-600">{tender.referenceId || "-"}</p>
                   </td>
-                  <td className="py-2 px-2 max-w-[180px]">
-                    <p className="font-medium text-gray-900 text-[11px] truncate">{tender.title || tender.name}</p>
+                  <td className="py-2 px-2 max-w-[220px]">
+                    <p className="text-gray-900 text-[11px] truncate">{tender.description || "-"}</p>
                   </td>
                   <td className="py-2 px-2">
-                    <p className="text-gray-600 text-[11px] truncate max-w-[120px]">{tender.customerName || "-"}</p>
+                    <p className="text-gray-600 text-[11px] truncate max-w-[140px]">{tender.clientName || "-"}</p>
                   </td>
                   <td className="py-2 px-2 text-right">
                     <p className="font-semibold text-gray-800 text-[11px]">{formatCurrency(parseFloat(tender.estimatedValue || "0"))}</p>
@@ -119,17 +118,14 @@ export default function TenderQuotationTable({ tenders, totalTenders, pipelineVa
                     </Badge>
                   </td>
                   <td className="py-2 px-2 text-[11px] text-gray-500">
-                    {tender.type === "tender" ? "Tender" : tender.type === "quotation" ? "Quote" : tender.type || "-"}
+                    {tender.type === "government_tender" ? "Tender" : tender.type === "private_quotation" ? "Quotation" : "-"}
                   </td>
                   <td className="py-2 px-2 text-gray-500 text-[11px] whitespace-nowrap">
                     {tender.submissionDate ? format(new Date(tender.submissionDate), "dd MMM yy") : "-"}
                   </td>
-                  <td className="py-2 px-2 text-gray-500 text-[11px] whitespace-nowrap">
-                    {tender.createdAt ? format(new Date(tender.createdAt), "dd MMM yy") : "-"}
-                  </td>
                 </tr>
               )) : (
-                <tr><td colSpan={10} className="py-6 text-center text-gray-400 text-xs">No quotations</td></tr>
+                <tr><td colSpan={9} className="py-6 text-center text-gray-400 text-xs">No tenders or quotations</td></tr>
               )}
             </tbody>
           </table>
