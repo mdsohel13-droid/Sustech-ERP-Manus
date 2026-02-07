@@ -4080,7 +4080,7 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
     db.select().from(dailySales),
     db.select().from(financialAccounts).where(eq(financialAccounts.isActive, true)),
     db.select().from(productInventory),
-    db.select().from(salesProducts).where(eq(salesProducts.isActive, true))
+    db.select().from(salesProducts).where(eq(salesProducts.isActive, 1))
   ]);
   
   const periodIncome = allIncome.filter(ie => new Date(ie.date) >= startDate);
@@ -4132,7 +4132,7 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
     .filter(ie => ie.type === 'expenditure' && new Date(ie.date).getFullYear() === now.getFullYear() - 1)
     .reduce((sum, ie) => sum + Number(ie.amount || 0), 0);
   
-  return {
+  const result = {
     revenue,
     cogs,
     grossProfit,
@@ -4152,6 +4152,7 @@ export async function getFinanceDashboardStats(period: 'mtd' | 'ytd' = 'ytd') {
       netProfitBenchmark: lastYearRevenue > 0 ? lastYearRevenue - lastYearExpenses : netProfit * 1.1
     }
   };
+  return result;
 }
 
 export async function getAllFinancialAccounts() {
@@ -4182,7 +4183,7 @@ export async function getBalanceSheetData() {
     db.select().from(accountsReceivable).where(eq(accountsReceivable.status, 'pending')),
     db.select().from(accountsPayable).where(eq(accountsPayable.status, 'pending')),
     db.select().from(productInventory),
-    db.select().from(salesProducts).where(eq(salesProducts.isActive, true))
+    db.select().from(salesProducts).where(eq(salesProducts.isActive, 1))
   ]);
   
   const getAccountsByType = (type: string) => accounts.filter(a => a.accountType === type);
