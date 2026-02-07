@@ -82,8 +82,8 @@ export default function Finance() {
   const { data: currentUser } = trpc.auth.me.useQuery();
 
   const { data: stats, isLoading: statsLoading } = trpc.financial.getDashboardStats.useQuery({ period }, { refetchInterval: 15000, refetchOnWindowFocus: true });
-  const { data: monthlyTrend = [] } = trpc.financial.getMonthlyTrend.useQuery({ months: 12 }, { refetchInterval: 15000, refetchOnWindowFocus: true });
-  const { data: cashFlow = [] } = trpc.financial.getCashFlowData.useQuery({ months: 6 }, { refetchInterval: 15000 });
+  const { data: monthlyTrend = [] as any[] } = trpc.financial.getMonthlyTrend.useQuery({ months: 12 }, { refetchInterval: 15000, refetchOnWindowFocus: true });
+  const { data: cashFlow = [] as any[] } = trpc.financial.getCashFlowData.useQuery({ months: 6 }, { refetchInterval: 15000 });
   const { data: incomeStatement } = trpc.financial.getIncomeStatement.useQuery({ period });
   const { data: arAging } = trpc.financial.getAgingReport.useQuery({ type: 'receivable' });
   const { data: apAging } = trpc.financial.getAgingReport.useQuery({ type: 'payable' });
