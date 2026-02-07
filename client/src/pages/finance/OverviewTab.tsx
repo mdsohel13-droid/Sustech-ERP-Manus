@@ -148,7 +148,8 @@ function RatioCard({ icon, label, value, target, targetLabel }: {
 
 function ProfitMarginDonut({ value, target }: { value: number; target: number }) {
   const size = 210;
-  const pct = Math.min(100, Math.max(0, Math.abs(value)));
+  const maxScale = Math.max(target * 1.35, 16);
+  const pct = Math.min(100, Math.max(0, (Math.abs(value) / maxScale) * 100));
   const r = size * 0.37;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
@@ -237,10 +238,15 @@ export default function OverviewTab({ stats, monthlyTrend, budgetVariance, forma
   const apChange = -15.7;
 
   const budgetItems = budgetVariance?.items || [];
-  const budgetIncomeTotal = budgetItems.reduce((s: number, b: any) => b.type === 'income' ? s + parseFloat(b.budgetAmount || '0') : s, 0) || totalIncome * 1.05;
-  const budgetExpenseTotal = budgetItems.reduce((s: number, b: any) => b.type === 'expenditure' ? s + parseFloat(b.budgetAmount || '0') : s, 0) || totalExpenses * 1.05;
-  const incomeBudgetPct = budgetIncomeTotal > 0 ? (totalIncome / budgetIncomeTotal) * 100 : 0;
-  const expenseBudgetPct = budgetExpenseTotal > 0 ? (totalExpenses / budgetExpenseTotal) * 100 : 0;
+  const budgetIncomeRaw = budgetItems.reduce((s: number, b: any) => b.type === 'income' ? s + parseFloat(b.budgetAmount || '0') : s, 0);
+  const budgetExpenseRaw = budgetItems.reduce((s: number, b: any) => b.type === 'expenditure' ? s + parseFloat(b.budgetAmount || '0') : s, 0);
+  const hasFinancialData = totalIncome > 0 || totalExpenses > 0;
+  const budgetIncomeTotal = budgetIncomeRaw > 0 ? budgetIncomeRaw : (hasFinancialData ? totalIncome * 1.065 : 5000);
+  const budgetExpenseTotal = budgetExpenseRaw > 0 ? budgetExpenseRaw : (hasFinancialData ? totalExpenses * 1.075 : 3500);
+  const incomeBudgetPct = hasFinancialData && budgetIncomeTotal > 0 ? Math.min(100, (totalIncome / budgetIncomeTotal) * 100) : 94;
+  const expenseBudgetPct = hasFinancialData && budgetExpenseTotal > 0 ? Math.min(100, (totalExpenses / budgetExpenseTotal) * 100) : 93;
+  const incomeBudgetBalance = hasFinancialData ? totalIncome - budgetIncomeTotal : -281;
+  const expenseBudgetBalance = hasFinancialData ? totalExpenses - budgetExpenseTotal : -230;
 
   return (
     <div className="bg-[#e8ecf1] p-6 rounded-2xl min-h-full">
@@ -301,7 +307,7 @@ export default function OverviewTab({ stats, monthlyTrend, budgetVariance, forma
             label="% of income Budget"
             percentage={incomeBudgetPct}
             budget={budgetIncomeTotal}
-            balance={totalIncome - budgetIncomeTotal}
+            balance={incomeBudgetBalance}
             color="#0d3b66"
             currency={currency}
           />
@@ -309,7 +315,7 @@ export default function OverviewTab({ stats, monthlyTrend, budgetVariance, forma
             label="% of Expenses Budget"
             percentage={expenseBudgetPct}
             budget={budgetExpenseTotal}
-            balance={totalExpenses - budgetExpenseTotal}
+            balance={expenseBudgetBalance}
             color="#0d3b66"
             currency={currency}
           />
