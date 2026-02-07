@@ -81,9 +81,9 @@ export default function Finance() {
   const utils = trpc.useUtils();
   const { data: currentUser } = trpc.auth.me.useQuery();
 
-  const { data: stats, isLoading: statsLoading } = trpc.financial.getDashboardStats.useQuery({ period });
-  const { data: monthlyTrend = [] } = trpc.financial.getMonthlyTrend.useQuery({ months: 12 });
-  const { data: cashFlow = [] } = trpc.financial.getCashFlowData.useQuery({ months: 6 });
+  const { data: stats, isLoading: statsLoading } = trpc.financial.getDashboardStats.useQuery({ period }, { refetchInterval: 15000, refetchOnWindowFocus: true });
+  const { data: monthlyTrend = [] } = trpc.financial.getMonthlyTrend.useQuery({ months: 12 }, { refetchInterval: 15000, refetchOnWindowFocus: true });
+  const { data: cashFlow = [] } = trpc.financial.getCashFlowData.useQuery({ months: 6 }, { refetchInterval: 15000 });
   const { data: incomeStatement } = trpc.financial.getIncomeStatement.useQuery({ period });
   const { data: arAging } = trpc.financial.getAgingReport.useQuery({ type: 'receivable' });
   const { data: apAging } = trpc.financial.getAgingReport.useQuery({ type: 'payable' });
@@ -149,7 +149,7 @@ export default function Finance() {
     { enabled: !!paymentTarget }
   );
 
-  const { data: budgetVariance } = trpc.fin.getBudgetVarianceAnalysis.useQuery({ monthYear: budgetMonth });
+  const { data: budgetVariance } = trpc.fin.getBudgetVarianceAnalysis.useQuery({ monthYear: budgetMonth }, { refetchInterval: 15000, refetchOnWindowFocus: true });
 
   const createBudget = trpc.budget.create.useMutation({
     onSuccess: () => { toast.success("Success", "Budget entry created"); utils.fin.getBudgetVarianceAnalysis.invalidate(); setAddBudgetOpen(false); },
