@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +17,6 @@ import {
   BarChart3,
   Wallet,
   Clock,
-  ChevronDown,
   Calendar,
   Plus,
   AlertTriangle,
@@ -26,15 +24,15 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Building,
-  Users,
-  Package,
   Target,
-  Eye,
-  Edit,
   Trash2,
   RefreshCw,
   Shield,
-  Banknote
+  Banknote,
+  Globe,
+  Scale,
+  Brain,
+  BookOpen
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
@@ -44,6 +42,12 @@ import {
   BarChart, Bar, ComposedChart, Cell, AreaChart, Area, PieChart, Pie, Legend
 } from "recharts";
 import { useToast } from "@/components/Toast";
+
+import OverviewTab from "./finance/OverviewTab";
+import MultiCurrencyTab from "./finance/MultiCurrencyTab";
+import TaxComplianceTab from "./finance/TaxComplianceTab";
+import IFRSTab from "./finance/IFRSTab";
+import AnomalyDetectionTab from "./finance/AnomalyDetectionTab";
 
 const COLORS = {
   revenue: '#3B82F6',
@@ -65,7 +69,6 @@ export default function Finance() {
   const [benchmark, setBenchmark] = useState<'budget' | 'lastYear'>('lastYear');
   const [addAROpen, setAddAROpen] = useState(false);
   const [addAPOpen, setAddAPOpen] = useState(false);
-  const [addJournalOpen, setAddJournalOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentTarget, setPaymentTarget] = useState<{ id: number; type: 'ar' | 'ap'; name: string; amount: number; paidAmount: number } | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -73,6 +76,7 @@ export default function Finance() {
   const [rejectReason, setRejectReason] = useState('');
   const [budgetMonth, setBudgetMonth] = useState(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`);
   const [addBudgetOpen, setAddBudgetOpen] = useState(false);
+  const [addJournalOpen, setAddJournalOpen] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: currentUser } = trpc.auth.me.useQuery();
@@ -111,70 +115,32 @@ export default function Finance() {
   const { data: pendingApprovals } = trpc.fin.getPendingApprovals.useQuery();
 
   const approveARMutation = trpc.fin.approveAR.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "AR entry approved");
-      utils.financial.getAllAR.invalidate();
-      utils.financial.getAllAP.invalidate();
-      utils.fin.getPendingApprovals.invalidate();
-    },
+    onSuccess: () => { toast.success("Success", "AR entry approved"); utils.financial.getAllAR.invalidate(); utils.fin.getPendingApprovals.invalidate(); },
     onError: (err) => toast.error("Error", err.message),
   });
 
   const rejectARMutation = trpc.fin.rejectAR.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "AR entry rejected");
-      utils.financial.getAllAR.invalidate();
-      utils.financial.getAllAP.invalidate();
-      utils.fin.getPendingApprovals.invalidate();
-      setRejectDialogOpen(false);
-      setRejectReason('');
-    },
+    onSuccess: () => { toast.success("Success", "AR entry rejected"); utils.financial.getAllAR.invalidate(); utils.fin.getPendingApprovals.invalidate(); setRejectDialogOpen(false); setRejectReason(''); },
     onError: (err) => toast.error("Error", err.message),
   });
 
   const approveAPMutation = trpc.fin.approveAP.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "AP entry approved");
-      utils.financial.getAllAR.invalidate();
-      utils.financial.getAllAP.invalidate();
-      utils.fin.getPendingApprovals.invalidate();
-    },
+    onSuccess: () => { toast.success("Success", "AP entry approved"); utils.financial.getAllAP.invalidate(); utils.fin.getPendingApprovals.invalidate(); },
     onError: (err) => toast.error("Error", err.message),
   });
 
   const rejectAPMutation = trpc.fin.rejectAP.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "AP entry rejected");
-      utils.financial.getAllAR.invalidate();
-      utils.financial.getAllAP.invalidate();
-      utils.fin.getPendingApprovals.invalidate();
-      setRejectDialogOpen(false);
-      setRejectReason('');
-    },
+    onSuccess: () => { toast.success("Success", "AP entry rejected"); utils.financial.getAllAP.invalidate(); utils.fin.getPendingApprovals.invalidate(); setRejectDialogOpen(false); setRejectReason(''); },
     onError: (err) => toast.error("Error", err.message),
   });
 
   const recordARPaymentMutation = trpc.fin.recordARPayment.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "AR payment recorded");
-      utils.financial.getAllAR.invalidate();
-      utils.financial.getAllAP.invalidate();
-      utils.fin.getPendingApprovals.invalidate();
-      setPaymentDialogOpen(false);
-      setPaymentTarget(null);
-    },
+    onSuccess: () => { toast.success("Success", "AR payment recorded"); utils.financial.getAllAR.invalidate(); setPaymentDialogOpen(false); setPaymentTarget(null); },
     onError: (err) => toast.error("Error", err.message),
   });
 
   const recordAPPaymentMutation = trpc.fin.recordAPPayment.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "AP payment recorded");
-      utils.financial.getAllAR.invalidate();
-      utils.financial.getAllAP.invalidate();
-      utils.fin.getPendingApprovals.invalidate();
-      setPaymentDialogOpen(false);
-      setPaymentTarget(null);
-    },
+    onSuccess: () => { toast.success("Success", "AP payment recorded"); utils.financial.getAllAP.invalidate(); setPaymentDialogOpen(false); setPaymentTarget(null); },
     onError: (err) => toast.error("Error", err.message),
   });
 
@@ -186,19 +152,12 @@ export default function Finance() {
   const { data: budgetVariance } = trpc.fin.getBudgetVarianceAnalysis.useQuery({ monthYear: budgetMonth });
 
   const createBudget = trpc.budget.create.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "Budget entry created");
-      utils.fin.getBudgetVarianceAnalysis.invalidate();
-      setAddBudgetOpen(false);
-    },
+    onSuccess: () => { toast.success("Success", "Budget entry created"); utils.fin.getBudgetVarianceAnalysis.invalidate(); setAddBudgetOpen(false); },
     onError: (err) => toast.error("Error", err.message),
   });
 
   const deleteBudget = trpc.budget.delete.useMutation({
-    onSuccess: () => {
-      toast.success("Success", "Budget entry deleted");
-      utils.fin.getBudgetVarianceAnalysis.invalidate();
-    },
+    onSuccess: () => { toast.success("Success", "Budget entry deleted"); utils.fin.getBudgetVarianceAnalysis.invalidate(); },
     onError: (err) => toast.error("Error", err.message),
   });
 
@@ -206,44 +165,6 @@ export default function Finance() {
     if (value >= 1000000) return `${(value / 1000000).toFixed(2)}M`;
     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
     return value.toFixed(0);
-  };
-
-  const getBenchmarkChange = (value: number, benchmarkValue: number) => {
-    if (benchmarkValue === 0) return { value: 0, isPositive: true };
-    const change = ((value - benchmarkValue) / Math.abs(benchmarkValue)) * 100;
-    return { value: Math.abs(change), isPositive: change >= 0 };
-  };
-
-  const revenueChange = stats?.benchmarks ? getBenchmarkChange(stats.revenue, stats.benchmarks.revenueBenchmark) : { value: 0, isPositive: true };
-  const cogsChange = stats?.benchmarks ? getBenchmarkChange(stats.cogs, stats.benchmarks.cogsBenchmark) : { value: 0, isPositive: false };
-  const grossProfitChange = stats?.benchmarks ? getBenchmarkChange(stats.grossProfit, stats.benchmarks.grossProfitBenchmark) : { value: 0, isPositive: true };
-  const netProfitChange = stats?.benchmarks ? getBenchmarkChange(stats.netProfit, stats.benchmarks.netProfitBenchmark) : { value: 0, isPositive: true };
-
-  const CircularProgress = ({ value, label, color }: { value: number; label: string; color: string }) => {
-    const radius = 40;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (Math.min(Math.abs(value), 100) / 100) * circumference;
-    
-    return (
-      <div className="flex flex-col items-center">
-        <div className="relative w-24 h-24">
-          <svg className="w-24 h-24 transform -rotate-90">
-            <circle cx="48" cy="48" r={radius} stroke="#e5e7eb" strokeWidth="8" fill="none" />
-            <circle 
-              cx="48" cy="48" r={radius} 
-              stroke={color} strokeWidth="8" fill="none"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-lg font-bold ${value < 0 ? 'text-red-500' : ''}`}>{value.toFixed(1)}%</span>
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground mt-2 text-center">{label}</p>
-      </div>
-    );
   };
 
   const agingData = useMemo(() => {
@@ -313,332 +234,6 @@ export default function Finance() {
     });
   };
 
-  const totalIncome = stats?.revenue || 0;
-  const totalExpenses = (stats?.cogs || 0) + (stats?.opex || 0);
-  const netProfit = stats?.netProfit || 0;
-  const netProfitMarginVal = stats?.netProfitMargin || 0;
-  const cashAtEnd = stats?.currentAssets?.cashBalance || 0;
-  const totalAR = stats?.currentAssets?.accountReceivables || 0;
-  const totalAP = stats?.currentLiabilities?.accountPayables || 0;
-  const currentAssets = (stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0) + (stats?.currentAssets?.deposits || 0) + (stats?.currentAssets?.inventory || 0);
-  const currentLiabilities = (stats?.currentLiabilities?.wagesPayable || 0) + (stats?.currentLiabilities?.accountPayables || 0) + (stats?.currentLiabilities?.provisions || 0) + (stats?.currentLiabilities?.otherPayable || 0);
-  const quickRatio = ((stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0)) / Math.max(currentLiabilities, 1);
-  const currentRatio = currentAssets / Math.max(currentLiabilities, 1);
-
-  const budgetItems = budgetVariance?.items || [];
-  const budgetIncomeTotal = budgetItems.reduce((s: number, b: any) => b.type === 'income' ? s + parseFloat(b.budgetAmount || '0') : s, 0) || totalIncome * 1.05;
-  const budgetExpenseTotal = budgetItems.reduce((s: number, b: any) => b.type === 'expenditure' ? s + parseFloat(b.budgetAmount || '0') : s, 0) || totalExpenses * 1.05;
-  const incomeActual = totalIncome;
-  const expenseActual = totalExpenses;
-
-  const prevMonthRevenue = monthlyTrend.length >= 2 ? (monthlyTrend[monthlyTrend.length - 2] as any)?.revenue || 0 : 0;
-  const prevMonthExpense = monthlyTrend.length >= 2 ? ((monthlyTrend[monthlyTrend.length - 2] as any)?.cogs || 0) : 0;
-  const arChangeStr = arTotal > 0 ? `${((totalAR - arTotal) / Math.max(arTotal, 1) * 100).toFixed(1)}%` : '0%';
-  const apChangeStr = apTotal > 0 ? `${((totalAP - apTotal) / Math.max(apTotal, 1) * 100).toFixed(1)}%` : '0%';
-  const cashChange = monthlyTrend.length >= 2 ? ((cashAtEnd - ((monthlyTrend[monthlyTrend.length - 2] as any)?.revenue || cashAtEnd)) / Math.max(cashAtEnd, 1) * 100) : 0;
-
-  const CHART_COLORS = ['#0d3b66', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
-
-  const GaugeDonut = ({ value, maxValue, label, centerValue, color, size = 120 }: { value: number; maxValue: number; label: string; centerValue: string; color: string; size?: number }) => {
-    const pct = maxValue > 0 ? Math.min(100, Math.abs(value / maxValue) * 100) : 0;
-    const r = size * 0.38;
-    const circ = 2 * Math.PI * r;
-    const offset = circ - (pct / 100) * circ;
-    const vb = size;
-    return (
-      <div className="flex flex-col items-center">
-        <div className="relative" style={{ width: size, height: size }}>
-          <svg style={{ width: size, height: size }} className="transform -rotate-90" viewBox={`0 0 ${vb} ${vb}`}>
-            <circle cx={vb/2} cy={vb/2} r={r} stroke="#1e293b" strokeWidth={size * 0.09} fill="none" opacity={0.15} />
-            <circle cx={vb/2} cy={vb/2} r={r} stroke={color} strokeWidth={size * 0.09} fill="none"
-              strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-bold" style={{ color, fontSize: size * 0.2 }}>{centerValue}</span>
-          </div>
-        </div>
-        <p className="text-[11px] font-medium text-muted-foreground mt-1 text-center">{label}</p>
-      </div>
-    );
-  };
-
-  const finBarData = [
-    { name: 'Revenue', value: totalIncome, fill: '#0d3b66' },
-    { name: 'COGS', value: stats?.cogs || 0, fill: '#0ea5e9' },
-    { name: 'OPEX', value: stats?.opex || 0, fill: '#f59e0b' },
-    { name: 'Net Profit', value: Math.max(netProfit, 0), fill: '#10b981' },
-  ];
-
-  const arApData = [
-    { name: 'Receivable', value: totalAR, fill: '#0ea5e9' },
-    { name: 'Payable', value: totalAP, fill: '#ef4444' },
-  ];
-
-  const assetPieData = [
-    { name: 'Cash & Bank', value: stats?.currentAssets?.cashBalance || 0 },
-    { name: 'Receivables', value: stats?.currentAssets?.accountReceivables || 0 },
-    { name: 'Deposits', value: stats?.currentAssets?.deposits || 0 },
-    { name: 'Inventory', value: stats?.currentAssets?.inventory || 0 },
-  ].filter(d => d.value > 0);
-
-  const liabilityPieData = [
-    { name: 'Wages', value: stats?.currentLiabilities?.wagesPayable || 0 },
-    { name: 'Payables', value: stats?.currentLiabilities?.accountPayables || 0 },
-    { name: 'Provisions', value: stats?.currentLiabilities?.provisions || 0 },
-    { name: 'Other', value: stats?.currentLiabilities?.otherPayable || 0 },
-  ].filter(d => d.value > 0);
-
-  const assetColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
-  const liabilityColors = ['#ef4444', '#f97316', '#ec4899', '#64748b'];
-
-  const grossProfitMarginPct = stats?.grossProfitMargin || 0;
-  const opexRatioPct = stats?.operatingExpenseRatio || 0;
-
-  const renderOverviewTab = () => (
-    <>
-      <div className="text-center mb-5">
-        <h1 className="text-2xl font-extrabold text-[#0d2137] tracking-tight uppercase">Financial Dashboard</h1>
-      </div>
-
-      {/* ROW 1: Donut gauges for key ratios + Horizontal bar for financial breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Financial Breakdown - Horizontal Bar Chart */}
-        <Card className="lg:col-span-5 border-0 shadow-sm">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">Financial Breakdown</CardTitle>
-            <p className="text-[10px] text-muted-foreground">Revenue, costs, and profit comparison</p>
-          </CardHeader>
-          <CardContent className="pb-3">
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={finBarData} layout="vertical" barSize={22}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                  <XAxis type="number" tick={{ fontSize: 9 }} tickFormatter={(v) => formatCompact(v)} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fontWeight: 600 }} width={72} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value: number) => [formatCurrency(value, currency), 'Amount']} />
-                  <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                    {finBarData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Key Ratio Gauges */}
-        <Card className="lg:col-span-7 border-0 shadow-sm">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">Key Financial Ratios</CardTitle>
-            <p className="text-[10px] text-muted-foreground">Performance indicators at a glance</p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-around flex-wrap gap-2">
-              <GaugeDonut value={netProfitMarginVal} maxValue={100} label="Net Profit Margin" centerValue={`${netProfitMarginVal.toFixed(1)}%`} color="#0ea5e9" size={115} />
-              <GaugeDonut value={grossProfitMarginPct} maxValue={100} label="Gross Profit Margin" centerValue={`${grossProfitMarginPct.toFixed(1)}%`} color="#10b981" size={115} />
-              <GaugeDonut value={quickRatio} maxValue={2} label="Quick Ratio" centerValue={quickRatio.toFixed(2)} color={quickRatio >= 1 ? '#10b981' : quickRatio >= 0.7 ? '#f59e0b' : '#ef4444'} size={115} />
-              <GaugeDonut value={currentRatio} maxValue={5} label="Current Ratio" centerValue={currentRatio.toFixed(2)} color={currentRatio >= 3 ? '#10b981' : currentRatio >= 2 ? '#f59e0b' : '#ef4444'} size={115} />
-              <GaugeDonut value={opexRatioPct} maxValue={100} label="OPEX Ratio" centerValue={`${opexRatioPct.toFixed(1)}%`} color="#f59e0b" size={115} />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ROW 2: AR vs AP Bar + Budget Donuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
-        {/* AR vs AP Comparison */}
-        <Card className="lg:col-span-4 border-0 shadow-sm">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">AR vs AP Comparison</CardTitle>
-            <p className="text-[10px] text-muted-foreground">Receivables vs payables balance</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={arApData} barSize={40}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 600 }} />
-                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => formatCompact(v)} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value: number) => [formatCurrency(value, currency), 'Amount']} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    {arApData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1 px-2">
-              <span>Net: <span className={`font-semibold ${(totalAR - totalAP) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(totalAR - totalAP, currency)}</span></span>
-              <span>Ratio: <span className="font-semibold text-[#0d2137]">{totalAP > 0 ? (totalAR / totalAP).toFixed(2) : 'N/A'}</span></span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Income Budget Donut */}
-        <Card className="lg:col-span-4 border-0 shadow-sm">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">Income Budget %</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center pt-0">
-            <GaugeDonut value={incomeActual} maxValue={budgetIncomeTotal} label="" centerValue={`${budgetIncomeTotal > 0 ? Math.min(100, Math.round((incomeActual / budgetIncomeTotal) * 100)) : 0}%`} color="#0d3b66" size={140} />
-            <div className="w-full space-y-1 px-4 mt-1">
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Budget</span><span className="font-semibold">{formatCurrency(budgetIncomeTotal, currency)}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Actual</span><span className="font-semibold">{formatCurrency(incomeActual, currency)}</span></div>
-              <div className="h-px bg-gray-200" />
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Balance</span><span className={`font-semibold ${incomeActual >= budgetIncomeTotal ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(incomeActual - budgetIncomeTotal, currency)}</span></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Expenses Budget Donut */}
-        <Card className="lg:col-span-4 border-0 shadow-sm">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-bold text-[#0d2137] text-center">Expenses Budget %</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center pt-0">
-            <GaugeDonut value={expenseActual} maxValue={budgetExpenseTotal} label="" centerValue={`${budgetExpenseTotal > 0 ? Math.min(100, Math.round((expenseActual / budgetExpenseTotal) * 100)) : 0}%`} color={expenseActual > budgetExpenseTotal ? '#ef4444' : '#0d3b66'} size={140} />
-            <div className="w-full space-y-1 px-4 mt-1">
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Budget</span><span className="font-semibold">{formatCurrency(budgetExpenseTotal, currency)}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Actual</span><span className="font-semibold">{formatCurrency(expenseActual, currency)}</span></div>
-              <div className="h-px bg-gray-200" />
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Balance</span><span className={`font-semibold ${expenseActual >= budgetExpenseTotal ? 'text-red-500' : 'text-emerald-600'}`}>{formatCurrency(expenseActual - budgetExpenseTotal, currency)}</span></div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ROW 3: Income & Expenses Bar Chart + Gross Profit Area Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">Income & Expenses Trend</CardTitle>
-            <p className="text-[10px] text-muted-foreground">Monthly comparison with net profit line</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={monthlyTrend} barGap={2}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => formatCompact(v)} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value: number, name: string) => [formatCurrency(value, currency), name === 'revenue' ? 'Income' : name === 'cogs' ? 'Expenses' : 'Net Profit']} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} formatter={(v) => v === 'revenue' ? 'Income' : v === 'cogs' ? 'Expenses' : 'Net Profit'} />
-                  <Bar dataKey="revenue" fill="#0d3b66" radius={[4, 4, 0, 0]} name="revenue" barSize={16} />
-                  <Bar dataKey="cogs" fill="#5fa8d3" radius={[4, 4, 0, 0]} name="cogs" barSize={16} />
-                  <Line type="monotone" dataKey="netProfit" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3, fill: '#f59e0b' }} name="netProfit" />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">Gross Profit & Margin Trend</CardTitle>
-            <p className="text-[10px] text-muted-foreground">Profit area with margin percentage overlay</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={monthlyTrend}>
-                  <defs>
-                    <linearGradient id="gpGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 9 }} tickFormatter={(v) => formatCompact(v)} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 9 }} tickFormatter={(v) => `${v}%`} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value: number, name: string) => [name === 'grossProfitMargin' ? `${value.toFixed(1)}%` : formatCurrency(value, currency), name === 'grossProfit' ? 'Gross Profit' : 'Margin %']} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} formatter={(v) => v === 'grossProfit' ? 'Gross Profit' : 'Margin %'} />
-                  <Area yAxisId="left" type="monotone" dataKey="grossProfit" fill="url(#gpGrad)" stroke="#10b981" strokeWidth={2} name="grossProfit" />
-                  <Line yAxisId="right" type="monotone" dataKey="grossProfitMargin" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3, fill: '#0ea5e9' }} name="grossProfitMargin" />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ROW 4: Asset Pie + Liability Pie + Cash Flow mini */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
-        {/* Assets Donut */}
-        <Card className="lg:col-span-4 border-0 shadow-sm">
-          <CardHeader className="pb-1 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-bold text-[#0d2137]">Asset Composition</CardTitle>
-              <p className="text-[10px] text-muted-foreground">Current asset breakdown</p>
-            </div>
-            <span className="text-base font-bold text-emerald-600">{formatCurrency(stats?.totalAssets || 0, currency)}</span>
-          </CardHeader>
-          <CardContent>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={assetPieData.length > 0 ? assetPieData : [{ name: 'No Data', value: 1 }]} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={{ strokeWidth: 1 }} style={{ fontSize: 9 }}>
-                    {(assetPieData.length > 0 ? assetPieData : [{ name: 'No Data', value: 1 }]).map((_: any, i: number) => <Cell key={i} fill={assetPieData.length > 0 ? assetColors[i % assetColors.length] : '#e5e7eb'} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value: number) => [formatCurrency(value, currency), 'Value']} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Liabilities Donut */}
-        <Card className="lg:col-span-4 border-0 shadow-sm">
-          <CardHeader className="pb-1 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-bold text-[#0d2137]">Liability Composition</CardTitle>
-              <p className="text-[10px] text-muted-foreground">Current liability breakdown</p>
-            </div>
-            <span className="text-base font-bold text-red-600">{formatCurrency(stats?.totalLiabilities || 0, currency)}</span>
-          </CardHeader>
-          <CardContent>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={liabilityPieData.length > 0 ? liabilityPieData : [{ name: 'No Data', value: 1 }]} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={{ strokeWidth: 1 }} style={{ fontSize: 9 }}>
-                    {(liabilityPieData.length > 0 ? liabilityPieData : [{ name: 'No Data', value: 1 }]).map((_: any, i: number) => <Cell key={i} fill={liabilityPieData.length > 0 ? liabilityColors[i % liabilityColors.length] : '#e5e7eb'} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value: number) => [formatCurrency(value, currency), 'Value']} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Net Profit Margin Area */}
-        <Card className="lg:col-span-4 border-0 shadow-sm">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-bold text-[#0d2137]">Net Profit Margin Trend</CardTitle>
-            <p className="text-[10px] text-muted-foreground">Monthly margin % movement</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={monthlyTrend}>
-                  <defs>
-                    <linearGradient id="npmGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => `${v}%`} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} formatter={(value: number) => [`${value.toFixed(1)}%`, 'Net Profit Margin']} />
-                  <Area type="monotone" dataKey="netProfitMargin" fill="url(#npmGrad)" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 3, fill: '#0ea5e9' }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
-  );
-
   const renderBalanceSheetTab = () => {
     const totalAssets = balanceSheet?.assets?.totalAssets || stats?.totalAssets || 0;
     const totalLiabilities = balanceSheet?.liabilities?.totalLiabilities || stats?.totalLiabilities || 0;
@@ -648,55 +243,42 @@ export default function Finance() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Balance Sheet</h2>
+            <h2 className="text-2xl font-bold text-[#0d2137]">Balance Sheet</h2>
             <p className="text-muted-foreground">As of {new Date().toLocaleDateString()}</p>
           </div>
-          <Button variant="outline" size="sm">
-            <FileText className="w-4 h-4 mr-2" />
-            Export PDF
-          </Button>
+          <Button variant="outline" size="sm"><FileText className="w-4 h-4 mr-2" />Export PDF</Button>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-emerald-200">
+          <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-emerald-500 rounded-lg">
-                  <ArrowUpRight className="w-6 h-6 text-white" />
-                </div>
+                <div className="p-3 bg-emerald-500 rounded-lg"><ArrowUpRight className="w-6 h-6 text-white" /></div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Assets</p>
-                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(totalAssets, currency)}</p>
+                  <p className="text-2xl font-bold text-emerald-700">{formatCurrency(totalAssets, currency)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 border-red-200">
+          <Card className="border-0 shadow-sm border-l-4 border-l-red-500">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-red-500 rounded-lg">
-                  <ArrowDownRight className="w-6 h-6 text-white" />
-                </div>
+                <div className="p-3 bg-red-500 rounded-lg"><ArrowDownRight className="w-6 h-6 text-white" /></div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Liabilities</p>
-                  <p className="text-2xl font-bold text-red-700 dark:text-red-400">{formatCurrency(totalLiabilities, currency)}</p>
+                  <p className="text-2xl font-bold text-red-700">{formatCurrency(totalLiabilities, currency)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-violet-200">
+          <Card className="border-0 shadow-sm border-l-4 border-l-violet-500">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-violet-500 rounded-lg">
-                  <Building className="w-6 h-6 text-white" />
-                </div>
+                <div className="p-3 bg-violet-500 rounded-lg"><Building className="w-6 h-6 text-white" /></div>
                 <div>
                   <p className="text-sm text-muted-foreground">Owner's Equity</p>
-                  <p className={`text-2xl font-bold ${equity >= 0 ? 'text-violet-700 dark:text-violet-400' : 'text-red-600'}`}>
-                    {formatCurrency(equity, currency)}
-                  </p>
+                  <p className={`text-2xl font-bold ${equity >= 0 ? 'text-violet-700' : 'text-red-600'}`}>{formatCurrency(equity, currency)}</p>
                 </div>
               </div>
             </CardContent>
@@ -704,113 +286,45 @@ export default function Finance() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Assets</CardTitle>
-            </CardHeader>
+          <Card className="border-0 shadow-sm">
+            <CardHeader><CardTitle className="text-lg">Assets</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Current Assets</h4>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Cash</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.cash || stats?.currentAssets?.cashBalance || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Bank Balances</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.bank || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Accounts Receivable</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.accountsReceivable || stats?.currentAssets?.accountReceivables || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Deposits & Prepayments</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.deposits || stats?.currentAssets?.deposits || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Inventory</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.inventory || stats?.currentAssets?.inventory || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow className="bg-muted/50">
-                        <TableCell className="font-semibold">Total Current Assets</TableCell>
-                        <TableCell className="text-right font-bold">{formatCurrency(balanceSheet?.assets?.currentAssets?.total || totalAssets, currency)}</TableCell>
-                      </TableRow>
-                      {(balanceSheet?.assets?.fixedAssets?.total || 0) > 0 && (
-                        <>
-                          <TableRow>
-                            <TableCell>Fixed Assets</TableCell>
-                            <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.fixedAssets?.total || 0, currency)}</TableCell>
-                          </TableRow>
-                        </>
-                      )}
-                      <TableRow className="bg-emerald-50 dark:bg-emerald-950/30">
-                        <TableCell className="font-bold">Total Assets</TableCell>
-                        <TableCell className="text-right font-bold">{formatCurrency(totalAssets, currency)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+              <Table>
+                <TableBody>
+                  <TableRow><TableCell className="text-xs font-medium text-slate-500" colSpan={2}>Current Assets</TableCell></TableRow>
+                  <TableRow><TableCell>Cash</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.cash || stats?.currentAssets?.cashBalance || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Bank Balances</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.bank || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Accounts Receivable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.accountsReceivable || stats?.currentAssets?.accountReceivables || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Deposits & Prepayments</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.deposits || stats?.currentAssets?.deposits || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Inventory</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.inventory || stats?.currentAssets?.inventory || 0, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-emerald-50"><TableCell className="font-bold">Total Assets</TableCell><TableCell className="text-right font-bold">{formatCurrency(totalAssets, currency)}</TableCell></TableRow>
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Liabilities & Equity</CardTitle>
-            </CardHeader>
+          <Card className="border-0 shadow-sm">
+            <CardHeader><CardTitle className="text-lg">Liabilities & Equity</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Current Liabilities</h4>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Wages Payable</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.wagesPayable || stats?.currentLiabilities?.wagesPayable || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Accounts Payable</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.accountsPayable || stats?.currentLiabilities?.accountPayables || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Taxes Payable</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.taxesPayable || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Provisions & Accruals</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.provisions || stats?.currentLiabilities?.provisions || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Other Payables</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.otherPayable || stats?.currentLiabilities?.otherPayable || 0, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow className="bg-red-50 dark:bg-red-950/30">
-                        <TableCell className="font-semibold">Total Liabilities</TableCell>
-                        <TableCell className="text-right font-bold">{formatCurrency(totalLiabilities, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow className="bg-violet-50 dark:bg-violet-950/30">
-                        <TableCell className="font-semibold">Owner's Equity</TableCell>
-                        <TableCell className="text-right font-bold">{formatCurrency(equity, currency)}</TableCell>
-                      </TableRow>
-                      <TableRow className="bg-muted">
-                        <TableCell className="font-bold">Total Liabilities + Equity</TableCell>
-                        <TableCell className="text-right font-bold">{formatCurrency(totalAssets, currency)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+              <Table>
+                <TableBody>
+                  <TableRow><TableCell className="text-xs font-medium text-slate-500" colSpan={2}>Current Liabilities</TableCell></TableRow>
+                  <TableRow><TableCell>Wages Payable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.wagesPayable || stats?.currentLiabilities?.wagesPayable || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Accounts Payable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.accountsPayable || stats?.currentLiabilities?.accountPayables || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Taxes Payable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.taxesPayable || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Provisions & Accruals</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.provisions || stats?.currentLiabilities?.provisions || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell>Other Payables</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.otherPayable || stats?.currentLiabilities?.otherPayable || 0, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-red-50"><TableCell className="font-semibold">Total Liabilities</TableCell><TableCell className="text-right font-bold">{formatCurrency(totalLiabilities, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-violet-50"><TableCell className="font-semibold">Owner's Equity</TableCell><TableCell className="text-right font-bold">{formatCurrency(equity, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-muted"><TableCell className="font-bold">Total Liabilities + Equity</TableCell><TableCell className="text-right font-bold">{formatCurrency(totalAssets, currency)}</TableCell></TableRow>
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Balance Sheet Visualization</CardTitle>
-          </CardHeader>
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="text-lg">Balance Sheet Visualization</CardTitle></CardHeader>
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -824,12 +338,8 @@ export default function Finance() {
                   <YAxis type="category" dataKey="name" width={100} />
                   <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                    {[
-                      { name: 'Assets', fill: COLORS.grossProfit },
-                      { name: 'Liabilities', fill: COLORS.cogs },
-                      { name: 'Equity', fill: COLORS.netProfit }
-                    ].map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    {[COLORS.grossProfit, COLORS.cogs, COLORS.netProfit].map((fill, index) => (
+                      <Cell key={`cell-${index}`} fill={fill} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -845,57 +355,42 @@ export default function Finance() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Cash Flow Statement</h2>
+          <h2 className="text-2xl font-bold text-[#0d2137]">Cash Flow Statement</h2>
           <p className="text-muted-foreground">Last 6 months cash flow analysis</p>
         </div>
-        <Button variant="outline" size="sm">
-          <FileText className="w-4 h-4 mr-2" />
-          Export PDF
-        </Button>
+        <Button variant="outline" size="sm"><FileText className="w-4 h-4 mr-2" />Export PDF</Button>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-green-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-500 rounded-lg">
-                <ArrowUpRight className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-green-500 rounded-lg"><ArrowUpRight className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Inflows</p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-                  {formatCurrency(cashFlow.reduce((sum, m) => sum + (m.inflow || 0), 0), currency)}
-                </p>
+                <p className="text-2xl font-bold text-green-700">{formatCurrency(cashFlow.reduce((sum, m) => sum + (m.inflow || 0), 0), currency)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-red-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-red-500 rounded-lg">
-                <ArrowDownRight className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-red-500 rounded-lg"><ArrowDownRight className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Outflows</p>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-                  {formatCurrency(cashFlow.reduce((sum, m) => sum + (m.outflow || 0), 0), currency)}
-                </p>
+                <p className="text-2xl font-bold text-red-700">{formatCurrency(cashFlow.reduce((sum, m) => sum + (m.outflow || 0), 0), currency)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-blue-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500 rounded-lg">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-blue-500 rounded-lg"><DollarSign className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Net Cash Flow</p>
-                <p className={`text-2xl font-bold ${cashFlow.reduce((sum, m) => sum + (m.net || 0), 0) >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-red-600'}`}>
+                <p className={`text-2xl font-bold ${cashFlow.reduce((sum, m) => sum + (m.net || 0), 0) >= 0 ? 'text-blue-700' : 'text-red-600'}`}>
                   {formatCurrency(cashFlow.reduce((sum, m) => sum + (m.net || 0), 0), currency)}
                 </p>
               </div>
@@ -904,10 +399,8 @@ export default function Finance() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Cash Flow Trend</CardTitle>
-        </CardHeader>
+      <Card className="border-0 shadow-sm">
+        <CardHeader><CardTitle className="text-lg">Cash Flow Trend</CardTitle></CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -919,46 +412,39 @@ export default function Finance() {
                 <Legend />
                 <Bar dataKey="inflow" name="Cash Inflow" fill={COLORS.inflow} radius={[4, 4, 0, 0]} />
                 <Bar dataKey="outflow" name="Cash Outflow" fill={COLORS.outflow} radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="net" name="Net Cash Flow" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="net" name="Net Cash Flow" stroke={COLORS.revenue} strokeWidth={2.5} dot={{ r: 4, fill: COLORS.revenue }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Monthly Cash Flow Details</CardTitle>
-        </CardHeader>
+      <Card className="border-0 shadow-sm">
+        <CardHeader><CardTitle className="text-lg">Cash Flow Details</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Month</TableHead>
-                <TableHead className="text-right">Cash Inflow</TableHead>
-                <TableHead className="text-right">Cash Outflow</TableHead>
-                <TableHead className="text-right">Net Cash Flow</TableHead>
-                <TableHead className="text-right">Trend</TableHead>
+                <TableHead className="text-right">Inflow</TableHead>
+                <TableHead className="text-right">Outflow</TableHead>
+                <TableHead className="text-right">Net</TableHead>
+                <TableHead className="text-right">Cumulative</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {cashFlow.map((row, idx) => (
-                <TableRow key={idx}>
-                  <TableCell className="font-medium">{row.month}</TableCell>
-                  <TableCell className="text-right text-green-600">{formatCurrency(row.inflow || 0, currency)}</TableCell>
-                  <TableCell className="text-right text-red-600">{formatCurrency(row.outflow || 0, currency)}</TableCell>
-                  <TableCell className={`text-right font-medium ${(row.net || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                    {formatCurrency(row.net || 0, currency)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {(row.net || 0) >= 0 ? (
-                      <Badge className="bg-green-100 text-green-800">Positive</Badge>
-                    ) : (
-                      <Badge className="bg-red-100 text-red-800">Negative</Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {cashFlow.map((row, idx) => {
+                const cumulative = cashFlow.slice(0, idx + 1).reduce((sum, m) => sum + (m.net || 0), 0);
+                return (
+                  <TableRow key={idx}>
+                    <TableCell className="font-medium">{row.month}</TableCell>
+                    <TableCell className="text-right text-green-600">{formatCurrency(row.inflow || 0, currency)}</TableCell>
+                    <TableCell className="text-right text-red-600">{formatCurrency(row.outflow || 0, currency)}</TableCell>
+                    <TableCell className={`text-right font-medium ${(row.net || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(row.net || 0, currency)}</TableCell>
+                    <TableCell className={`text-right font-medium ${cumulative >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{formatCurrency(cumulative, currency)}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -970,50 +456,27 @@ export default function Finance() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">AR-AP</h2>
-          <p className="text-muted-foreground">Accounts Receivable & Payable aging analysis</p>
+          <h2 className="text-2xl font-bold text-[#0d2137]">Accounts Receivable & Payable</h2>
+          <p className="text-muted-foreground">AR/AP management with aging analysis</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={addAROpen} onOpenChange={setAddAROpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Receivable
-              </Button>
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-2" />Add Receivable</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Accounts Receivable</DialogTitle>
-                <DialogDescription>Record a new receivable entry</DialogDescription>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Add Accounts Receivable</DialogTitle><DialogDescription>Record a new receivable entry</DialogDescription></DialogHeader>
               <form onSubmit={handleAddAR} className="space-y-4">
-                <div>
-                  <Label htmlFor="customerName">Customer Name</Label>
-                  <Input id="customerName" name="customerName" required />
-                </div>
+                <div><Label htmlFor="customerName">Customer Name</Label><Input id="customerName" name="customerName" required /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="amount">Amount</Label>
-                    <Input id="amount" name="amount" type="number" step="0.01" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="dueDate">Due Date</Label>
-                    <Input id="dueDate" name="dueDate" type="date" required />
-                  </div>
+                  <div><Label htmlFor="amount">Amount</Label><Input id="amount" name="amount" type="number" step="0.01" required /></div>
+                  <div><Label htmlFor="dueDate">Due Date</Label><Input id="dueDate" name="dueDate" type="date" required /></div>
                 </div>
-                <div>
-                  <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                  <Input id="invoiceNumber" name="invoiceNumber" />
-                </div>
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea id="notes" name="notes" />
-                </div>
+                <div><Label htmlFor="invoiceNumber">Invoice Number</Label><Input id="invoiceNumber" name="invoiceNumber" /></div>
+                <div><Label htmlFor="notes">Notes</Label><Textarea id="notes" name="notes" /></div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setAddAROpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createAR.isPending}>
-                    {createAR.isPending ? 'Creating...' : 'Create'}
-                  </Button>
+                  <Button type="submit" disabled={createAR.isPending}>{createAR.isPending ? 'Creating...' : 'Create'}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -1021,44 +484,21 @@ export default function Finance() {
 
           <Dialog open={addAPOpen} onOpenChange={setAddAPOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="border-red-300 text-red-600 hover:bg-red-50">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Payable
-              </Button>
+              <Button size="sm" variant="outline" className="border-red-300 text-red-600 hover:bg-red-50"><Plus className="w-4 h-4 mr-2" />Add Payable</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Accounts Payable</DialogTitle>
-                <DialogDescription>Record a new payable entry</DialogDescription>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Add Accounts Payable</DialogTitle><DialogDescription>Record a new payable entry</DialogDescription></DialogHeader>
               <form onSubmit={handleAddAP} className="space-y-4">
-                <div>
-                  <Label htmlFor="vendorName">Vendor Name</Label>
-                  <Input id="vendorName" name="vendorName" required />
-                </div>
+                <div><Label htmlFor="vendorName">Vendor Name</Label><Input id="vendorName" name="vendorName" required /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="amount">Amount</Label>
-                    <Input id="amount" name="amount" type="number" step="0.01" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="dueDate">Due Date</Label>
-                    <Input id="dueDate" name="dueDate" type="date" required />
-                  </div>
+                  <div><Label htmlFor="amount">Amount</Label><Input id="amount" name="amount" type="number" step="0.01" required /></div>
+                  <div><Label htmlFor="dueDate">Due Date</Label><Input id="dueDate" name="dueDate" type="date" required /></div>
                 </div>
-                <div>
-                  <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                  <Input id="invoiceNumber" name="invoiceNumber" />
-                </div>
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea id="notes" name="notes" />
-                </div>
+                <div><Label htmlFor="invoiceNumber">Invoice Number</Label><Input id="invoiceNumber" name="invoiceNumber" /></div>
+                <div><Label htmlFor="notes">Notes</Label><Textarea id="notes" name="notes" /></div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setAddAPOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createAP.isPending}>
-                    {createAP.isPending ? 'Creating...' : 'Create'}
-                  </Button>
+                  <Button type="submit" disabled={createAP.isPending}>{createAP.isPending ? 'Creating...' : 'Create'}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -1067,34 +507,25 @@ export default function Finance() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-emerald-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-emerald-500 rounded-lg">
-                <CreditCard className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-emerald-500 rounded-lg"><CreditCard className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Receivables</p>
-                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-                  {formatCurrency(arTotal, currency)}
-                </p>
+                <p className="text-2xl font-bold text-emerald-700">{formatCurrency(arTotal, currency)}</p>
                 <p className="text-xs text-muted-foreground">{arData.length} invoices pending</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-red-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-red-500 rounded-lg">
-                <Wallet className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-red-500 rounded-lg"><Wallet className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Payables</p>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-                  {formatCurrency(apTotal, currency)}
-                </p>
+                <p className="text-2xl font-bold text-red-700">{formatCurrency(apTotal, currency)}</p>
                 <p className="text-xs text-muted-foreground">{apData.length} bills pending</p>
               </div>
             </div>
@@ -1102,10 +533,8 @@ export default function Finance() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Aging Analysis Chart</CardTitle>
-        </CardHeader>
+      <Card className="border-0 shadow-sm">
+        <CardHeader><CardTitle className="text-lg">Aging Analysis Chart</CardTitle></CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -1124,100 +553,51 @@ export default function Finance() {
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-emerald-500" />
-              Accounts Receivable Aging
-            </CardTitle>
-          </CardHeader>
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><CreditCard className="w-5 h-5 text-emerald-500" />AR Aging</CardTitle></CardHeader>
           <CardContent>
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aging Bucket</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">%</TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader><TableRow><TableHead>Aging Bucket</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">%</TableHead></TableRow></TableHeader>
               <TableBody>
                 {agingData.map((row, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>
-                      {row.name}
-                    </TableCell>
+                    <TableCell className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>{row.name}</TableCell>
                     <TableCell className="text-right">{formatCurrency(row.ar, currency)}</TableCell>
-                    <TableCell className="text-right">
-                      {arTotal ? ((row.ar / arTotal) * 100).toFixed(1) : 0}%
-                    </TableCell>
+                    <TableCell className="text-right">{arTotal ? ((row.ar / arTotal) * 100).toFixed(1) : 0}%</TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="bg-muted/50 font-bold">
-                  <TableCell>Total</TableCell>
-                  <TableCell className="text-right">{formatCurrency(arTotal, currency)}</TableCell>
-                  <TableCell className="text-right">100%</TableCell>
-                </TableRow>
+                <TableRow className="bg-muted/50 font-bold"><TableCell>Total</TableCell><TableCell className="text-right">{formatCurrency(arTotal, currency)}</TableCell><TableCell className="text-right">100%</TableCell></TableRow>
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-red-500" />
-              Accounts Payable Aging
-            </CardTitle>
-          </CardHeader>
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Wallet className="w-5 h-5 text-red-500" />AP Aging</CardTitle></CardHeader>
           <CardContent>
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aging Bucket</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">%</TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader><TableRow><TableHead>Aging Bucket</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">%</TableHead></TableRow></TableHeader>
               <TableBody>
                 {agingData.map((row, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>
-                      {row.name}
-                    </TableCell>
+                    <TableCell className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>{row.name}</TableCell>
                     <TableCell className="text-right">{formatCurrency(row.ap, currency)}</TableCell>
-                    <TableCell className="text-right">
-                      {apTotal ? ((row.ap / apTotal) * 100).toFixed(1) : 0}%
-                    </TableCell>
+                    <TableCell className="text-right">{apTotal ? ((row.ap / apTotal) * 100).toFixed(1) : 0}%</TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="bg-muted/50 font-bold">
-                  <TableCell>Total</TableCell>
-                  <TableCell className="text-right">{formatCurrency(apTotal, currency)}</TableCell>
-                  <TableCell className="text-right">100%</TableCell>
-                </TableRow>
+                <TableRow className="bg-muted/50 font-bold"><TableCell>Total</TableCell><TableCell className="text-right">{formatCurrency(apTotal, currency)}</TableCell><TableCell className="text-right">100%</TableCell></TableRow>
               </TableBody>
             </Table>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Recent Receivables</CardTitle>
-        </CardHeader>
+      <Card className="border-0 shadow-sm">
+        <CardHeader><CardTitle className="text-lg">Recent Receivables</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Approval</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Invoice #</TableHead><TableHead>Customer</TableHead><TableHead>Due Date</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead><TableHead>Approval</TableHead><TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1227,28 +607,16 @@ export default function Finance() {
                   <TableCell>{ar.customerName}</TableCell>
                   <TableCell>{new Date(ar.dueDate).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">{formatCurrency(Number(ar.amount), currency)}</TableCell>
-                  <TableCell>
-                    <Badge variant={ar.status === 'paid' ? 'default' : ar.status === 'pending' ? 'secondary' : 'destructive'}>
-                      {ar.status}
-                    </Badge>
-                  </TableCell>
+                  <TableCell><Badge variant={ar.status === 'paid' ? 'default' : ar.status === 'pending' ? 'secondary' : 'destructive'}>{ar.status}</Badge></TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Badge className={
-                        ar.approval_status === 'approved' ? 'bg-green-100 text-green-800' :
-                        ar.approval_status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }>
+                      <Badge className={ar.approval_status === 'approved' ? 'bg-green-100 text-green-800' : ar.approval_status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
                         {ar.approval_status === 'pending_approval' ? 'Pending' : ar.approval_status || 'approved'}
                       </Badge>
                       {ar.approval_status === 'pending_approval' && (currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
                         <div className="flex gap-1 ml-1">
-                          <Button size="sm" variant="ghost" className="h-6 px-2 text-green-600" onClick={() => approveARMutation.mutate({ id: ar.id })}>
-                            <CheckCircle className="w-3 h-3" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-6 px-2 text-red-600" onClick={() => { setRejectTarget({ id: ar.id, type: 'ar' }); setRejectDialogOpen(true); }}>
-                            <AlertTriangle className="w-3 h-3" />
-                          </Button>
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-green-600" onClick={() => approveARMutation.mutate({ id: ar.id })}><CheckCircle className="w-3 h-3" /></Button>
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-red-600" onClick={() => { setRejectTarget({ id: ar.id, type: 'ar' }); setRejectDialogOpen(true); }}><AlertTriangle className="w-3 h-3" /></Button>
                         </div>
                       )}
                     </div>
@@ -1258,21 +626,12 @@ export default function Finance() {
                       <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => {
                         setPaymentTarget({ id: ar.id, type: 'ar', name: ar.customerName, amount: Number(ar.amount), paidAmount: Number(ar.paidAmount || 0) });
                         setPaymentDialogOpen(true);
-                      }}>
-                        <Banknote className="w-3 h-3 mr-1" />
-                        Record Payment
-                      </Button>
+                      }}><Banknote className="w-3 h-3 mr-1" />Record Payment</Button>
                     )}
                   </TableCell>
                 </TableRow>
               ))}
-              {arData.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    No receivables found. Click "Add Receivable" to create one.
-                  </TableCell>
-                </TableRow>
-              )}
+              {arData.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No receivables found.</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>
@@ -1282,9 +641,7 @@ export default function Finance() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>
-              {paymentTarget && `Recording payment for ${paymentTarget.name} - Remaining: ${formatCurrency(paymentTarget.amount - paymentTarget.paidAmount, currency)}`}
-            </DialogDescription>
+            <DialogDescription>{paymentTarget && `Recording payment for ${paymentTarget.name} - Remaining: ${formatCurrency(paymentTarget.amount - paymentTarget.paidAmount, currency)}`}</DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => {
             e.preventDefault();
@@ -1302,38 +659,20 @@ export default function Finance() {
             } as any);
           }} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="paymentDate">Payment Date</Label>
-                <Input id="paymentDate" name="paymentDate" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
-              </div>
-              <div>
-                <Label htmlFor="amount">Amount ({paymentTarget && `max: ${formatCurrency(paymentTarget.amount - paymentTarget.paidAmount, currency)}`})</Label>
-                <Input id="amount" name="amount" type="number" step="0.01" max={paymentTarget ? paymentTarget.amount - paymentTarget.paidAmount : undefined} required />
-              </div>
+              <div><Label htmlFor="paymentDate">Payment Date</Label><Input id="paymentDate" name="paymentDate" type="date" defaultValue={new Date().toISOString().split('T')[0]} required /></div>
+              <div><Label htmlFor="amount">Amount</Label><Input id="amount" name="amount" type="number" step="0.01" max={paymentTarget ? paymentTarget.amount - paymentTarget.paidAmount : undefined} required /></div>
             </div>
             <div>
               <Label htmlFor="paymentMethod">Payment Method</Label>
               <select id="paymentMethod" name="paymentMethod" className="w-full border rounded px-3 py-2 bg-background" required>
-                <option value="cash">Cash</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="check">Check</option>
-                <option value="mobile_payment">Mobile Payment</option>
+                <option value="cash">Cash</option><option value="bank_transfer">Bank Transfer</option><option value="check">Check</option><option value="mobile_payment">Mobile Payment</option>
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="referenceNumber">Reference Number</Label>
-                <Input id="referenceNumber" name="referenceNumber" />
-              </div>
-              <div>
-                <Label htmlFor="bankAccount">Bank Account</Label>
-                <Input id="bankAccount" name="bankAccount" />
-              </div>
+              <div><Label htmlFor="referenceNumber">Reference Number</Label><Input id="referenceNumber" name="referenceNumber" /></div>
+              <div><Label htmlFor="bankAccount">Bank Account</Label><Input id="bankAccount" name="bankAccount" /></div>
             </div>
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea id="notes" name="notes" />
-            </div>
+            <div><Label htmlFor="notes">Notes</Label><Textarea id="notes" name="notes" /></div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => { setPaymentDialogOpen(false); setPaymentTarget(null); }}>Cancel</Button>
               <Button type="submit" disabled={recordARPaymentMutation.isPending || recordAPPaymentMutation.isPending}>
@@ -1346,15 +685,9 @@ export default function Finance() {
 
       <Dialog open={rejectDialogOpen} onOpenChange={(open) => { setRejectDialogOpen(open); if (!open) { setRejectTarget(null); setRejectReason(''); } }}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Entry</DialogTitle>
-            <DialogDescription>Provide a reason for rejection</DialogDescription>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Reject Entry</DialogTitle><DialogDescription>Provide a reason for rejection</DialogDescription></DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="rejectReason">Rejection Reason</Label>
-              <Textarea id="rejectReason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required />
-            </div>
+            <div><Label htmlFor="rejectReason">Rejection Reason</Label><Textarea id="rejectReason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required /></div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setRejectDialogOpen(false); setRejectTarget(null); setRejectReason(''); }}>Cancel</Button>
               <Button variant="destructive" disabled={!rejectReason || rejectARMutation.isPending || rejectAPMutation.isPending} onClick={() => {
@@ -1375,25 +708,21 @@ export default function Finance() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Financial Forecasting</h2>
+          <h2 className="text-2xl font-bold text-[#0d2137]">Financial Forecasting</h2>
           <p className="text-muted-foreground">6-month revenue and profit projections based on historical trends</p>
         </div>
-        <Button variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Recalculate
-        </Button>
+        <Button variant="outline" size="sm"><RefreshCw className="w-4 h-4 mr-2" />Recalculate</Button>
       </div>
 
-      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+      <Card className="border-amber-200 bg-amber-50/50">
         <CardContent className="pt-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
             <div>
-              <p className="font-medium text-amber-800 dark:text-amber-200">Forecast Methodology</p>
-              <p className="text-sm text-amber-700 dark:text-amber-300">
+              <p className="font-medium text-amber-800">Forecast Methodology</p>
+              <p className="text-sm text-amber-700">
                 Projections are calculated using weighted moving average based on the last 3 months of actual data. 
-                COGS is estimated at 59% of revenue, consistent with historical patterns. 
-                These forecasts are for planning purposes only and should be validated with market conditions.
+                COGS is estimated at 59% of revenue. These forecasts are for planning purposes only.
               </p>
             </div>
           </div>
@@ -1401,50 +730,36 @@ export default function Finance() {
       </Card>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-blue-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500 rounded-lg">
-                <Target className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-blue-500 rounded-lg"><Target className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Projected Revenue (6mo)</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-                  {formatCurrency(forecastData.filter(d => d.projected).reduce((sum, d) => sum + d.revenue, 0), currency)}
-                </p>
+                <p className="text-2xl font-bold text-blue-700">{formatCurrency(forecastData.filter(d => d.projected).reduce((sum, d) => sum + d.revenue, 0), currency)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-emerald-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-emerald-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-emerald-500 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-emerald-500 rounded-lg"><TrendingUp className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Projected Gross Profit (6mo)</p>
-                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-                  {formatCurrency(forecastData.filter(d => d.projected).reduce((sum, d) => sum + d.grossProfit, 0), currency)}
-                </p>
+                <p className="text-2xl font-bold text-emerald-700">{formatCurrency(forecastData.filter(d => d.projected).reduce((sum, d) => sum + d.grossProfit, 0), currency)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-violet-200">
+        <Card className="border-0 shadow-sm border-l-4 border-l-violet-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-violet-500 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-white" />
-              </div>
+              <div className="p-3 bg-violet-500 rounded-lg"><BarChart3 className="w-6 h-6 text-white" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">Avg Monthly Growth Rate</p>
-                <p className="text-2xl font-bold text-violet-700 dark:text-violet-400">
-                  {monthlyTrend.length >= 2 ? 
-                    `${(((monthlyTrend[monthlyTrend.length - 1]?.revenue || 0) / (monthlyTrend[monthlyTrend.length - 2]?.revenue || 1) - 1) * 100).toFixed(1)}%` 
-                    : 'N/A'}
+                <p className="text-2xl font-bold text-violet-700">
+                  {monthlyTrend.length >= 2 ? `${(((monthlyTrend[monthlyTrend.length - 1]?.revenue || 0) / (monthlyTrend[monthlyTrend.length - 2]?.revenue || 1) - 1) * 100).toFixed(1)}%` : 'N/A'}
                 </p>
               </div>
             </div>
@@ -1452,7 +767,7 @@ export default function Finance() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Revenue Forecast Chart</CardTitle>
           <CardDescription>Historical data vs projected values (dashed line indicates forecast)</CardDescription>
@@ -1466,58 +781,27 @@ export default function Finance() {
                 <YAxis tickFormatter={(v) => formatCompact(v)} />
                 <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
                 <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  name="Revenue"
-                  fill="#3B82F620" 
-                  stroke="#3B82F6" 
-                  strokeWidth={2}
-                  strokeDasharray={(d: any) => d.projected ? "5 5" : "0"}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="grossProfit" 
-                  name="Gross Profit"
-                  stroke="#10B981" 
-                  strokeWidth={2} 
-                  dot={{ r: 4 }}
-                />
+                <Area type="monotone" dataKey="revenue" name="Revenue" fill="#3B82F620" stroke="#3B82F6" strokeWidth={2} />
+                <Line type="monotone" dataKey="grossProfit" name="Gross Profit" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Forecast Details</CardTitle>
-        </CardHeader>
+      <Card className="border-0 shadow-sm">
+        <CardHeader><CardTitle className="text-lg">Forecast Details</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Month</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
-                <TableHead className="text-right">COGS</TableHead>
-                <TableHead className="text-right">Gross Profit</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
+            <TableHeader><TableRow><TableHead>Month</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">COGS</TableHead><TableHead className="text-right">Gross Profit</TableHead><TableHead>Type</TableHead></TableRow></TableHeader>
             <TableBody>
               {forecastData.map((row, idx) => (
-                <TableRow key={idx} className={row.projected ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}>
+                <TableRow key={idx} className={row.projected ? 'bg-blue-50/50' : ''}>
                   <TableCell className="font-medium">{row.month}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.revenue, currency)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(row.cogs, currency)}</TableCell>
                   <TableCell className="text-right text-emerald-600">{formatCurrency(row.grossProfit, currency)}</TableCell>
-                  <TableCell>
-                    {row.projected ? (
-                      <Badge className="bg-blue-100 text-blue-800">Projected</Badge>
-                    ) : (
-                      <Badge className="bg-green-100 text-green-800">Actual</Badge>
-                    )}
-                  </TableCell>
+                  <TableCell>{row.projected ? <Badge className="bg-blue-100 text-blue-800">Projected</Badge> : <Badge className="bg-green-100 text-green-800">Actual</Badge>}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -1527,29 +811,21 @@ export default function Finance() {
     </div>
   );
 
-  const BUDGET_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
-
   const renderBudgetTab = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Budget vs Actual</h2>
+          <h2 className="text-2xl font-bold text-[#0d2137]">Budget vs Actual</h2>
           <p className="text-muted-foreground">Budget variance analysis for {budgetMonth}</p>
         </div>
         <div className="flex gap-2 items-center">
           <Input type="month" value={budgetMonth} onChange={(e) => setBudgetMonth(e.target.value)} className="w-44" />
           <Dialog open={addBudgetOpen} onOpenChange={setAddBudgetOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Budget
-              </Button>
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-2" />Add Budget</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Budget Entry</DialogTitle>
-                <DialogDescription>Create a new budget line item</DialogDescription>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Add Budget Entry</DialogTitle><DialogDescription>Create a new budget line item</DialogDescription></DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
@@ -1562,35 +838,20 @@ export default function Finance() {
                 });
               }} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="monthYear">Month</Label>
-                    <Input id="monthYear" name="monthYear" type="month" defaultValue={budgetMonth} required />
-                  </div>
+                  <div><Label htmlFor="monthYear">Month</Label><Input id="monthYear" name="monthYear" type="month" defaultValue={budgetMonth} required /></div>
                   <div>
                     <Label htmlFor="type">Type</Label>
                     <select id="type" name="type" className="w-full border rounded px-3 py-2 bg-background" required>
-                      <option value="income">Income</option>
-                      <option value="expenditure">Expenditure</option>
+                      <option value="income">Income</option><option value="expenditure">Expenditure</option>
                     </select>
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Input id="category" name="category" required />
-                </div>
-                <div>
-                  <Label htmlFor="budgetAmount">Budget Amount</Label>
-                  <Input id="budgetAmount" name="budgetAmount" type="number" step="0.01" required />
-                </div>
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea id="notes" name="notes" />
-                </div>
+                <div><Label htmlFor="category">Category</Label><Input id="category" name="category" required /></div>
+                <div><Label htmlFor="budgetAmount">Budget Amount</Label><Input id="budgetAmount" name="budgetAmount" type="number" step="0.01" required /></div>
+                <div><Label htmlFor="notes">Notes</Label><Textarea id="notes" name="notes" /></div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setAddBudgetOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={createBudget.isPending}>
-                    {createBudget.isPending ? 'Creating...' : 'Create'}
-                  </Button>
+                  <Button type="submit" disabled={createBudget.isPending}>{createBudget.isPending ? 'Creating...' : 'Create'}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -1599,47 +860,19 @@ export default function Finance() {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <Card className="border-t-4 border-t-blue-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
-            <p className="text-2xl font-bold text-blue-600">{formatCurrency(Number(budgetVariance?.summary?.totalBudget || 0), currency)}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-t-4 border-t-emerald-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Total Actual</p>
-            <p className="text-2xl font-bold text-emerald-600">{formatCurrency(Number(budgetVariance?.summary?.totalActual || 0), currency)}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-t-4 border-t-amber-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Total Variance</p>
-            <p className={`text-2xl font-bold ${Number(budgetVariance?.summary?.totalVariance || 0) >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
-              {formatCurrency(Number(budgetVariance?.summary?.totalVariance || 0), currency)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-t-4 border-t-red-500">
-          <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Over Budget</p>
-            <p className="text-2xl font-bold text-red-600">{budgetVariance?.summary?.overBudgetCount || 0} items</p>
-          </CardContent>
-        </Card>
+        <Card className="border-0 shadow-sm border-t-4 border-t-blue-500"><CardContent className="pt-4"><p className="text-xs text-muted-foreground mb-1">Total Budget</p><p className="text-2xl font-bold text-blue-600">{formatCurrency(Number(budgetVariance?.summary?.totalBudget || 0), currency)}</p></CardContent></Card>
+        <Card className="border-0 shadow-sm border-t-4 border-t-emerald-500"><CardContent className="pt-4"><p className="text-xs text-muted-foreground mb-1">Total Actual</p><p className="text-2xl font-bold text-emerald-600">{formatCurrency(Number(budgetVariance?.summary?.totalActual || 0), currency)}</p></CardContent></Card>
+        <Card className="border-0 shadow-sm border-t-4 border-t-amber-500"><CardContent className="pt-4"><p className="text-xs text-muted-foreground mb-1">Total Variance</p><p className={`text-2xl font-bold ${Number(budgetVariance?.summary?.totalVariance || 0) >= 0 ? 'text-amber-600' : 'text-red-600'}`}>{formatCurrency(Number(budgetVariance?.summary?.totalVariance || 0), currency)}</p></CardContent></Card>
+        <Card className="border-0 shadow-sm border-t-4 border-t-red-500"><CardContent className="pt-4"><p className="text-xs text-muted-foreground mb-1">Over Budget</p><p className="text-2xl font-bold text-red-600">{budgetVariance?.summary?.overBudgetCount || 0} items</p></CardContent></Card>
       </div>
 
       {budgetVariance?.items && budgetVariance.items.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Budget vs Actual by Category</CardTitle>
-          </CardHeader>
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="text-lg">Budget vs Actual by Category</CardTitle></CardHeader>
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={budgetVariance.items.map((item: any) => ({
-                  category: item.category,
-                  budget: Number(item.budgetAmount),
-                  actual: Number(item.actual),
-                }))}>
+                <BarChart data={budgetVariance.items.map((item: any) => ({ category: item.category, budget: Number(item.budgetAmount), actual: Number(item.actual) }))}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="category" tick={{ fontSize: 10 }} />
                   <YAxis tickFormatter={(v) => formatCompact(v)} />
@@ -1654,59 +887,32 @@ export default function Finance() {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Variance Details</CardTitle>
-        </CardHeader>
+      <Card className="border-0 shadow-sm">
+        <CardHeader><CardTitle className="text-lg">Variance Details</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Category</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Budget</TableHead>
-                <TableHead className="text-right">Actual</TableHead>
-                <TableHead className="text-right">Variance</TableHead>
-                <TableHead className="text-right">% Used</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+            <TableHeader><TableRow><TableHead>Category</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Actual</TableHead><TableHead className="text-right">Variance</TableHead><TableHead className="text-right">% Used</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
             <TableBody>
               {budgetVariance?.items?.map((item: any) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.category}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.type === 'income' ? 'default' : 'secondary'}>{item.type}</Badge>
-                  </TableCell>
+                  <TableCell><Badge variant={item.type === 'income' ? 'default' : 'secondary'}>{item.type}</Badge></TableCell>
                   <TableCell className="text-right">{formatCurrency(Number(item.budgetAmount), currency)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(Number(item.actual), currency)}</TableCell>
-                  <TableCell className={`text-right font-medium ${Number(item.variance) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {formatCurrency(Number(item.variance), currency)}
-                  </TableCell>
+                  <TableCell className={`text-right font-medium ${Number(item.variance) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{formatCurrency(Number(item.variance), currency)}</TableCell>
                   <TableCell className="text-right">{item.percentUsed}%</TableCell>
                   <TableCell>
-                    <Badge className={
-                      item.status === 'on_track' ? 'bg-green-100 text-green-800' :
-                      item.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }>
+                    <Badge className={item.status === 'on_track' ? 'bg-green-100 text-green-800' : item.status === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
                       {item.status === 'on_track' ? 'On Track' : item.status === 'warning' ? 'Warning' : 'Over Budget'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="ghost" className="h-7 text-xs text-red-600" onClick={() => deleteBudget.mutate({ id: item.id })}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs text-red-600" onClick={() => deleteBudget.mutate({ id: item.id })}><Trash2 className="w-3 h-3" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
               {(!budgetVariance?.items || budgetVariance.items.length === 0) && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                    No budget entries for {budgetMonth}. Click "Add Budget" to create one.
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No budget entries for {budgetMonth}.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -1715,10 +921,23 @@ export default function Finance() {
     </div>
   );
 
+  const SIDEBAR_TABS = [
+    { key: 'overview', label: 'Overview', icon: BarChart3, section: 'main' },
+    { key: 'balanceSheet', label: 'Balance Sheet', icon: Wallet, section: 'main' },
+    { key: 'cashFlow', label: 'Cash Flow', icon: DollarSign, section: 'main' },
+    { key: 'aging', label: 'AR-AP', icon: Clock, section: 'main', badge: pendingApprovals?.totalPending },
+    { key: 'forecasting', label: 'Forecasting', icon: TrendingUp, section: 'main' },
+    { key: 'budget', label: 'Budget', icon: Target, section: 'main' },
+    { key: 'multiCurrency', label: 'Multi-Currency', icon: Globe, section: 'advanced' },
+    { key: 'taxCompliance', label: 'Tax Compliance', icon: Scale, section: 'advanced' },
+    { key: 'ifrs', label: 'IFRS Reporting', icon: BookOpen, section: 'advanced' },
+    { key: 'anomaly', label: 'AI Anomaly', icon: Brain, section: 'advanced' },
+  ];
+
   return (
     <DashboardLayout>
       <div className="flex h-full">
-        <div className="w-52 border-r bg-muted/30 p-4 space-y-2">
+        <div className="w-52 border-r bg-muted/30 p-4 space-y-1 overflow-auto">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-white" />
@@ -1728,111 +947,57 @@ export default function Finance() {
               <p className="text-[10px] text-muted-foreground">Dashboard</p>
             </div>
           </div>
-          
-          <Button 
-            variant={activeTab === 'overview' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start text-sm"
-            onClick={() => setActiveTab('overview')}
-          >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Overview
-          </Button>
-          <Button 
-            variant={activeTab === 'balanceSheet' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start text-sm"
-            onClick={() => setActiveTab('balanceSheet')}
-          >
-            <Wallet className="w-4 h-4 mr-2" />
-            Balance Sheet
-          </Button>
-          <Button 
-            variant={activeTab === 'cashFlow' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start text-sm"
-            onClick={() => setActiveTab('cashFlow')}
-          >
-            <DollarSign className="w-4 h-4 mr-2" />
-            Cash Flow
-          </Button>
-          <Button 
-            variant={activeTab === 'aging' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start text-sm"
-            onClick={() => setActiveTab('aging')}
-          >
-            <Clock className="w-4 h-4 mr-2" />
-            AR-AP
-            {(pendingApprovals?.totalPending || 0) > 0 && (
-              <Badge className="ml-auto bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals?.totalPending}</Badge>
-            )}
-          </Button>
-          <Button 
-            variant={activeTab === 'forecasting' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start text-sm"
-            onClick={() => setActiveTab('forecasting')}
-          >
-            <TrendingUp className="w-4 h-4 mr-2" />
-            Forecasting
-          </Button>
-          <Button 
-            variant={activeTab === 'budget' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start text-sm"
-            onClick={() => setActiveTab('budget')}
-          >
-            <Target className="w-4 h-4 mr-2" />
-            Budget
-          </Button>
+
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 mb-1">Core</p>
+          {SIDEBAR_TABS.filter(t => t.section === 'main').map(tab => (
+            <Button
+              key={tab.key}
+              variant={activeTab === tab.key ? 'secondary' : 'ghost'}
+              className="w-full justify-start text-sm"
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <tab.icon className="w-4 h-4 mr-2" />
+              {tab.label}
+              {tab.badge && tab.badge > 0 && (
+                <Badge className="ml-auto bg-amber-500 text-white text-[10px] px-1.5 py-0">{tab.badge}</Badge>
+              )}
+            </Button>
+          ))}
+
+          <div className="h-px bg-border my-3" />
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 mb-1">Advanced</p>
+          {SIDEBAR_TABS.filter(t => t.section === 'advanced').map(tab => (
+            <Button
+              key={tab.key}
+              variant={activeTab === tab.key ? 'secondary' : 'ghost'}
+              className="w-full justify-start text-sm"
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <tab.icon className="w-4 h-4 mr-2" />
+              {tab.label}
+            </Button>
+          ))}
 
           <div className="pt-6 border-t mt-4">
             <p className="text-xs text-muted-foreground mb-2">Period</p>
             <div className="flex gap-1">
-              <Button 
-                size="sm" 
-                variant={period === 'mtd' ? 'default' : 'outline'}
-                onClick={() => setPeriod('mtd')}
-                className="flex-1 text-xs"
-              >
-                MTD
-              </Button>
-              <Button 
-                size="sm" 
-                variant={period === 'ytd' ? 'default' : 'outline'}
-                onClick={() => setPeriod('ytd')}
-                className="flex-1 text-xs"
-              >
-                YTD
-              </Button>
-            </div>
-          </div>
-
-          <div className="pt-4">
-            <p className="text-xs text-muted-foreground mb-2">Compare</p>
-            <div className="flex gap-1">
-              <Button 
-                size="sm" 
-                variant={benchmark === 'budget' ? 'default' : 'outline'}
-                onClick={() => setBenchmark('budget')}
-                className="flex-1 text-xs"
-              >
-                Budget
-              </Button>
-              <Button 
-                size="sm" 
-                variant={benchmark === 'lastYear' ? 'default' : 'outline'}
-                onClick={() => setBenchmark('lastYear')}
-                className="flex-1 text-xs"
-              >
-                Last Year
-              </Button>
+              <Button size="sm" variant={period === 'mtd' ? 'default' : 'outline'} onClick={() => setPeriod('mtd')} className="flex-1 text-xs">MTD</Button>
+              <Button size="sm" variant={period === 'ytd' ? 'default' : 'outline'} onClick={() => setPeriod('ytd')} className="flex-1 text-xs">YTD</Button>
             </div>
           </div>
         </div>
 
         <div className="flex-1 p-6 space-y-6 overflow-auto">
-          {activeTab === 'overview' && renderOverviewTab()}
+          {activeTab === 'overview' && <OverviewTab stats={stats} monthlyTrend={monthlyTrend} budgetVariance={budgetVariance} formatCompact={formatCompact} />}
           {activeTab === 'balanceSheet' && renderBalanceSheetTab()}
           {activeTab === 'cashFlow' && renderCashFlowTab()}
           {activeTab === 'aging' && renderAgingTab()}
           {activeTab === 'forecasting' && renderForecastingTab()}
           {activeTab === 'budget' && renderBudgetTab()}
+          {activeTab === 'multiCurrency' && <MultiCurrencyTab />}
+          {activeTab === 'taxCompliance' && <TaxComplianceTab stats={stats} monthlyTrend={monthlyTrend} />}
+          {activeTab === 'ifrs' && <IFRSTab stats={stats} balanceSheet={balanceSheet} monthlyTrend={monthlyTrend} />}
+          {activeTab === 'anomaly' && <AnomalyDetectionTab stats={stats} monthlyTrend={monthlyTrend} arData={arData} apData={apData} />}
         </div>
 
         {activeTab === 'overview' && (
@@ -1840,45 +1005,25 @@ export default function Finance() {
             <div>
               <p className="text-xs text-muted-foreground mb-1">Showing data for:</p>
               <div className="flex items-center gap-2">
-                <select className="text-sm border rounded px-2 py-1 bg-background flex-1">
-                  <option>Last</option>
-                  <option>This</option>
-                </select>
+                <select className="text-sm border rounded px-2 py-1 bg-background flex-1"><option>Last</option><option>This</option></select>
                 <input type="number" defaultValue={period === 'ytd' ? 12 : 1} className="w-12 text-sm border rounded px-2 py-1 bg-background" />
-                <select className="text-sm border rounded px-2 py-1 bg-background flex-1">
-                  <option>{period === 'ytd' ? 'Months' : 'Month'}</option>
-                  <option>Quarters</option>
-                  <option>Years</option>
-                </select>
+                <select className="text-sm border rounded px-2 py-1 bg-background flex-1"><option>{period === 'ytd' ? 'Months' : 'Month'}</option><option>Quarters</option><option>Years</option></select>
               </div>
               <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                 <Calendar className="w-3 h-3" />
-                <span>{period === 'ytd' ? '1/1/2026 - 1/29/2026' : '1/1/2026 - 1/29/2026'}</span>
+                <span>{period === 'ytd' ? '1/1/2026 - 12/31/2026' : '1/1/2026 - 1/31/2026'}</span>
               </div>
             </div>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Income Statement</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">Income Statement</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {incomeStatement?.items?.map((item, idx) => (
                   <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span>{item.name}</span>
-                      <span>{formatCompact(item.value)}</span>
-                    </div>
+                    <div className="flex justify-between text-xs"><span>{item.name}</span><span>{formatCompact(item.value)}</span></div>
                     <div className="h-3 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          item.name === 'Revenue' ? 'bg-blue-500' :
-                          item.name === 'COGS' ? 'bg-red-400' :
-                          item.name === 'Gross Profit' ? 'bg-emerald-400' :
-                          item.name === 'OPEX' ? 'bg-amber-400' :
-                          'bg-violet-400'
-                        }`}
-                        style={{ width: `${Math.min(100, Math.abs(item.percentage))}%` }}
-                      />
+                      <div className={`h-full ${item.name === 'Revenue' ? 'bg-blue-500' : item.name === 'COGS' ? 'bg-red-400' : item.name === 'Gross Profit' ? 'bg-emerald-400' : item.name === 'OPEX' ? 'bg-amber-400' : 'bg-violet-400'}`}
+                        style={{ width: `${Math.min(100, Math.abs(item.percentage))}%` }} />
                     </div>
                   </div>
                 ))}
@@ -1886,49 +1031,19 @@ export default function Finance() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Key Ratios</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">Key Ratios</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Current Ratio</span>
-                  <span className="font-medium">
-                    {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Quick Ratio</span>
-                  <span className="font-medium">
-                    {(((stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0)) / (stats?.totalLiabilities || 1)).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Debt to Equity</span>
-                  <span className="font-medium">
-                    {((stats?.totalLiabilities || 0) / Math.max(1, (stats?.totalAssets || 0) - (stats?.totalLiabilities || 0))).toFixed(2)}
-                  </span>
-                </div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Current Ratio</span><span className="font-medium">{((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Quick Ratio</span><span className="font-medium">{(((stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0)) / (stats?.totalLiabilities || 1)).toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Debt to Equity</span><span className="font-medium">{((stats?.totalLiabilities || 0) / Math.max(1, (stats?.totalAssets || 0) - (stats?.totalLiabilities || 0))).toFixed(2)}</span></div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Smart Insights</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">Smart Insights</CardTitle></CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-3">
-                <p>
-                  <span className="text-emerald-600 font-medium">Gross Profit Margin</span> is at {stats?.grossProfitMargin?.toFixed(1) || 0}%, 
-                  {(stats?.grossProfitMargin || 0) > 30 ? ' above' : ' below'} the industry average of 30%.
-                </p>
-                <p>
-                  Your <span className="text-blue-600 font-medium">Current Ratio</span> of {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)} 
-                  indicates {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)) > 1.5 ? 'healthy liquidity' : 'potential liquidity concerns'}.
-                </p>
-                <p>
-                  Accounts Receivable aging shows <span className={`font-medium ${(arAging?.aging?.over90 || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                    {formatCurrency(arAging?.aging?.over90 || 0, currency)}
-                  </span> over 90 days.
-                </p>
+                <p><span className="text-emerald-600 font-medium">Gross Profit Margin</span> is at {stats?.grossProfitMargin?.toFixed(1) || 0}%, {(stats?.grossProfitMargin || 0) > 30 ? ' above' : ' below'} the industry average of 30%.</p>
+                <p>Your <span className="text-blue-600 font-medium">Current Ratio</span> of {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)).toFixed(2)} indicates {((stats?.totalAssets || 0) / (stats?.totalLiabilities || 1)) > 1.5 ? 'healthy liquidity' : 'potential liquidity concerns'}.</p>
               </CardContent>
             </Card>
           </div>
