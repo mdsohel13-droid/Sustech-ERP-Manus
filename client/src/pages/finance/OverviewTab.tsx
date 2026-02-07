@@ -212,63 +212,47 @@ function BudgetDonut({ label, percentage, budget, balance, color }: {
 }
 
 export default function OverviewTab({ stats, monthlyTrend, budgetVariance, formatCompact }: OverviewTabProps) {
-  const rawIncome = stats?.revenue || 0;
-  const rawExpenses = (stats?.cogs || 0) + (stats?.opex || 0);
-  const rawNetProfit = stats?.netProfit || 0;
-  const rawMargin = stats?.netProfitMargin || 0;
-  const rawCash = stats?.currentAssets?.cashBalance || 0;
-  const rawAR = stats?.currentAssets?.accountReceivables || 0;
-  const rawAP = stats?.currentLiabilities?.accountPayables || 0;
+  const totalIncome = stats?.revenue || 0;
+  const totalExpenses = (stats?.cogs || 0) + (stats?.opex || 0);
+  const netProfit = stats?.netProfit || 0;
+  const netProfitMarginVal = stats?.netProfitMargin || 0;
+  const cashAtEnd = stats?.currentAssets?.cashBalance || 0;
+  const totalAR = stats?.currentAssets?.accountReceivables || 0;
+  const totalAP = stats?.currentLiabilities?.accountPayables || 0;
 
-  const hasData = rawIncome > 0 || rawExpenses > 0 || rawNetProfit !== 0 || rawCash > 0;
+  const currentAssets = (stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0) + (stats?.currentAssets?.deposits || 0) + (stats?.currentAssets?.inventory || 0);
+  const currentLiabilities = (stats?.currentLiabilities?.wagesPayable || 0) + (stats?.currentLiabilities?.accountPayables || 0) + (stats?.currentLiabilities?.provisions || 0) + (stats?.currentLiabilities?.otherPayable || 0);
+  const quickAssets = (stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0);
+  const quickRatio = currentLiabilities > 0 ? quickAssets / currentLiabilities : 0;
+  const currentRatio = currentLiabilities > 0 ? currentAssets / currentLiabilities : 0;
 
-  const totalIncome = hasData ? rawIncome : 4719;
-  const totalExpenses = hasData ? rawExpenses : 3270;
-  const netProfit = hasData ? rawNetProfit : 629;
-  const netProfitMarginVal = hasData ? rawMargin : 13.3;
-  const cashAtEnd = hasData ? rawCash : 7684;
-  const totalAR = hasData ? rawAR : 609;
-  const totalAP = hasData ? rawAP : 538;
+  const prevMonth = monthlyTrend.length >= 2 ? monthlyTrend[monthlyTrend.length - 2] as any : null;
+  const prevMonthRevenue = prevMonth?.revenue || 0;
+  const prevMonthExpense = (prevMonth?.cogs || 0) + (prevMonth?.opex || 0);
+  const prevMonthNetProfit = prevMonth?.netProfit || 0;
+  const prevMonthCash = prevMonth?.cashBalance || 0;
+  const prevMonthAR = prevMonth?.accountReceivables || 0;
+  const prevMonthAP = prevMonth?.accountPayables || 0;
 
-  const currentAssets = hasData
-    ? (stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0) + (stats?.currentAssets?.deposits || 0) + (stats?.currentAssets?.inventory || 0)
-    : 9000;
-  const currentLiabilities = hasData
-    ? (stats?.currentLiabilities?.wagesPayable || 0) + (stats?.currentLiabilities?.accountPayables || 0) + (stats?.currentLiabilities?.provisions || 0) + (stats?.currentLiabilities?.otherPayable || 0)
-    : 2980;
-  const quickAssets = hasData
-    ? (stats?.currentAssets?.cashBalance || 0) + (stats?.currentAssets?.accountReceivables || 0)
-    : 3040;
-  const quickRatio = currentLiabilities > 0 ? quickAssets / currentLiabilities : 1.02;
-  const currentRatio = currentLiabilities > 0 ? currentAssets / currentLiabilities : 3.02;
+  const calcChange = (current: number, previous: number) =>
+    previous !== 0 ? ((current - previous) / Math.abs(previous)) * 100 : 0;
 
-  const prevMonthRevenue = monthlyTrend.length >= 2 ? (monthlyTrend[monthlyTrend.length - 2] as any)?.revenue || 0 : 0;
-  const prevMonthExpense = monthlyTrend.length >= 2 ? ((monthlyTrend[monthlyTrend.length - 2] as any)?.cogs || 0) + ((monthlyTrend[monthlyTrend.length - 2] as any)?.opex || 0) : 0;
-  const prevMonthNetProfit = monthlyTrend.length >= 2 ? (monthlyTrend[monthlyTrend.length - 2] as any)?.netProfit || 0 : 0;
-
-  const incomeChange = hasData && prevMonthRevenue > 0 ? ((rawIncome - prevMonthRevenue) / prevMonthRevenue) * 100 : 16.1;
-  const expenseChange = hasData && prevMonthExpense > 0 ? ((rawExpenses - prevMonthExpense) / prevMonthExpense) * 100 : 16.1;
-  const netProfitChange = hasData && prevMonthNetProfit !== 0 ? ((rawNetProfit - prevMonthNetProfit) / Math.abs(prevMonthNetProfit)) * 100 : -8.8;
-  const cashChange = hasData && monthlyTrend.length >= 2 ? 4.9 : 4.9;
-  const arChange = -5.1;
-  const apChange = -15.7;
+  const incomeChange = calcChange(totalIncome, prevMonthRevenue);
+  const expenseChange = calcChange(totalExpenses, prevMonthExpense);
+  const netProfitChange = calcChange(netProfit, prevMonthNetProfit);
+  const cashChange = calcChange(cashAtEnd, prevMonthCash);
+  const arChange = calcChange(totalAR, prevMonthAR);
+  const apChange = calcChange(totalAP, prevMonthAP);
 
   const budgetItems = budgetVariance?.items || [];
-  const budgetIncomeRaw = budgetItems.reduce((s: number, b: any) => b.type === 'income' ? s + parseFloat(b.budgetAmount || '0') : s, 0);
-  const budgetExpenseRaw = budgetItems.reduce((s: number, b: any) => b.type === 'expenditure' ? s + parseFloat(b.budgetAmount || '0') : s, 0);
+  const budgetIncomeTotal = budgetItems.reduce((s: number, b: any) => b.type === 'income' ? s + parseFloat(b.budgetAmount || '0') : s, 0);
+  const budgetExpenseTotal = budgetItems.reduce((s: number, b: any) => b.type === 'expenditure' ? s + parseFloat(b.budgetAmount || '0') : s, 0);
 
-  const budgetIncomeTotal = budgetIncomeRaw > 0 ? budgetIncomeRaw : (hasData ? Math.max(rawIncome * 1.065, 1) : 5000);
-  const budgetExpenseTotal = budgetExpenseRaw > 0 ? budgetExpenseRaw : (hasData ? Math.max(rawExpenses * 1.075, 1) : 3500);
+  const incomeBudgetPct = budgetIncomeTotal > 0 ? Math.min(100, (totalIncome / budgetIncomeTotal) * 100) : 0;
+  const expenseBudgetPct = budgetExpenseTotal > 0 ? Math.min(100, (totalExpenses / budgetExpenseTotal) * 100) : 0;
 
-  const incomeBudgetPct = hasData && rawIncome > 0
-    ? Math.min(100, (rawIncome / budgetIncomeTotal) * 100)
-    : 94;
-  const expenseBudgetPct = hasData && rawExpenses > 0
-    ? Math.min(100, (rawExpenses / budgetExpenseTotal) * 100)
-    : 93;
-
-  const incomeBudgetBalance = hasData ? rawIncome - budgetIncomeTotal : -281;
-  const expenseBudgetBalance = hasData ? rawExpenses - budgetExpenseTotal : -230;
+  const incomeBudgetBalance = totalIncome - budgetIncomeTotal;
+  const expenseBudgetBalance = totalExpenses - budgetExpenseTotal;
 
   const fmtNum = (n: number) => {
     const abs = Math.abs(n);
@@ -276,12 +260,7 @@ export default function OverviewTab({ stats, monthlyTrend, budgetVariance, forma
     return n < 0 ? `-${formatted}` : formatted;
   };
 
-  const fmtVal = (v: number) => fmtNum(v);
-
-  const displayIncomeChange = `${incomeChange.toFixed(1)}%`;
-  const displayExpenseChange = `${expenseChange.toFixed(1)}%`;
-  const displayNetProfitChange = `${netProfitChange.toFixed(1)}%`;
-  const displayCashChange = `${cashChange.toFixed(1)}%`;
+  const fmtPct = (v: number) => `${v.toFixed(1)}%`;
 
   return (
     <div className="bg-[#e8ecf1] p-5 rounded-2xl min-h-full">
@@ -291,13 +270,13 @@ export default function OverviewTab({ stats, monthlyTrend, budgetVariance, forma
 
       <div className="grid grid-cols-10 gap-3 mb-4">
         <div className="col-span-2 grid grid-rows-2 gap-3">
-          <KpiCard icon={<DollarIcon />} label="Total Income" value={fmtVal(totalIncome)} change={displayIncomeChange} subtitle="vs previous month" />
-          <KpiCard icon={<BarChartIcon />} label="Net Profit" value={fmtVal(netProfit)} change={displayNetProfitChange} subtitle="vs previous month" />
+          <KpiCard icon={<DollarIcon />} label="Total Income" value={fmtNum(totalIncome)} change={fmtPct(incomeChange)} subtitle="vs previous month" />
+          <KpiCard icon={<BarChartIcon />} label="Net Profit" value={fmtNum(netProfit)} change={fmtPct(netProfitChange)} subtitle="vs previous month" />
         </div>
 
         <div className="col-span-2 grid grid-rows-2 gap-3">
-          <KpiCard icon={<WalletIcon />} label="Total Expenses" value={fmtVal(totalExpenses)} change={displayExpenseChange} subtitle="vs previous month" />
-          <KpiCard icon={<BanknoteIcon />} label="Cash at end of month" value={fmtVal(cashAtEnd)} change={displayCashChange} subtitle="vs previous month" />
+          <KpiCard icon={<WalletIcon />} label="Total Expenses" value={fmtNum(totalExpenses)} change={fmtPct(expenseChange)} subtitle="vs previous month" />
+          <KpiCard icon={<BanknoteIcon />} label="Cash at end of month" value={fmtNum(cashAtEnd)} change={fmtPct(cashChange)} subtitle="vs previous month" />
         </div>
 
         <div className="col-span-2 flex items-center justify-center">
@@ -305,12 +284,12 @@ export default function OverviewTab({ stats, monthlyTrend, budgetVariance, forma
         </div>
 
         <div className="col-span-2 grid grid-rows-2 gap-3">
-          <KpiCard icon={<ReceivableIcon />} label="Accounts Receivable" value={fmtVal(totalAR)} change={`${arChange}%`} subtitle="vs previous month" />
+          <KpiCard icon={<ReceivableIcon />} label="Accounts Receivable" value={fmtNum(totalAR)} change={fmtPct(arChange)} subtitle="vs previous month" />
           <RatioCard icon={<GaugeIcon />} label="Quick Ratio" value={quickRatio.toFixed(2)} target="1 or higher" targetLabel="Quick Ratio Target" />
         </div>
 
         <div className="col-span-2 grid grid-rows-2 gap-3">
-          <KpiCard icon={<PayableIcon />} label="Accounts Payable" value={fmtVal(totalAP)} change={`${apChange}%`} subtitle="vs previous month" />
+          <KpiCard icon={<PayableIcon />} label="Accounts Payable" value={fmtNum(totalAP)} change={fmtPct(apChange)} subtitle="vs previous month" />
           <RatioCard icon={<StopwatchIcon />} label="Current Ratio" value={currentRatio.toFixed(2)} target="3 or higher" targetLabel="Current Ratio Target" />
         </div>
       </div>
@@ -325,7 +304,7 @@ export default function OverviewTab({ stats, monthlyTrend, budgetVariance, forma
                 <XAxis dataKey="month" tick={{ fontSize: 9, fill: '#0d2137' }} />
                 <YAxis tick={{ fontSize: 8, fill: '#0d2137' }} tickFormatter={(v) => formatCompact(v)} />
                 <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  formatter={(value: number, name: string) => [fmtVal(value), name === 'revenue' ? 'Total Income' : name === 'cogs' ? 'Total Expenses' : 'Net Profit']} />
+                  formatter={(value: number, name: string) => [fmtNum(value), name === 'revenue' ? 'Total Income' : name === 'cogs' ? 'Total Expenses' : 'Net Profit']} />
                 <Legend wrapperStyle={{ fontSize: 9, paddingTop: 4, color: '#0d2137' }} formatter={(v) => v === 'revenue' ? 'Total Income' : v === 'cogs' ? 'Total Expenses' : 'Net Profit'} />
                 <Bar dataKey="revenue" fill="#0d3b66" radius={[2, 2, 0, 0]} name="revenue" />
                 <Bar dataKey="cogs" fill="#5fa8d3" radius={[2, 2, 0, 0]} name="cogs" />
