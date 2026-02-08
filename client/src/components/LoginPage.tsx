@@ -39,7 +39,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-50 dark:via-gray-50 dark:to-slate-100 relative">
+    <div className="flex items-center justify-center min-h-screen bg-background relative">
       {switchable && toggleTheme && (
         <Button
           variant="ghost"
@@ -56,25 +56,25 @@ export function LoginPage() {
         </Button>
       )}
       <div className="w-full max-w-md p-4">
-        <Card className="bg-white border-slate-200 shadow-lg">
+        <Card className="shadow-lg">
           <CardHeader className="text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
               <LayoutDashboard className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-2xl text-slate-900">Sustech ERP</CardTitle>
-              <CardDescription className="text-slate-500">
+              <CardTitle className="text-2xl">Sustech ERP</CardTitle>
+              <CardDescription>
                 Sign in to access your business dashboard
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="password" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-slate-100">
-                <TabsTrigger value="password" className="text-slate-600 data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="password" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   Email & Password
                 </TabsTrigger>
-                <TabsTrigger value="oauth" className="text-slate-600 data-[state=active]:bg-primary data-[state=active]:text-white">
+                <TabsTrigger value="oauth" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   OAuth / Demo
                 </TabsTrigger>
               </TabsList>
@@ -82,38 +82,38 @@ export function LoginPage() {
               <TabsContent value="password" className="space-y-4 mt-4">
                 <form onSubmit={handleEmailLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-slate-700">Email</Label>
+                    <Label htmlFor="email">Email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="your@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+                        className="pl-10"
                         data-testid="login-email"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-slate-700">Password</Label>
+                    <Label htmlFor="password">Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+                        className="pl-10 pr-10"
                         data-testid="login-password"
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-slate-700"
+                        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -148,7 +148,7 @@ export function LoginPage() {
                 >
                   Sign in with OAuth
                 </Button>
-                <p className="text-xs text-slate-500 text-center mt-4">
+                <p className="text-xs text-muted-foreground text-center mt-4">
                   Use your OAuth account to sign in securely
                 </p>
               </TabsContent>
@@ -156,7 +156,7 @@ export function LoginPage() {
           </CardContent>
         </Card>
         
-        <p className="text-center text-sm text-slate-500 mt-4">
+        <p className="text-center text-sm text-muted-foreground mt-4">
           Sustech ERP workspace V1.0
         </p>
       </div>
