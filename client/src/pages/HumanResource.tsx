@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -527,85 +528,102 @@ export default function HumanResource() {
         )}
       </div>
 
-      {/* Key Metrics - Colorful Gradient Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {/* Total Users - Blue Gradient */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
-          <div className="absolute top-3 right-3 opacity-20">
-            <Users className="h-12 w-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-100 flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Total Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-100" />
-              <span className="text-3xl font-bold">{allUsers?.length || 0}</span>
+      {/* Key Metrics - Smart Chart KPI Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Stacked Bar - Users by Role */}
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" /> Users by Role
+            </p>
+            <div style={{ width: '100%', height: 120 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[{
+                    name: 'Users',
+                    admins: allUsers?.filter((u: any) => u.role === 'admin').length || 0,
+                    regular: (allUsers?.length || 0) - (allUsers?.filter((u: any) => u.role === 'admin').length || 0),
+                  }]}
+                  layout="vertical"
+                  margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
+                >
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="name" hide />
+                  <Tooltip
+                    formatter={(value: number, name: string) => [value, name === 'admins' ? 'Admins' : 'Regular']}
+                    contentStyle={{ fontSize: 12 }}
+                  />
+                  <Bar dataKey="regular" stackId="a" fill="#2563EB" radius={[4, 0, 0, 4]} name="regular" />
+                  <Bar dataKey="admins" stackId="a" fill="#F59E0B" radius={[0, 4, 4, 0]} name="admins" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-            <p className="text-xs text-blue-100 mt-1">System users</p>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="flex items-center gap-1 text-xs"><span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: '#2563EB' }} /> Regular</span>
+              <span className="flex items-center gap-1 text-xs"><span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: '#F59E0B' }} /> Admins</span>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Admins - Amber Gradient */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-amber-400 to-amber-500 text-white border-0 shadow-lg">
-          <div className="absolute top-3 right-3 opacity-20">
-            <Award className="h-12 w-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-amber-100 flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Admins
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-amber-100" />
-              <span className="text-3xl font-bold">{allUsers?.filter((u: any) => u.role === 'admin').length || 0}</span>
+        {/* Gauge Donut - Pending Leaves */}
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+              <ClipboardList className="h-3.5 w-3.5" /> Pending Leaves
+            </p>
+            <div style={{ width: '100%', height: 120 }} className="relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Pending', value: hrStats?.pendingLeaves || 0 },
+                      { name: 'Rest', value: Math.max((allUsers?.length || 1) - (hrStats?.pendingLeaves || 0), 0) },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={32}
+                    outerRadius={48}
+                    startAngle={90}
+                    endAngle={-270}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    <Cell fill="#F43F5E" />
+                    <Cell fill="#F1F5F9" />
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [value, name === 'Pending' ? 'Pending' : 'Remaining']}
+                    contentStyle={{ fontSize: 12 }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold" style={{ color: '#F43F5E' }}>{hrStats?.pendingLeaves || 0}</span>
+              </div>
             </div>
-            <p className="text-xs text-amber-100 mt-1">Full access users</p>
+            <p className="text-xs text-muted-foreground text-center mt-1">Awaiting approval</p>
           </CardContent>
         </Card>
 
-        {/* Pending Leaves - Red/Pink Gradient */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-rose-400 to-rose-500 text-white border-0 shadow-lg">
-          <div className="absolute top-3 right-3 opacity-20">
-            <Calendar className="h-12 w-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-rose-100 flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" />
-              Pending Leaves
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-rose-100" />
-              <span className="text-3xl font-bold">{hrStats?.pendingLeaves || 0}</span>
-            </div>
-            <p className="text-xs text-rose-100 mt-1">Awaiting approval</p>
+        {/* Stat Card - Departments */}
+        <Card className="shadow-sm" style={{ borderLeft: '4px solid #7C3AED' }}>
+          <CardContent className="p-4 flex flex-col justify-center h-full">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+              <Building2 className="h-3.5 w-3.5" /> Departments
+            </p>
+            <span className="text-3xl font-bold mt-2" style={{ color: '#7C3AED' }}>{departments?.length || 0}</span>
+            <p className="text-xs text-muted-foreground mt-1">Active departments</p>
           </CardContent>
         </Card>
 
-        {/* Departments - Purple Gradient */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
-          <div className="absolute top-3 right-3 opacity-20">
-            <Building2 className="h-12 w-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-100 flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Departments
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-purple-100" />
-              <span className="text-3xl font-bold">{hrStats?.employeesByDept?.length || 0}</span>
-            </div>
-            <p className="text-xs text-purple-100 mt-1">Active departments</p>
+        {/* Stat Card - Total Users */}
+        <Card className="shadow-sm" style={{ borderLeft: '4px solid #2563EB' }}>
+          <CardContent className="p-4 flex flex-col justify-center h-full">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" /> Total Users
+            </p>
+            <span className="text-3xl font-bold mt-2" style={{ color: '#2563EB' }}>{allUsers?.length || 0}</span>
+            <p className="text-xs text-muted-foreground mt-1">System users</p>
           </CardContent>
         </Card>
       </div>

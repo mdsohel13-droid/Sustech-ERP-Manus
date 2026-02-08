@@ -336,35 +336,89 @@ export default function Inventory() {
           </div>
         </div>
 
-        {/* Top KPI Row - Colorful Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
-            <p className="text-sm opacity-90">Total Stock</p>
-            <p className="text-3xl font-bold mt-1">{stats.totalStockUnits.toLocaleString()}</p>
-            <p className="text-xs opacity-75 mt-1">items</p>
-          </div>
-          <div className="bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl p-4 text-white shadow-lg">
-            <p className="text-sm opacity-90">Out of Stock</p>
-            <p className="text-3xl font-bold mt-1">{stats.outOfStockCount}</p>
-            <div className="flex items-center gap-1 mt-1">
-              <AlertTriangle className="w-3 h-3" />
-              <span className="text-xs opacity-75">requires attention</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
-            <p className="text-sm opacity-90">Stock Value</p>
-            <p className="text-3xl font-bold mt-1">{formatCurrency(stats.totalStockValue, currency)}</p>
-            <p className="text-xs opacity-75 mt-1">total value</p>
-          </div>
-          <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl p-4 text-white shadow-lg">
-            <p className="text-sm opacity-90">Low Stock</p>
-            <p className="text-3xl font-bold mt-1">{stats.lowStockCount}</p>
-            <p className="text-xs opacity-75 mt-1">SKUs</p>
-          </div>
-          <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl p-4 text-white shadow-lg flex items-center justify-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold">{Math.min(99, Math.floor(100 - (stats.outOfStockCount * 2) - (stats.lowStockCount * 0.5)))}</span>
-            </div>
+        {/* Top KPI Strip - Chart-based */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="pt-4 pb-2">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Stock Overview</p>
+              <ResponsiveContainer width="100%" height={120}>
+                <BarChart
+                  layout="vertical"
+                  data={[
+                    { name: "Total Stock", value: stats.totalStockUnits, fill: "#3B82F6" },
+                    { name: "Low Stock", value: stats.lowStockCount, fill: "#F97316" },
+                    { name: "Out of Stock", value: stats.outOfStockCount, fill: "#EF4444" },
+                  ]}
+                  margin={{ top: 0, right: 30, left: 80, bottom: 0 }}
+                >
+                  <XAxis type="number" tick={{ fontSize: 11 }} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={75} />
+                  <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                    {[
+                      { fill: "#3B82F6" },
+                      { fill: "#F97316" },
+                      { fill: "#EF4444" },
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Card className="border-l-4" style={{ borderLeftColor: "#4F46E5" }}>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-muted-foreground">Stock Value</p>
+                <p className="text-lg font-bold mt-1" style={{ color: "#4F46E5" }}>{formatCurrency(stats.totalStockValue, currency)}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">total inventory value</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4" style={{ borderLeftColor: "#EA580C" }}>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-muted-foreground">Low Stock</p>
+                <p className="text-lg font-bold mt-1" style={{ color: "#EA580C" }}>{stats.lowStockCount}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">SKUs below threshold</p>
+              </CardContent>
+            </Card>
+
+            <Card className="flex items-center justify-center">
+              <CardContent className="pt-3 pb-3 flex flex-col items-center">
+                <p className="text-xs text-muted-foreground mb-1">Health Score</p>
+                <div className="relative" style={{ width: 72, height: 72 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { value: Math.min(99, Math.floor(100 - (stats.outOfStockCount * 2) - (stats.lowStockCount * 0.5))) },
+                          { value: 100 - Math.min(99, Math.floor(100 - (stats.outOfStockCount * 2) - (stats.lowStockCount * 0.5))) },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={24}
+                        outerRadius={34}
+                        startAngle={90}
+                        endAngle={-270}
+                        paddingAngle={0}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        <Cell fill="#10B981" />
+                        <Cell fill="#F1F5F9" />
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-bold" style={{ color: "#10B981" }}>
+                      {Math.min(99, Math.floor(100 - (stats.outOfStockCount * 2) - (stats.lowStockCount * 0.5)))}%
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 

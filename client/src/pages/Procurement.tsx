@@ -296,87 +296,103 @@ export default function Procurement() {
           </div>
         </div>
 
-        {/* 6 KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {/* Total Purchase Orders */}
-          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0">
+        {/* KPI Strip */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Total Purchase</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.totalPurchaseOrders || 0}</p>
-                  <p className="text-xs opacity-80">orders</p>
-                </div>
-                <ShoppingCart className="w-8 h-8 opacity-80" />
+              <p className="text-xs font-medium text-muted-foreground mb-2">Order Overview</p>
+              <div style={{ height: 130 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[
+                    { name: 'Total POs', value: dashboardStats?.totalPurchaseOrders || 0, fill: '#6366F1' },
+                    { name: 'Pending', value: dashboardStats?.pendingApprovals || 0, fill: '#06B6D4' },
+                    { name: 'In Transit', value: dashboardStats?.inTransitPOs || 0, fill: '#10B981' },
+                    { name: 'Overdue', value: dashboardStats?.overdueDeliveries || 0, fill: '#F59E0B' },
+                  ]} barSize={28}>
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 11, fontWeight: 600 }}>
+                      {[
+                        { name: 'Total POs', fill: '#6366F1' },
+                        { name: 'Pending', fill: '#06B6D4' },
+                        { name: 'In Transit', fill: '#10B981' },
+                        { name: 'Overdue', fill: '#F59E0B' },
+                      ].map((entry, index) => (
+                        <Cell key={`bar-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
 
-          {/* Pending Approvals */}
-          <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white border-0">
+          <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Pending Approvals</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.pendingApprovals || 0}</p>
-                  <p className="text-xs opacity-80">items</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Status Distribution</p>
+              <div className="flex items-center gap-4" style={{ height: 130 }}>
+                <div className="w-28 h-28">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Pending', value: dashboardStats?.pendingApprovals || 0 },
+                          { name: 'In Transit', value: dashboardStats?.inTransitPOs || 0 },
+                          { name: 'Overdue', value: dashboardStats?.overdueDeliveries || 0 },
+                          { name: 'Completed', value: Math.max(0, (dashboardStats?.totalPurchaseOrders || 0) - (dashboardStats?.pendingApprovals || 0) - (dashboardStats?.inTransitPOs || 0) - (dashboardStats?.overdueDeliveries || 0)) },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={28}
+                        outerRadius={48}
+                        dataKey="value"
+                        strokeWidth={2}
+                      >
+                        <Cell fill="#06B6D4" />
+                        <Cell fill="#10B981" />
+                        <Cell fill="#F59E0B" />
+                        <Cell fill="#6366F1" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <CheckCircle className="w-8 h-8 opacity-80" />
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
+                    <span>Pending</span>
+                    <span className="font-semibold ml-auto">{dashboardStats?.pendingApprovals || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#10B981' }} />
+                    <span>In Transit</span>
+                    <span className="font-semibold ml-auto">{dashboardStats?.inTransitPOs || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
+                    <span>Overdue</span>
+                    <span className="font-semibold ml-auto">{dashboardStats?.overdueDeliveries || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#6366F1' }} />
+                    <span>Completed</span>
+                    <span className="font-semibold ml-auto">{Math.max(0, (dashboardStats?.totalPurchaseOrders || 0) - (dashboardStats?.pendingApprovals || 0) - (dashboardStats?.inTransitPOs || 0) - (dashboardStats?.overdueDeliveries || 0))}</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* In Transit */}
-          <Card className="bg-gradient-to-br from-emerald-500 to-green-600 text-white border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">In Transit</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.inTransitPOs || 0}</p>
-                  <p className="text-xs opacity-80">shipments</p>
-                </div>
-                <Truck className="w-8 h-8 opacity-80" />
+          <Card>
+            <CardContent className="p-4 flex flex-col gap-3 justify-center" style={{ height: '100%' }}>
+              <div className="rounded-lg border p-3" style={{ borderLeft: '4px solid #E11D48' }}>
+                <p className="text-xs text-muted-foreground">Total Spend (YTD)</p>
+                <p className="text-xl font-bold mt-1">{formatCurrency(dashboardStats?.totalSpendYTD || 0, currency)}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Overdue Deliveries */}
-          <Card className="bg-gradient-to-br from-orange-500 to-amber-600 text-white border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Overdue Deliveries</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.overdueDeliveries || 0}</p>
-                  <p className="text-xs opacity-80">items</p>
-                </div>
-                <AlertTriangle className="w-8 h-8 opacity-80" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total Spend YTD */}
-          <Card className="bg-gradient-to-br from-rose-500 to-pink-600 text-white border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Total Spend (YTD)</p>
-                  <p className="text-2xl font-bold">{formatCurrency(dashboardStats?.totalSpendYTD || 0, currency)}</p>
-                </div>
-                <DollarSign className="w-8 h-8 opacity-80" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Active Vendors */}
-          <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Active Vendors</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.activeVendors || 0}</p>
-                  <p className="text-xs opacity-80">partners</p>
-                </div>
-                <Users className="w-8 h-8 opacity-80" />
+              <div className="rounded-lg border p-3" style={{ borderLeft: '4px solid #7C3AED' }}>
+                <p className="text-xs text-muted-foreground">Active Vendors</p>
+                <p className="text-xl font-bold mt-1">{dashboardStats?.activeVendors || 0}</p>
               </div>
             </CardContent>
           </Card>

@@ -380,83 +380,71 @@ export default function CRM() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* Total Leads - Blue/Teal Gradient */}
-        <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white border-0 shadow-lg">
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm font-medium text-teal-100">Total Leads</p>
-            <div className="flex items-center justify-between mt-1">
-              <div>
-                <p className="text-3xl font-bold">{(dashboardStats?.totalLeads || 0).toLocaleString()}</p>
-                <p className="text-xs text-teal-100">units</p>
-              </div>
-              <Users className="w-8 h-8 text-teal-200" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI Donut Strip */}
+      <Card className="shadow-lg">
+        <CardContent className="pt-5 pb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {(() => {
+              const totalLeads = dashboardStats?.totalLeads || 0;
+              const activeOpportunities = dashboardStats?.activeOpportunities || 0;
+              const dealsWon = dashboardStats?.dealsWonThisMonth || 0;
+              const totalRevenue = dashboardStats?.totalRevenueYTD || 0;
+              const tasksDue = dashboardStats?.tasksDue || 0;
+              const maxCount = Math.max(totalLeads, activeOpportunities, dealsWon, tasksDue, 1);
 
-        {/* Active Opportunities - Green Gradient */}
-        <Card className="bg-gradient-to-br from-emerald-500 to-green-600 text-white border-0 shadow-lg">
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm font-medium text-emerald-100">Active Opportunities</p>
-            <div className="flex items-center justify-between mt-1">
-              <div>
-                <p className="text-3xl font-bold">{dashboardStats?.activeOpportunities || 0}</p>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-emerald-100">units</span>
-                  <TrendingUp className="w-3 h-3 text-emerald-200" />
-                  <span className="text-xs text-emerald-200">+5%</span>
-                </div>
-              </div>
-              <Target className="w-8 h-8 text-emerald-200" />
-            </div>
-          </CardContent>
-        </Card>
+              const kpis = [
+                { label: 'Total Leads', value: totalLeads, maxRef: maxCount, display: totalLeads.toLocaleString(), color: '#0D9488', sub: 'leads' },
+                { label: 'Active Opportunities', value: activeOpportunities, maxRef: maxCount, display: activeOpportunities.toLocaleString(), color: '#059669', sub: 'opportunities' },
+                { label: 'Deals Won (This Month)', value: dealsWon, maxRef: maxCount, display: dealsWon.toLocaleString(), color: '#7C3AED', sub: 'deals' },
+                { label: 'Total Revenue (YTD)', value: totalRevenue, maxRef: totalRevenue, display: formatCurrency(totalRevenue, currency), color: '#EA580C', sub: 'revenue' },
+                { label: 'Tasks Due', value: tasksDue, maxRef: maxCount, display: tasksDue.toLocaleString(), color: '#475569', sub: 'tasks' },
+              ];
 
-        {/* Deals Won (This Month) - Purple Gradient */}
-        <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white border-0 shadow-lg">
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm font-medium text-violet-100">Deals Won (This Month)</p>
-            <div className="flex items-center justify-between mt-1">
-              <div>
-                <p className="text-3xl font-bold">{dashboardStats?.dealsWonThisMonth || 0}</p>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-violet-100">units</span>
-                  <TrendingUp className="w-3 h-3 text-violet-200" />
-                  <span className="text-xs text-violet-200">+12%</span>
-                </div>
-              </div>
-              <Trophy className="w-8 h-8 text-violet-200" />
-            </div>
-          </CardContent>
-        </Card>
+              return kpis.map((kpi) => {
+                const proportion = kpi.maxRef > 0 ? Math.max(kpi.value / kpi.maxRef, 0.05) : 0.5;
+                const filled = proportion * 100;
+                const remainder = 100 - filled;
+                const donutData = [
+                  { name: 'filled', value: filled },
+                  { name: 'empty', value: remainder },
+                ];
 
-        {/* Total Revenue (YTD) - Amber/Orange Gradient */}
-        <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-white border-0 shadow-lg">
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm font-medium text-amber-100">Total Revenue (YTD)</p>
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-2xl font-bold">{formatCurrency(dashboardStats?.totalRevenueYTD || 0, currency)}</p>
-              <DollarSign className="w-8 h-8 text-amber-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tasks Due - Light Background */}
-        <Card className="bg-gradient-to-br from-slate-50 to-gray-100 border shadow-lg">
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm font-medium text-slate-600">Tasks Due</p>
-            <div className="flex items-center justify-between mt-1">
-              <div>
-                <p className="text-3xl font-bold text-slate-800">{dashboardStats?.tasksDue || 0}</p>
-                <p className="text-xs text-slate-500">items</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-amber-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                return (
+                  <div key={kpi.label} className="flex flex-col items-center text-center gap-1">
+                    <p className="text-xs font-medium text-muted-foreground truncate w-full">{kpi.label}</p>
+                    <div className="relative" style={{ width: 90, height: 90 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={donutData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={28}
+                            outerRadius={40}
+                            startAngle={90}
+                            endAngle={-270}
+                            dataKey="value"
+                            stroke="none"
+                          >
+                            <Cell fill={kpi.color} />
+                            <Cell fill="#e5e7eb" />
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-bold" style={{ color: kpi.color, maxWidth: 54, lineHeight: '1.1', wordBreak: 'break-all' }}>
+                          {kpi.display}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{kpi.sub}</p>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

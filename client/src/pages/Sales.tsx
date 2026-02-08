@@ -381,37 +381,65 @@ export default function Sales() {
         </Button>
       </div>
 
-      {/* Top KPI Row - Colorful Cards */}
+      {/* Top KPI Row - Chart-Based Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="w-4 h-4 opacity-75" />
-            <p className="text-sm opacity-90">Total Sales</p>
-          </div>
-          <p className="text-3xl font-bold">{formatCurrency(dashboardStats.totalSales, currency)}</p>
-        </div>
-        <div className="bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl p-4 text-white shadow-lg">
-          <p className="text-sm opacity-90">Open Opportunities</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <p className="text-3xl font-bold">{dashboardStats.openOpportunities}</p>
-            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">15%</span>
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
-          <p className="text-sm opacity-90">Sales This Month</p>
-          <p className="text-3xl font-bold mt-1">{formatCurrency(dashboardStats.salesThisMonth, currency)}</p>
-        </div>
-        <div className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl p-4 text-white shadow-lg">
-          <p className="text-sm opacity-90">Revenue This Quarter</p>
-          <p className="text-3xl font-bold mt-1">{formatCurrency(dashboardStats.revenueThisQuarter, currency)}</p>
-          <div className="mt-1">
-            <ResponsiveContainer width="100%" height={30}>
-              <AreaChart data={[{v:20},{v:35},{v:25},{v:45},{v:30},{v:50}]}>
-                <Area type="monotone" dataKey="v" stroke="#fff" fill="rgba(255,255,255,0.3)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <Card className="border-l-4 border-l-[#2563EB] bg-white">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <DollarSign className="w-3.5 h-3.5 text-[#2563EB]" />
+              <p className="text-xs text-muted-foreground">Total Sales</p>
+            </div>
+            <p className="text-xl font-bold text-[#2563EB]">{formatCurrency(dashboardStats.totalSales, currency)}</p>
+            <div className="mt-1">
+              <ResponsiveContainer width="100%" height={32}>
+                <AreaChart data={salesPerformanceData}>
+                  <Area type="monotone" dataKey="revenue" stroke="#2563EB" fill="rgba(37,99,235,0.12)" strokeWidth={1.5} dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#64748B] bg-white">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Users className="w-3.5 h-3.5 text-[#64748B]" />
+              <p className="text-xs text-muted-foreground">Open Opportunities</p>
+            </div>
+            <p className="text-xl font-bold text-[#64748B]">{dashboardStats.openOpportunities}</p>
+            <p className="text-xs text-muted-foreground mt-1">Pipeline deals</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#16A34A] bg-white">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <TrendingUp className="w-3.5 h-3.5 text-[#16A34A]" />
+              <p className="text-xs text-muted-foreground">Sales This Month</p>
+            </div>
+            <p className="text-xl font-bold text-[#16A34A]">{formatCurrency(dashboardStats.salesThisMonth, currency)}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {dashboardStats.totalSales > 0 ? `${((dashboardStats.salesThisMonth / dashboardStats.totalSales) * 100).toFixed(1)}% of total` : 'No sales yet'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#D97706] bg-white">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <BarChart3 className="w-3.5 h-3.5 text-[#D97706]" />
+              <p className="text-xs text-muted-foreground">Revenue This Quarter</p>
+            </div>
+            <p className="text-xl font-bold text-[#D97706]">{formatCurrency(dashboardStats.revenueThisQuarter, currency)}</p>
+            <div className="mt-1">
+              <ResponsiveContainer width="100%" height={32}>
+                <LineChart data={salesPerformanceData}>
+                  <Line type="monotone" dataKey="revenue" stroke="#D97706" strokeWidth={1.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Sales Funnel + Sales Performance Row */}

@@ -58,6 +58,7 @@ import {
   Tag,
 } from "lucide-react";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useState } from "react";
 import { format, isAfter, isBefore, addDays } from "date-fns";
 
@@ -427,88 +428,75 @@ export default function ActionTracker() {
         </div>
       </div>
 
-      {/* KPI Cards with Gradients */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {/* Action Card */}
-        <Card 
-          className={`relative overflow-hidden ${typeConfig.action.gradient} text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow`}
-          onClick={() => setActiveTab("actions")}
-        >
-          <div className="absolute top-3 right-3 opacity-20">
-            <Target className="h-16 w-16" />
+      {/* KPI Chart Strip */}
+      <Card className="flex flex-row items-center gap-6 p-4">
+        <div className="relative" style={{ width: 160, height: 160 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={[
+                  { name: "Action", value: typeCounts.action },
+                  { name: "Decision", value: typeCounts.decision },
+                  { name: "Issue", value: typeCounts.issue },
+                  { name: "Opportunity", value: typeCounts.opportunity },
+                ]}
+                cx="50%"
+                cy="50%"
+                innerRadius={45}
+                outerRadius={70}
+                paddingAngle={3}
+                dataKey="value"
+              >
+                <Cell fill="#3B82F6" />
+                <Cell fill="#10B981" />
+                <Cell fill="#F97316" />
+                <Cell fill="#EC4899" />
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-2xl font-bold">
+              {typeCounts.action + typeCounts.decision + typeCounts.issue + typeCounts.opportunity}
+            </span>
           </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-100 flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Action
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{typeCounts.action}</div>
-            <p className="text-xs text-blue-100 mt-1">Keep track of {typeCounts.action} actions</p>
-          </CardContent>
-        </Card>
+        </div>
 
-        {/* Decision Card */}
-        <Card 
-          className={`relative overflow-hidden ${typeConfig.decision.gradient} text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow`}
-          onClick={() => setActiveTab("decisions")}
-        >
-          <div className="absolute top-3 right-3 opacity-20">
-            <FileText className="h-16 w-16" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-emerald-100 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Decision
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{typeCounts.decision}</div>
-            <p className="text-xs text-emerald-100 mt-1">Document {typeCounts.decision} decisions</p>
-          </CardContent>
-        </Card>
-
-        {/* Issue Card */}
-        <Card 
-          className={`relative overflow-hidden ${typeConfig.issue.gradient} text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow`}
-          onClick={() => setActiveTab("issues")}
-        >
-          <div className="absolute top-3 right-3 opacity-20">
-            <AlertTriangle className="h-16 w-16" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-100 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              Issue
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{typeCounts.issue}</div>
-            <p className="text-xs text-orange-100 mt-1">Track {typeCounts.issue} issues</p>
-          </CardContent>
-        </Card>
-
-        {/* Opportunity Card */}
-        <Card 
-          className={`relative overflow-hidden ${typeConfig.opportunity.gradient} text-white border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow`}
-          onClick={() => setActiveTab("opportunities")}
-        >
-          <div className="absolute top-3 right-3 opacity-20">
-            <CircleDot className="h-16 w-16" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-pink-100 flex items-center gap-2">
-              <Lightbulb className="h-4 w-4" />
-              Opportunity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{typeCounts.opportunity}</div>
-            <p className="text-xs text-pink-100 mt-1">Oversee {typeCounts.opportunity} opportunities</p>
-          </CardContent>
-        </Card>
-      </div>
+        <div className="grid grid-cols-2 gap-4 flex-1">
+          <button
+            className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/60 transition-colors text-left"
+            onClick={() => setActiveTab("actions")}
+          >
+            <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: "#3B82F6" }} />
+            <span className="text-sm text-muted-foreground">Action</span>
+            <span className="ml-auto text-lg font-bold">{typeCounts.action}</span>
+          </button>
+          <button
+            className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/60 transition-colors text-left"
+            onClick={() => setActiveTab("decisions")}
+          >
+            <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: "#10B981" }} />
+            <span className="text-sm text-muted-foreground">Decision</span>
+            <span className="ml-auto text-lg font-bold">{typeCounts.decision}</span>
+          </button>
+          <button
+            className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/60 transition-colors text-left"
+            onClick={() => setActiveTab("issues")}
+          >
+            <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: "#F97316" }} />
+            <span className="text-sm text-muted-foreground">Issue</span>
+            <span className="ml-auto text-lg font-bold">{typeCounts.issue}</span>
+          </button>
+          <button
+            className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/60 transition-colors text-left"
+            onClick={() => setActiveTab("opportunities")}
+          >
+            <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: "#EC4899" }} />
+            <span className="text-sm text-muted-foreground">Opportunity</span>
+            <span className="ml-auto text-lg font-bold">{typeCounts.opportunity}</span>
+          </button>
+        </div>
+      </Card>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

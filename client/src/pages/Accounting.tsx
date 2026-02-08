@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Download, FileText, Receipt, Wallet, Clock, Search, RefreshCw, Eye, MoreHorizontal, Archive, RotateCcw, AlertTriangle, BookOpen, CreditCard, ArrowRightLeft, Settings, ChevronDown, ChevronRight, Check } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, Line, AreaChart, Area } from "recharts";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -367,77 +367,82 @@ export default function Accounting() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm opacity-90">Total Cash</p>
-                <p className="text-2xl font-bold">{formatCurrency(totalCash, currency)}</p>
-              </div>
-              <div className="bg-white/20 p-3 rounded-full">
-                <Wallet className="h-6 w-6" />
-              </div>
-            </div>
+            <p className="text-sm font-medium text-muted-foreground mb-2">MTD Snapshot</p>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={[
+                { name: 'Revenue', value: revenueMTD, fill: '#0EA5E9' },
+                { name: 'Expense', value: expenseMTD, fill: '#F43F5E' },
+                { name: 'Net Profit', value: netPosition, fill: '#10B981' },
+              ]} barSize={36}>
+                <XAxis dataKey="name" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis hide />
+                <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 11, formatter: (v: number) => formatCurrency(v, currency) }}>
+                  {[
+                    { name: 'Revenue', fill: '#0EA5E9' },
+                    { name: 'Expense', fill: '#F43F5E' },
+                    { name: 'Net Profit', fill: '#10B981' },
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm opacity-90">Revenue MTD</p>
-                <p className="text-2xl font-bold">{formatCurrency(revenueMTD, currency)}</p>
-              </div>
-              <div className="bg-white/20 p-3 rounded-full">
-                <TrendingUp className="h-6 w-6" />
-              </div>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-sm font-medium text-muted-foreground">Net Profit Trend (6 Mo)</p>
+              <p className="text-lg font-bold" style={{ color: '#6366F1' }}>{formatCurrency(totalCash, currency)}</p>
+              <p className="text-[10px] text-muted-foreground">Current cash balance</p>
             </div>
+            <ResponsiveContainer width="100%" height={120}>
+              <AreaChart data={last12MonthsData.slice(-6)}>
+                <defs>
+                  <linearGradient id="cashGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="month" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis hide />
+                <Tooltip formatter={(value: number) => formatCurrency(value, currency)} />
+                <Area type="monotone" dataKey="netProfit" stroke="#6366F1" strokeWidth={2} fill="url(#cashGradient)" name="Net Profit" />
+              </AreaChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4">
+          <Card className="border-l-4 flex-1" style={{ borderLeftColor: '#F59E0B' }}>
+            <CardContent className="p-4 flex items-center justify-between h-full">
               <div>
-                <p className="text-sm opacity-90">Expense MTD</p>
-                <p className="text-2xl font-bold">{formatCurrency(expenseMTD, currency)}</p>
-              </div>
-              <div className="bg-white/20 p-3 rounded-full">
-                <TrendingDown className="h-6 w-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm opacity-90">Pending Invoices</p>
+                <p className="text-sm text-muted-foreground">Pending Invoices</p>
                 <p className="text-2xl font-bold">{pendingInvoices}</p>
               </div>
-              <div className="bg-white/20 p-3 rounded-full">
-                <Clock className="h-6 w-6" />
+              <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                <Clock className="h-5 w-5" style={{ color: '#F59E0B' }} />
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+          <Card className="border-l-4 flex-1" style={{ borderLeftColor: '#6366F1' }}>
+            <CardContent className="p-4 flex items-center justify-between h-full">
               <div>
-                <p className="text-sm opacity-90">Net Profit</p>
-                <p className="text-2xl font-bold">{formatCurrency(netPosition, currency)}</p>
-                <p className="text-xs opacity-80">{netProfitMargin}% margin</p>
+                <p className="text-sm text-muted-foreground">Total Cash</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalCash, currency)}</p>
               </div>
-              <div className="bg-white/20 p-3 rounded-full">
-                <DollarSign className="h-6 w-6" />
+              <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}>
+                <Wallet className="h-5 w-5" style={{ color: '#6366F1' }} />
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
