@@ -35,7 +35,7 @@ import {
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { trpc } from "@/lib/trpc";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, Cell, PieChart, Pie } from "recharts";
 
 export default function Products() {
   const { currency } = useCurrency();
@@ -626,79 +626,100 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Colorful KPI Cards - Matching Reference Design */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* Total Products - Blue Gradient */}
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
-            <CardContent className="pt-5 pb-4">
-              <p className="text-sm font-medium text-blue-100">Total Products</p>
-              <div className="flex items-center justify-between mt-1">
-                <div>
-                  <p className="text-3xl font-bold">{stats.totalProducts.toLocaleString()}</p>
-                  <p className="text-xs text-blue-100">units</p>
+        {/* KPI Chart Strip */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Product Breakdown</p>
+              <div className="flex items-center gap-4" style={{ height: 130 }}>
+                <div className="w-28 h-28">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Active', value: stats.totalProducts - stats.archivedCount },
+                          { name: 'Discontinued', value: stats.archivedCount },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={28}
+                        outerRadius={48}
+                        dataKey="value"
+                        strokeWidth={2}
+                      >
+                        <Cell fill="#3B82F6" />
+                        <Cell fill="#F97316" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <Package className="w-8 h-8 text-blue-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3B82F6' }} />
+                    <span className="text-xs text-muted-foreground flex-1">Active</span>
+                    <span className="text-sm font-bold">{(stats.totalProducts - stats.archivedCount).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#F97316' }} />
+                    <span className="text-xs text-muted-foreground flex-1">Discontinued</span>
+                    <span className="text-sm font-bold">{stats.archivedCount}</span>
+                  </div>
+                  <div className="pt-1 border-t">
+                    <span className="text-xs text-muted-foreground">Total: </span>
+                    <span className="text-sm font-bold">{stats.totalProducts.toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Active Listings - Green Gradient */}
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
-            <CardContent className="pt-5 pb-4">
-              <p className="text-sm font-medium text-green-100">Active Listings</p>
-              <div className="flex items-center justify-between mt-1">
-                <div>
-                  <p className="text-3xl font-bold">{(stats.totalProducts - stats.archivedCount).toLocaleString()}</p>
-                  <p className="text-xs text-green-100">units</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-200" />
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Revenue (Last 30 Days)</p>
+              <p className="text-2xl font-bold" style={{ color: '#059669' }}>{formatCurrency(revenueStats?.revenue || 0, currency)}</p>
+              <div className="flex items-center gap-1 mt-1 mb-2">
+                <span className={`text-xs font-medium ${(revenueStats?.revenueChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {(revenueStats?.revenueChange || 0) >= 0 ? '↑' : '↓'} {Math.abs(revenueStats?.revenueChange || 0)}% vs prior
+                </span>
+              </div>
+              <div style={{ height: 60 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[
+                    { name: 'Total', value: stats.totalProducts, fill: '#3B82F6' },
+                    { name: 'Active', value: stats.totalProducts - stats.archivedCount, fill: '#10B981' },
+                    { name: 'Archived', value: stats.archivedCount, fill: '#F97316' },
+                  ]} barSize={24}>
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 10, fontWeight: 600 }}>
+                      <Cell fill="#3B82F6" />
+                      <Cell fill="#10B981" />
+                      <Cell fill="#F97316" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
 
-          {/* Revenue (Last 30 Days) - Teal/Dark Gradient */}
-          <Card className="bg-gradient-to-br from-slate-700 to-slate-800 text-white border-0 shadow-lg">
-            <CardContent className="pt-5 pb-4">
-              <p className="text-sm font-medium text-slate-300">Revenue (Last 30 Days)</p>
-              <div className="mt-1">
-                <p className="text-2xl font-bold">{formatCurrency(revenueStats?.revenue || 0, currency)}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-xs ${(revenueStats?.revenueChange || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {(revenueStats?.revenueChange || 0) >= 0 ? '↑' : '↓'} {Math.abs(revenueStats?.revenueChange || 0)}%
-                  </span>
-                  <TrendingUp className="w-4 h-4 text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Category - Cream/Light */}
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 shadow-lg">
-            <CardContent className="pt-5 pb-4">
-              <p className="text-sm font-medium text-amber-700">Top Category</p>
-              <div className="flex items-center justify-between mt-1">
-                <div>
-                  <Star className="w-6 h-6 text-amber-500 mb-1" />
-                  <p className="text-xs text-amber-600">{topCategory?.count || 0} Products</p>
-                </div>
-                <p className="text-sm font-semibold text-amber-800 text-right">{topCategory?.name || 'N/A'}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Discontinued/Archived - Orange Gradient */}
-          <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0 shadow-lg">
-            <CardContent className="pt-5 pb-4">
-              <p className="text-sm font-medium text-orange-100">Discontinued</p>
-              <div className="flex items-center justify-between mt-1">
-                <div>
-                  <p className="text-3xl font-bold">{stats.archivedCount}</p>
-                  <p className="text-xs text-orange-100">items</p>
-                </div>
-                <Clock className="w-8 h-8 text-orange-200" />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="border-l-4" style={{ borderLeftColor: '#F59E0B' }}>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-muted-foreground">Top Category</p>
+                <p className="text-lg font-bold mt-1" style={{ color: '#F59E0B' }}>{topCategory?.name || 'N/A'}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{topCategory?.count || 0} products</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4" style={{ borderLeftColor: '#EF4444' }}>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-muted-foreground">Low Stock</p>
+                <p className="text-lg font-bold mt-1" style={{ color: '#EF4444' }}>{stats.lowStockCount || 0}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">items below threshold</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Main Content: Product Listings + Performance Sidebar */}

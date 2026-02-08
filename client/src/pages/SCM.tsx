@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -164,7 +165,7 @@ export default function SCM() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold">
             SCM Command Center
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -179,78 +180,102 @@ export default function SCM() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Inventory Value</p>
-                <p className="text-2xl font-bold mt-1">
-                  {formatCurrency(totalInventoryValue, currency)}
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Warehouse className="h-6 w-6" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-blue-100 text-sm">
-              <TrendingUp className="h-4 w-4 mr-1" />
-              <span>Real-time valuation</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-amber-100 text-sm font-medium">Pending Approvals</p>
-                <p className="text-2xl font-bold mt-1">{pendingPOs}</p>
-              </div>
-              <div className="h-12 w-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-amber-100 text-sm">
-              <FileText className="h-4 w-4 mr-1" />
-              <span>POs awaiting action</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2">SCM Status (Horizontal)</p>
+            <div style={{ height: 130 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  layout="horizontal"
+                  data={[
+                    { name: 'Pending', value: pendingPOs },
+                    { name: 'Low Stock', value: lowStockCount },
+                    { name: 'In Transit', value: inTransitPOs },
+                  ]}
+                  barSize={28}
+                  margin={{ top: 15, right: 5, left: 5, bottom: 0 }}
+                >
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 11, fontWeight: 600 }}>
+                    <Cell fill="#F59E0B" />
+                    <Cell fill="#EF4444" />
+                    <Cell fill="#10B981" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 to-rose-500 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Low Stock Alerts</p>
-                <p className="text-2xl font-bold mt-1">{lowStockCount}</p>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Inventory Health</p>
+            <div className="flex items-center gap-4" style={{ height: 130 }}>
+              <div className="w-28 h-28 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Low Stock', value: lowStockCount || 0 },
+                        { name: 'In Transit', value: inTransitPOs || 0 },
+                        { name: 'Healthy', value: Math.max(1, (pendingPOs + inTransitPOs + lowStockCount === 0 ? 1 : 0)) },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={48}
+                      startAngle={90}
+                      endAngle={-270}
+                      dataKey="value"
+                      strokeWidth={2}
+                    >
+                      <Cell fill="#EF4444" />
+                      <Cell fill="#10B981" />
+                      <Cell fill="#e5e7eb" />
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold" style={{ color: '#6366F1' }}>
+                    {formatCurrency(totalInventoryValue, currency).replace(/\.\d+$/, '')}
+                  </span>
+                </div>
               </div>
-              <div className="h-12 w-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6" />
+              <div className="flex-1 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#EF4444' }} />
+                  <span className="text-xs text-muted-foreground flex-1">Low Stock</span>
+                  <span className="text-sm font-bold">{lowStockCount}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#10B981' }} />
+                  <span className="text-xs text-muted-foreground flex-1">In Transit</span>
+                  <span className="text-sm font-bold">{inTransitPOs}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#F59E0B' }} />
+                  <span className="text-xs text-muted-foreground flex-1">Pending POs</span>
+                  <span className="text-sm font-bold">{pendingPOs}</span>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 flex items-center text-red-100 text-sm">
-              <TrendingDown className="h-4 w-4 mr-1" />
-              <span>Items below reorder point</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">In Transit</p>
-                <p className="text-2xl font-bold mt-1">{inTransitPOs}</p>
-              </div>
-              <div className="h-12 w-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Truck className="h-6 w-6" />
-              </div>
+        <Card className="border-l-4" style={{ borderLeftColor: '#6366F1' }}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Warehouse className="h-4 w-4 text-[#6366F1]" />
+              <p className="text-xs text-muted-foreground">Inventory Value</p>
             </div>
-            <div className="mt-4 flex items-center text-green-100 text-sm">
-              <Package className="h-4 w-4 mr-1" />
-              <span>Shipments on the way</span>
-            </div>
+            <p className="text-2xl font-bold" style={{ color: '#6366F1' }}>
+              {formatCurrency(totalInventoryValue, currency)}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">Real-time valuation</p>
           </CardContent>
         </Card>
       </div>

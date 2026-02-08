@@ -49,6 +49,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { trpc } from "@/lib/trpc";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const statusConfig = {
   not_started: { label: "Not Started", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300", icon: Clock },
@@ -458,48 +459,100 @@ export default function TenderQuotation() {
         </div>
       ) : null}
 
-      {/* Summary Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">GOVERNMENT TENDERS</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{governmentTenders.length}</div>
-            <p className="text-xs text-muted-foreground mt-2">Active tenders</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">PRIVATE QUOTATIONS</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{privateQuotations.length}</div>
-            <p className="text-xs text-muted-foreground mt-2">Active quotations</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">WON/PO RECEIVED</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">
-              {items?.filter(i => i.status === "win" || i.status === "po_received").length || 0}
+      {/* KPI Chart Strip */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Tender Distribution</p>
+            <div className="flex items-center gap-4" style={{ height: 130 }}>
+              <div className="w-28 h-28">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Gov. Tenders', value: governmentTenders.length || 0 },
+                        { name: 'Pvt. Quotations', value: privateQuotations.length || 0 },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={28}
+                      outerRadius={48}
+                      dataKey="value"
+                      strokeWidth={2}
+                    >
+                      <Cell fill="#3B82F6" />
+                      <Cell fill="#8B5CF6" />
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#3B82F6' }} />
+                  <span className="text-xs text-muted-foreground flex-1">Gov. Tenders</span>
+                  <span className="text-sm font-bold">{governmentTenders.length}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#8B5CF6' }} />
+                  <span className="text-xs text-muted-foreground flex-1">Pvt. Quotations</span>
+                  <span className="text-sm font-bold">{privateQuotations.length}</span>
+                </div>
+                <div className="pt-1 border-t">
+                  <span className="text-xs text-muted-foreground">Total: </span>
+                  <span className="text-sm font-bold">{(items?.length || 0)}</span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Successful bids</p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">PENDING FOLLOW-UP</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">
-              {items?.filter(i => i.status === "submitted").length || 0}
+
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Status Overview</p>
+            <div style={{ height: 130 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[
+                  { name: 'Won/PO', value: items?.filter(i => i.status === "win" || i.status === "po_received").length || 0 },
+                  { name: 'Submitted', value: items?.filter(i => i.status === "submitted").length || 0 },
+                  { name: 'Preparing', value: items?.filter(i => i.status === "preparing").length || 0 },
+                  { name: 'Lost', value: items?.filter(i => i.status === "loss").length || 0 },
+                ]} barSize={28}>
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 11, fontWeight: 600 }}>
+                    <Cell fill="#10B981" />
+                    <Cell fill="#F59E0B" />
+                    <Cell fill="#6366F1" />
+                    <Cell fill="#EF4444" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Awaiting response</p>
           </CardContent>
         </Card>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="border-l-4" style={{ borderLeftColor: '#10B981' }}>
+            <CardContent className="pt-4 pb-3">
+              <p className="text-xs text-muted-foreground">Won / PO Received</p>
+              <p className="text-lg font-bold mt-1" style={{ color: '#10B981' }}>
+                {items?.filter(i => i.status === "win" || i.status === "po_received").length || 0}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Successful bids</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4" style={{ borderLeftColor: '#F59E0B' }}>
+            <CardContent className="pt-4 pb-3">
+              <p className="text-xs text-muted-foreground">Pending Follow-up</p>
+              <p className="text-lg font-bold mt-1" style={{ color: '#F59E0B' }}>
+                {items?.filter(i => i.status === "submitted").length || 0}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Awaiting response</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Tabs for Government Tenders and Private Quotations */}
