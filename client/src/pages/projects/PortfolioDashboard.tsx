@@ -117,14 +117,6 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
       sortDir === "asc" ? <ChevronUp className="h-3 w-3 ml-0.5 inline" /> : <ChevronDown className="h-3 w-3 ml-0.5 inline" />
     ) : null;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
-
   const kpis = data?.kpis || { totalProjects: 0, totalTasks: 0, totalIssues: 0, totalLateTasks: 0 };
   const charts = data?.charts || {
     byProgram: [], byProjectManager: [], byProjectStatus: [],
@@ -138,6 +130,14 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
     if (!data?.projects) return [];
     return Array.from(new Set(data.projects.map((p) => p.name).filter(Boolean)));
   }, [data?.projects]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   const renderDonut = (
     title: string,
