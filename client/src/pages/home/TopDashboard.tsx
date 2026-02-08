@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell, Legend, LabelList,
 } from "recharts";
 
 interface TopDashboardProps {
@@ -67,7 +67,7 @@ function GaugeMini({ value, maxValue, label, centerText, color, size = 90 }: {
           <span className="font-bold text-white" style={{ fontSize: size * 0.17 }}>{centerText}</span>
         </div>
       </div>
-      <p className="text-[10px] text-blue-200/60 mt-1 text-center font-medium">{label}</p>
+      <p className="text-[10px] text-purple-200/60 mt-1 text-center font-medium">{label}</p>
     </div>
   );
 }
@@ -108,26 +108,27 @@ export default function TopDashboard(props: TopDashboardProps) {
   const crmConversion = props.totalLeads > 0 ? Math.round((props.crmClosedWon / props.totalLeads) * 100) : 0;
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-[#0a1628] via-[#0d1f3c] to-[#0a1628] p-4 lg:p-5 shadow-xl border border-blue-900/30">
+    <div className="rounded-2xl bg-gradient-to-br from-[#1a1520] via-[#211b28] to-[#1a1520] p-4 lg:p-5 shadow-xl border border-purple-900/20">
 
       {/* ROW 1: Financial Horizontal Bar + Key Ratio Gauges */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
 
         {/* Financial Breakdown - Horizontal Bar */}
         <div className="lg:col-span-5 bg-white/5 rounded-xl p-3 border border-white/5">
-          <p className="text-xs text-blue-200/60 font-semibold mb-1 uppercase tracking-wider">Financial Overview</p>
+          <p className="text-xs text-purple-200/60 font-semibold mb-1 uppercase tracking-wider">Financial Overview</p>
           <div className="h-[140px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={finBarData} layout="vertical" barSize={18}>
+              <BarChart data={finBarData} layout="vertical" barSize={18} margin={{ right: 45 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.06)" />
                 <XAxis type="number" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }} tickFormatter={formatCompact} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)', fontWeight: 600 }} width={68} />
                 <Tooltip
-                  contentStyle={{ fontSize: 11, borderRadius: 8, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  contentStyle={{ fontSize: 11, borderRadius: 8, background: '#2a2333', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
                   formatter={(value: number) => [fc(value), 'Amount']}
                 />
                 <Bar dataKey="value" radius={[0, 6, 6, 0]}>
                   {finBarData.map((_, i) => <Cell key={i} fill={finBarColors[i]} />)}
+                  <LabelList dataKey="value" position="right" formatter={formatCompact} style={{ fontSize: 10, fill: 'rgba(255,255,255,0.85)', fontWeight: 600 }} offset={5} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -136,7 +137,7 @@ export default function TopDashboard(props: TopDashboardProps) {
 
         {/* Key Ratio Gauges */}
         <div className="lg:col-span-7 bg-white/5 rounded-xl p-3 border border-white/5">
-          <p className="text-xs text-blue-200/60 font-semibold mb-2 uppercase tracking-wider">Key Indicators</p>
+          <p className="text-xs text-purple-200/60 font-semibold mb-2 uppercase tracking-wider">Key Indicators</p>
           <div className="flex items-center justify-around flex-wrap gap-1">
             <GaugeMini value={profitMargin} maxValue={100} label="Profit Margin" centerText={`${profitMargin.toFixed(1)}%`} color="#10b981" size={88} />
             <GaugeMini value={tenderWinRate} maxValue={100} label="Tender Win Rate" centerText={`${tenderWinRate}%`} color="#f59e0b" size={88} />
@@ -152,7 +153,7 @@ export default function TopDashboard(props: TopDashboardProps) {
 
         {/* Projects Donut */}
         <div className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/[0.07] transition-colors" onClick={() => navigate("/projects")}>
-          <p className="text-xs text-blue-200/60 font-semibold mb-1 uppercase tracking-wider">Projects ({props.projectsTotal})</p>
+          <p className="text-xs text-purple-200/60 font-semibold mb-1 uppercase tracking-wider">Projects ({props.projectsTotal})</p>
           <div className="h-[130px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -168,7 +169,7 @@ export default function TopDashboard(props: TopDashboardProps) {
                     <Cell key={i} fill={projectPieData.length > 0 ? projectColors[i % projectColors.length] : 'rgba(255,255,255,0.1)'} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ fontSize: 10, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} />
+                <Tooltip contentStyle={{ fontSize: 10, background: '#2a2333', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -176,16 +177,17 @@ export default function TopDashboard(props: TopDashboardProps) {
 
         {/* AR vs AP Bar Chart */}
         <div className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/[0.07] transition-colors" onClick={() => navigate("/financial")}>
-          <p className="text-xs text-blue-200/60 font-semibold mb-1 uppercase tracking-wider">AR vs AP</p>
+          <p className="text-xs text-purple-200/60 font-semibold mb-1 uppercase tracking-wider">AR vs AP</p>
           <div className="h-[130px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={arApBarData} barSize={32}>
+              <BarChart data={arApBarData} barSize={32} margin={{ top: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)', fontWeight: 600 }} />
                 <YAxis tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }} tickFormatter={formatCompact} />
-                <Tooltip contentStyle={{ fontSize: 11, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} formatter={(value: number) => [fc(value), 'Amount']} />
+                <Tooltip contentStyle={{ fontSize: 11, background: '#2a2333', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} formatter={(value: number) => [fc(value), 'Amount']} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {arApBarData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                  <LabelList dataKey="value" position="top" formatter={formatCompact} style={{ fontSize: 10, fill: 'rgba(255,255,255,0.85)', fontWeight: 600 }} offset={5} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -195,7 +197,7 @@ export default function TopDashboard(props: TopDashboardProps) {
         {/* Inventory Donut */}
         <div className="bg-white/5 rounded-xl p-3 border border-white/5 cursor-pointer hover:bg-white/[0.07] transition-colors" onClick={() => navigate("/inventory")}>
           <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider">Inventory</p>
+            <p className="text-xs text-purple-200/60 font-semibold uppercase tracking-wider">Inventory</p>
             <span className="text-[10px] text-teal-400 font-medium">{props.stockValue}</span>
           </div>
           <div className="h-[130px]">
@@ -213,7 +215,7 @@ export default function TopDashboard(props: TopDashboardProps) {
                     <Cell key={i} fill={inventoryPieData.length > 0 ? inventoryColors[i % inventoryColors.length] : 'rgba(255,255,255,0.1)'} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ fontSize: 10, background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} />
+                <Tooltip contentStyle={{ fontSize: 10, background: '#2a2333', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 6 }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -221,7 +223,7 @@ export default function TopDashboard(props: TopDashboardProps) {
 
         {/* Tenders + CRM + Team Gauges */}
         <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-          <p className="text-xs text-blue-200/60 font-semibold mb-2 uppercase tracking-wider">Operations</p>
+          <p className="text-xs text-purple-200/60 font-semibold mb-2 uppercase tracking-wider">Operations</p>
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-around">
               <GaugeMini value={props.tendersWon} maxValue={Math.max(props.tendersTotal, 1)} label={`Tenders Won`} centerText={`${props.tendersWon}/${props.tendersTotal}`} color="#f59e0b" size={72} />
