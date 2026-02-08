@@ -76,8 +76,7 @@ function GaugeMini({ value, maxValue, label, centerText, color, size = 90, isDar
 export default function TopDashboard(props: TopDashboardProps) {
   const [, navigate] = useLocation();
   const fc = props.formatCurrency;
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { isDark } = useTheme();
 
   const tickFill = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
   const tickFillStrong = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';

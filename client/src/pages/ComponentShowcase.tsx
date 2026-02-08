@@ -165,6 +165,8 @@ import {
   CalendarIcon,
   Check,
   Clock,
+  Compass,
+  Leaf,
   Moon,
   Sun,
   X,
@@ -174,7 +176,7 @@ import { toast as sonnerToast } from "sonner";
 import { AIChatBox, type Message } from "@/components/AIChatBox";
 
 export default function ComponentsShowcase() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [datePickerDate, setDatePickerDate] = useState<Date>();
   const [selectedFruits, setSelectedFruits] = useState<string[]>([]);
@@ -233,11 +235,19 @@ export default function ComponentsShowcase() {
           <h2 className="text-3xl font-bold tracking-tight mb-6">
             Shadcn/ui Component Library
           </h2>
-          <Button variant="outline" size="icon" onClick={toggleTheme}>
+          <Button variant="outline" size="icon" onClick={() => {
+            const order = ["dark", "light", "fresh-mint", "boreal"] as const;
+            const idx = order.indexOf(theme as any);
+            setTheme(order[(idx + 1) % order.length]);
+          }}>
             {theme === "light" ? (
-              <Moon className="h-5 w-5" />
-            ) : (
               <Sun className="h-5 w-5" />
+            ) : theme === "fresh-mint" ? (
+              <Leaf className="h-5 w-5" />
+            ) : theme === "boreal" ? (
+              <Compass className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
             )}
           </Button>
         </div>

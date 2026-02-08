@@ -5,17 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Mail, Lock, Eye, EyeOff, Loader2, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { useTheme } from "@/contexts/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { theme, toggleTheme, switchable } = useTheme();
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
@@ -40,21 +39,9 @@ export function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background relative">
-      {switchable && toggleTheme && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleTheme}
-          title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-          className="absolute top-4 right-4 w-9 px-0"
-        >
-          {theme === "light" ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Sun className="h-4 w-4" />
-          )}
-        </Button>
-      )}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md p-4">
         <Card className="shadow-lg">
           <CardHeader className="text-center space-y-4">

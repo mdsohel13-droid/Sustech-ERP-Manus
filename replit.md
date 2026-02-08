@@ -12,6 +12,7 @@ The system employs a modern web stack. The frontend is built with React, TypeScr
 Key architectural decisions and features include:
 - **Modular Design**: Organized into distinct modules (Finance, Accounting, Procurement, CRM, Sales, Inventory, Products, Tenders/Quotations), each with dedicated functionalities.
 - **Modern UI/UX**: Dashboards feature smart chart-based KPI visualizations (mini donuts, bar charts, sparklines, gauges) replacing static gradient cards. Each module uses a unique chart type and color palette for visual differentiation. All data is real-time from PostgreSQL with no hardcoded values.
+- **4-Theme System**: Dynamic theme switching via ThemeProvider (ThemeContext.tsx) with dropdown selector (ThemeToggle.tsx). Themes: (1) Ash Grove Dark - gray-purple palette, (2) Classic Light - clean professional blue, (3) Fresh Mint - light green eco-friendly (#2ECC71 primary), (4) Boreal Professional - midnight blue sophisticated (#142850 bg, #00909E teal accent). Dark and Boreal share `isDark=true` for chart colors. CSS variables defined in index.css with full token sets per theme. Theme selection persists via localStorage.
 - **Real-time Data Integration**: Modules display real-time data from PostgreSQL via tRPC queries.
 - **Comprehensive CRUD Operations**: Full Create, Read, Update, and Delete capabilities for critical entities across all modules.
 - **Automated Workflows**: Streamlined operations through features like auto-generated numbers and automated project creation.
