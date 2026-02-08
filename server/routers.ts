@@ -680,6 +680,14 @@ export const appRouter = router({
         actualCloseDate: z.string().optional(),
         priority: z.enum(["low", "medium", "high"]).optional(),
         assignedTo: z.number().optional(),
+        portfolio: z.string().optional(),
+        program: z.string().optional(),
+        projectTemplate: z.string().optional(),
+        projectStatus: z.enum(["not_started", "in_progress", "on_hold", "completed", "cancelled"]).optional(),
+        activeStage: z.enum(["initiate", "plan", "execute", "monitor", "close"]).optional(),
+        health: z.enum(["green", "yellow", "red"]).optional(),
+        projectType: z.enum(["strategic", "improvement", "operational"]).optional(),
+        projectManager: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const { startDate, expectedCloseDate, actualCloseDate, ...data } = input;
