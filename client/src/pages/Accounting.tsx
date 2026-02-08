@@ -651,34 +651,34 @@ export default function Accounting() {
                   {formatCurrency(transactionTab === "income" ? totalIncome : totalExpenditure, currency)}
                 </span>
               </div>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Payment Method</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="whitespace-normal break-words">Date</TableHead>
+                    <TableHead className="whitespace-normal break-words">Description</TableHead>
+                    <TableHead className="whitespace-normal break-words">Category</TableHead>
+                    <TableHead className="whitespace-normal break-words">Reference</TableHead>
+                    <TableHead className="whitespace-normal break-words">Payment Method</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Amount</TableHead>
+                    <TableHead className="whitespace-normal break-words"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTransactions.map((entry: any) => (
                     <TableRow key={entry.id}>
-                      <TableCell>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{entry.description || '-'}</TableCell>
-                      <TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                         <Badge variant={entry.type === 'income' ? 'default' : 'destructive'}>
                           {entry.category}
                         </Badge>
                       </TableCell>
-                      <TableCell>{entry.referenceNumber || '-'}</TableCell>
-                      <TableCell className="capitalize">{entry.paymentMethod?.replace('_', ' ') || '-'}</TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.referenceNumber || '-'}</TableCell>
+                      <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{entry.paymentMethod?.replace('_', ' ') || '-'}</TableCell>
                       <TableCell className={`text-right font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                         {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
@@ -744,25 +744,25 @@ export default function Accounting() {
               </CardHeader>
               {showArchived && (
                 <CardContent>
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead>Archived On</TableHead>
-                        <TableHead></TableHead>
+                        <TableHead className="whitespace-normal break-words">Date</TableHead>
+                        <TableHead className="whitespace-normal break-words">Description</TableHead>
+                        <TableHead className="whitespace-normal break-words">Category</TableHead>
+                        <TableHead className="whitespace-normal break-words">Type</TableHead>
+                        <TableHead className="whitespace-normal break-words text-right">Amount</TableHead>
+                        <TableHead className="whitespace-normal break-words">Archived On</TableHead>
+                        <TableHead className="whitespace-normal break-words"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {archivedEntries.map((entry: any) => (
                         <TableRow key={entry.id} className="bg-muted/30">
-                          <TableCell>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.date ? format(new Date(entry.date), 'MMM dd, yyyy') : '-'}</TableCell>
                           <TableCell className="max-w-[200px] truncate">{entry.description || '-'}</TableCell>
-                          <TableCell>{entry.category}</TableCell>
-                          <TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.category}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <Badge variant={entry.type === 'income' ? 'default' : 'destructive'}>
                               {entry.type}
                             </Badge>
@@ -770,10 +770,10 @@ export default function Accounting() {
                           <TableCell className={`text-right font-medium ${entry.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                             {entry.type === 'income' ? '+' : '-'}{formatCurrency(Number(entry.amount || 0), currency)}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="break-words text-muted-foreground" style={{ overflowWrap: "break-word" }}>
                             {entry.archivedAt ? format(new Date(entry.archivedAt), 'MMM dd, yyyy') : '-'}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <div className="flex items-center gap-1">
                               <Button
                                 variant="ghost"
@@ -850,17 +850,17 @@ export default function Accounting() {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-10"></TableHead>
-                    <TableHead>Entry #</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words w-10"></TableHead>
+                    <TableHead className="whitespace-normal break-words">Entry #</TableHead>
+                    <TableHead className="whitespace-normal break-words">Date</TableHead>
+                    <TableHead className="whitespace-normal break-words">Description</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Amount</TableHead>
+                    <TableHead className="whitespace-normal break-words">Status</TableHead>
+                    <TableHead className="whitespace-normal break-words">Reference</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -868,14 +868,14 @@ export default function Accounting() {
                     journalEntries.map((entry: any) => (
                       <>
                         <TableRow key={entry.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedJournal(expandedJournal === entry.id ? null : entry.id)}>
-                          <TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             {expandedJournal === entry.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                           </TableCell>
-                          <TableCell className="font-mono text-sm">{entry.entryNumber}</TableCell>
-                          <TableCell>{entry.entryDate ? format(new Date(entry.entryDate), 'MMM dd, yyyy') : '-'}</TableCell>
+                          <TableCell className="break-words font-mono text-sm" style={{ overflowWrap: "break-word" }}>{entry.entryNumber}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.entryDate ? format(new Date(entry.entryDate), 'MMM dd, yyyy') : '-'}</TableCell>
                           <TableCell className="max-w-[200px] truncate">{entry.description}</TableCell>
-                          <TableCell className="text-right font-medium">{formatCurrency(Number(entry.amount || 0), currency)}</TableCell>
-                          <TableCell>
+                          <TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(entry.amount || 0), currency)}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             {entry.isPosted ? (
                               <Badge className="bg-green-100 text-green-800 border-green-300">
                                 <Check className="h-3 w-3 mr-1" />
@@ -887,8 +887,8 @@ export default function Accounting() {
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">{entry.reference || '-'}</TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="break-words text-muted-foreground" style={{ overflowWrap: "break-word" }}>{entry.reference || '-'}</TableCell>
+                          <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                             {!entry.isPosted && (
                               <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                                 <Button
@@ -918,28 +918,28 @@ export default function Accounting() {
                             <TableCell colSpan={8} className="bg-muted/30 p-0">
                               <div className="p-4">
                                 <p className="text-sm font-medium mb-2 text-muted-foreground">Line Items</p>
-                                <Table>
+                                <Table className="table-fixed">
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead>Account</TableHead>
-                                      <TableHead className="text-right">Debit</TableHead>
-                                      <TableHead className="text-right">Credit</TableHead>
-                                      <TableHead>Description</TableHead>
+                                      <TableHead className="whitespace-normal break-words">Account</TableHead>
+                                      <TableHead className="whitespace-normal break-words text-right">Debit</TableHead>
+                                      <TableHead className="whitespace-normal break-words text-right">Credit</TableHead>
+                                      <TableHead className="whitespace-normal break-words">Description</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
                                     {(entry.lines || []).map((line: any, idx: number) => (
                                       <TableRow key={idx}>
-                                        <TableCell className="text-sm">
+                                        <TableCell className="break-words text-sm" style={{ overflowWrap: "break-word" }}>
                                           {line.account ? `${line.account.accountCode} - ${line.account.accountName}` : `Account #${line.accountId}`}
                                         </TableCell>
-                                        <TableCell className="text-right font-medium">
+                                        <TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>
                                           {Number(line.debitAmount) > 0 ? formatCurrency(Number(line.debitAmount), currency) : '-'}
                                         </TableCell>
-                                        <TableCell className="text-right font-medium">
+                                        <TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>
                                           {Number(line.creditAmount) > 0 ? formatCurrency(Number(line.creditAmount), currency) : '-'}
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">{line.description || '-'}</TableCell>
+                                        <TableCell className="break-words text-sm text-muted-foreground" style={{ overflowWrap: "break-word" }}>{line.description || '-'}</TableCell>
                                       </TableRow>
                                     ))}
                                     {(!entry.lines || entry.lines.length === 0) && (
@@ -993,25 +993,25 @@ export default function Accounting() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Subtype</TableHead>
-                    <TableHead className="text-right">Balance</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words">Code</TableHead>
+                    <TableHead className="whitespace-normal break-words">Name</TableHead>
+                    <TableHead className="whitespace-normal break-words">Type</TableHead>
+                    <TableHead className="whitespace-normal break-words">Subtype</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Balance</TableHead>
+                    <TableHead className="whitespace-normal break-words">Status</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {financialAccounts.length > 0 ? (
                     financialAccounts.map((account: any) => (
                       <TableRow key={account.id}>
-                        <TableCell className="font-mono">{account.accountCode}</TableCell>
-                        <TableCell className="font-medium">{account.accountName}</TableCell>
-                        <TableCell>
+                        <TableCell className="break-words font-mono" style={{ overflowWrap: "break-word" }}>{account.accountCode}</TableCell>
+                        <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{account.accountName}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <Badge variant="outline" className={
                             account.accountType === 'asset' ? 'bg-blue-50 text-blue-700' :
                             account.accountType === 'liability' ? 'bg-red-50 text-red-700' :
@@ -1022,18 +1022,18 @@ export default function Accounting() {
                             {account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground capitalize">
+                        <TableCell className="break-words text-sm text-muted-foreground capitalize" style={{ overflowWrap: "break-word" }}>
                           {account.accountSubtype?.replace(/_/g, ' ')}
                         </TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>
                           {formatCurrency(parseFloat(account.balance || '0'), currency)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <Badge variant={account.isActive ? "default" : "secondary"}>
                             {account.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1264,20 +1264,20 @@ export default function Accounting() {
                     Add Line
                   </Button>
                 </div>
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[35%]">Account *</TableHead>
-                      <TableHead className="w-[18%]">Debit</TableHead>
-                      <TableHead className="w-[18%]">Credit</TableHead>
-                      <TableHead className="w-[22%]">Description</TableHead>
-                      <TableHead className="w-[7%]"></TableHead>
+                      <TableHead className="whitespace-normal break-words w-[35%]">Account *</TableHead>
+                      <TableHead className="whitespace-normal break-words w-[18%]">Debit</TableHead>
+                      <TableHead className="whitespace-normal break-words w-[18%]">Credit</TableHead>
+                      <TableHead className="whitespace-normal break-words w-[22%]">Description</TableHead>
+                      <TableHead className="whitespace-normal break-words w-[7%]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {journalLines.map((line, index) => (
                       <TableRow key={index}>
-                        <TableCell className="p-1">
+                        <TableCell className="break-words p-1" style={{ overflowWrap: "break-word" }}>
                           <Select
                             value={line.accountId > 0 ? line.accountId.toString() : undefined}
                             onValueChange={(val) => updateJournalLine(index, 'accountId', parseInt(val))}
@@ -1292,7 +1292,7 @@ export default function Accounting() {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="p-1">
+                        <TableCell className="break-words p-1" style={{ overflowWrap: "break-word" }}>
                           <Input
                             type="number"
                             step="0.01"
@@ -1303,7 +1303,7 @@ export default function Accounting() {
                             onChange={(e) => updateJournalLine(index, 'debitAmount', e.target.value)}
                           />
                         </TableCell>
-                        <TableCell className="p-1">
+                        <TableCell className="break-words p-1" style={{ overflowWrap: "break-word" }}>
                           <Input
                             type="number"
                             step="0.01"
@@ -1314,7 +1314,7 @@ export default function Accounting() {
                             onChange={(e) => updateJournalLine(index, 'creditAmount', e.target.value)}
                           />
                         </TableCell>
-                        <TableCell className="p-1">
+                        <TableCell className="break-words p-1" style={{ overflowWrap: "break-word" }}>
                           <Input
                             placeholder="Line description"
                             className="h-9"
@@ -1322,7 +1322,7 @@ export default function Accounting() {
                             onChange={(e) => updateJournalLine(index, 'description', e.target.value)}
                           />
                         </TableCell>
-                        <TableCell className="p-1">
+                        <TableCell className="break-words p-1" style={{ overflowWrap: "break-word" }}>
                           <Button
                             type="button"
                             variant="ghost"
@@ -1337,9 +1337,9 @@ export default function Accounting() {
                       </TableRow>
                     ))}
                     <TableRow className="bg-muted/50 font-medium">
-                      <TableCell className="text-right p-2">Totals:</TableCell>
-                      <TableCell className="p-2">{formatCurrency(journalTotalDebits, currency)}</TableCell>
-                      <TableCell className="p-2">{formatCurrency(journalTotalCredits, currency)}</TableCell>
+                      <TableCell className="break-words text-right p-2" style={{ overflowWrap: "break-word" }}>Totals:</TableCell>
+                      <TableCell className="break-words p-2" style={{ overflowWrap: "break-word" }}>{formatCurrency(journalTotalDebits, currency)}</TableCell>
+                      <TableCell className="break-words p-2" style={{ overflowWrap: "break-word" }}>{formatCurrency(journalTotalCredits, currency)}</TableCell>
                       <TableCell colSpan={2} className="p-2">
                         {!journalIsBalanced && (journalTotalDebits > 0 || journalTotalCredits > 0) && (
                           <span className="text-red-600 text-sm flex items-center gap-1">

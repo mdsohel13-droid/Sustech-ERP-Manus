@@ -311,19 +311,19 @@ export default function ActionTracker() {
 
     return (
       <Card>
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-12">
+              <TableHead className="whitespace-normal break-words w-12">
                 <Checkbox />
               </TableHead>
-              <TableHead className="w-16">ISO</TableHead>
-              <TableHead className="w-24">Priority</TableHead>
-              <TableHead>Item</TableHead>
-              <TableHead>Project</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-20">Actions</TableHead>
+              <TableHead className="whitespace-normal break-words w-16">ISO</TableHead>
+              <TableHead className="whitespace-normal break-words w-24">Priority</TableHead>
+              <TableHead className="whitespace-normal break-words">Item</TableHead>
+              <TableHead className="whitespace-normal break-words">Project</TableHead>
+              <TableHead className="whitespace-normal break-words">Due Date</TableHead>
+              <TableHead className="whitespace-normal break-words">Status</TableHead>
+              <TableHead className="whitespace-normal break-words w-20">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -334,13 +334,13 @@ export default function ActionTracker() {
               
               return (
                 <TableRow key={item.id} className="hover:bg-muted/30">
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Checkbox 
                       checked={selectedItems.includes(item.id)}
                       onCheckedChange={() => toggleSelectItem(item.id)}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <div className="flex items-center gap-1">
                       <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
                         {index + 1}
@@ -350,13 +350,13 @@ export default function ActionTracker() {
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${priorityCfg.dotColor}`} />
                       <span className="text-sm font-medium">{item.title.slice(0, 20)}...</span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <button 
                       onClick={() => handleEdit(item)}
                       className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
@@ -364,25 +364,25 @@ export default function ActionTracker() {
                       {item.title.length > 25 ? item.title.slice(0, 25) + "..." : item.title}
                     </button>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-green-500" />
                       <span className="text-sm">{item.relatedModule || "General"}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     {dueDateDisplay && (
                       <Badge variant="outline" className={`text-xs ${dueDateDisplay.className}`}>
                         {dueDateDisplay.text}
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Badge variant="outline" className={`text-xs ${statusCfg.color}`}>
                       {statusCfg.label}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(item)}>
                         <Edit className="h-3.5 w-3.5" />

@@ -114,24 +114,24 @@ export default function RFQTab() {
                 <Button size="sm" onClick={() => setAddLineOpen(true)}><Plus className="h-3 w-3 mr-1" /> Add Item</Button>
               </div>
               {rfqLines && rfqLines.length > 0 ? (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Specifications</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead>Unit</TableHead>
-                      <TableHead className="text-right">Est. Unit Price</TableHead>
+                      <TableHead className="whitespace-normal break-words">Product</TableHead>
+                      <TableHead className="whitespace-normal break-words">Specifications</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Qty</TableHead>
+                      <TableHead className="whitespace-normal break-words">Unit</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Est. Unit Price</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {rfqLines.map((line) => (
                       <TableRow key={line.id}>
-                        <TableCell className="font-medium">{line.productName}</TableCell>
-                        <TableCell>{line.specifications || "—"}</TableCell>
-                        <TableCell className="text-right">{line.quantity}</TableCell>
-                        <TableCell>{line.unitOfMeasure || "pcs"}</TableCell>
-                        <TableCell className="text-right">{line.estimatedUnitPrice || "—"}</TableCell>
+                        <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{line.productName}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{line.specifications || "—"}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{line.quantity}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{line.unitOfMeasure || "pcs"}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{line.estimatedUnitPrice || "—"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -156,17 +156,17 @@ export default function RFQTab() {
                 </div>
               </div>
               {rfqResponses && rfqResponses.length > 0 ? (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Rank</TableHead>
-                      <TableHead>Vendor</TableHead>
-                      <TableHead className="text-right">Quoted Value</TableHead>
-                      <TableHead className="text-right">Delivery Days</TableHead>
-                      <TableHead>Payment Terms</TableHead>
-                      <TableHead className="text-right">Score</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="whitespace-normal break-words">Rank</TableHead>
+                      <TableHead className="whitespace-normal break-words">Vendor</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Quoted Value</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Delivery Days</TableHead>
+                      <TableHead className="whitespace-normal break-words">Payment Terms</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Score</TableHead>
+                      <TableHead className="whitespace-normal break-words">Status</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -174,18 +174,18 @@ export default function RFQTab() {
                       const vendor = vendors?.find((v) => v.id === resp.vendorId);
                       return (
                         <TableRow key={resp.id}>
-                          <TableCell>{resp.rank || "—"}</TableCell>
-                          <TableCell className="font-medium">{vendor?.name || `Vendor #${resp.vendorId}`}</TableCell>
-                          <TableCell className="text-right">{resp.totalQuotedValue || "—"}</TableCell>
-                          <TableCell className="text-right">{resp.deliveryDays || "—"}</TableCell>
-                          <TableCell>{resp.paymentTerms || "—"}</TableCell>
-                          <TableCell className="text-right">{resp.evaluationScore || "—"}</TableCell>
-                          <TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{resp.rank || "—"}</TableCell>
+                          <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{vendor?.name || `Vendor #${resp.vendorId}`}</TableCell>
+                          <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{resp.totalQuotedValue || "—"}</TableCell>
+                          <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{resp.deliveryDays || "—"}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{resp.paymentTerms || "—"}</TableCell>
+                          <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{resp.evaluationScore || "—"}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <Badge className={resp.status === "accepted" ? "bg-green-100 text-green-800" : resp.status === "rejected" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}>
                               {resp.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                             {resp.status === "evaluated" && selectedRFQ.status !== "closed" && (
                               <Button size="sm" variant="outline" onClick={() => acceptMutation.mutate({ responseId: resp.id })}>
                                 Accept & Create PO
@@ -277,32 +277,32 @@ export default function RFQTab() {
       </CardHeader>
       <CardContent>
         {rfqs && rfqs.length > 0 ? (
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>RFQ #</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Delivery Date</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="whitespace-normal break-words">RFQ #</TableHead>
+                <TableHead className="whitespace-normal break-words">Title</TableHead>
+                <TableHead className="whitespace-normal break-words">Priority</TableHead>
+                <TableHead className="whitespace-normal break-words">Status</TableHead>
+                <TableHead className="whitespace-normal break-words">Delivery Date</TableHead>
+                <TableHead className="whitespace-normal break-words">Created</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rfqs.map((rfq) => (
                 <TableRow key={rfq.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailId(rfq.id)}>
-                  <TableCell className="font-mono text-sm">{rfq.rfqNumber}</TableCell>
-                  <TableCell className="font-medium">{rfq.title}</TableCell>
-                  <TableCell>
+                  <TableCell className="break-words font-mono text-sm" style={{ overflowWrap: "break-word" }}>{rfq.rfqNumber}</TableCell>
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{rfq.title}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Badge variant="outline" className={rfq.rfqType === "emergency" ? "border-red-300 text-red-700" : ""}>
                       {rfq.rfqType}
                     </Badge>
                   </TableCell>
-                  <TableCell><Badge className={statusColors[rfq.status || "draft"] || "bg-gray-100"}>{rfq.status}</Badge></TableCell>
-                  <TableCell>{rfq.requiredDeliveryDate || "—"}</TableCell>
-                  <TableCell>{format(new Date(rfq.createdAt), "MMM d, yyyy")}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><Badge className={statusColors[rfq.status || "draft"] || "bg-gray-100"}>{rfq.status}</Badge></TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{rfq.requiredDeliveryDate || "—"}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{format(new Date(rfq.createdAt), "MMM d, yyyy")}</TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                     <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setDetailId(rfq.id); }}>
                       <Search className="h-4 w-4" />
                     </Button>

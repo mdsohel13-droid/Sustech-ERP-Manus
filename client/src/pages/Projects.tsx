@@ -259,23 +259,26 @@ export default function Projects() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Portfolio Dashboard
+        <TabsList className="flex-wrap gap-1">
+          <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs px-3">
+            <BarChart3 className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="whitespace-nowrap">Portfolio Dashboard</span>
           </TabsTrigger>
-          <TabsTrigger value="active" className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            Active Projects ({projects.length})
+          <TabsTrigger value="active" className="flex items-center gap-1.5 text-xs px-3">
+            <Briefcase className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="whitespace-nowrap">Active Projects ({projects.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="archive" className="flex items-center gap-2">
-            <Archive className="h-4 w-4" />
-            Archive ({archivedProjects.length})
+          <TabsTrigger value="archive" className="flex items-center gap-1.5 text-xs px-3">
+            <Archive className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="whitespace-nowrap">Archive ({archivedProjects.length})</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
-          <PortfolioDashboard onOpenFinancials={(project) => { setSelectedProject(project); setFinancialsOpen(true); }} />
+          <PortfolioDashboard
+            onOpenFinancials={(project) => { setSelectedProject(project); setFinancialsOpen(true); }}
+            onOpenDetail={(project) => { setDetailProject(project); setDetailDialogOpen(true); }}
+          />
         </TabsContent>
 
         <TabsContent value="active" className="space-y-6">

@@ -61,19 +61,19 @@ export default function SupplierRiskTab() {
       </CardHeader>
       <CardContent>
         {vendorScores && vendorScores.length > 0 ? (
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Risk Level</TableHead>
-                <TableHead className="text-right">Risk Score</TableHead>
-                <TableHead className="text-right">On-Time %</TableHead>
-                <TableHead className="text-right">Quality</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Responsiveness</TableHead>
-                <TableHead className="text-right">Compliance</TableHead>
-                <TableHead>Last Assessed</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="whitespace-normal break-words">Vendor</TableHead>
+                <TableHead className="whitespace-normal break-words">Risk Level</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Risk Score</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">On-Time %</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Quality</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Price</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Responsiveness</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Compliance</TableHead>
+                <TableHead className="whitespace-normal break-words">Last Assessed</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -81,8 +81,8 @@ export default function SupplierRiskTab() {
                 const score = vs.latestScore;
                 return (
                   <TableRow key={vs.vendor.id}>
-                    <TableCell className="font-medium">{vs.vendor.name}</TableCell>
-                    <TableCell>
+                    <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{vs.vendor.name}</TableCell>
+                    <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                       {score ? (
                         <Badge className={riskColors[score.riskLevel] || "bg-gray-100"}>
                           {score.riskLevel === "critical" && <AlertTriangle className="h-3 w-3 mr-1" />}
@@ -92,7 +92,7 @@ export default function SupplierRiskTab() {
                         <span className="text-muted-foreground text-sm">Not assessed</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                       {score ? (
                         <div className="flex items-center gap-2 justify-end">
                           <Progress value={100 - parseFloat(score.riskScore)} className="w-16 h-2" />
@@ -100,13 +100,13 @@ export default function SupplierRiskTab() {
                         </div>
                       ) : "—"}
                     </TableCell>
-                    <TableCell className="text-right">{score ? `${parseFloat(score.onTimeDeliveryRate).toFixed(1)}%` : "—"}</TableCell>
-                    <TableCell className="text-right">{score ? parseFloat(score.qualityScore).toFixed(1) : "—"}</TableCell>
-                    <TableCell className="text-right">{score ? parseFloat(score.priceCompetitiveness).toFixed(1) : "—"}</TableCell>
-                    <TableCell className="text-right">{score ? parseFloat(score.responsiveness).toFixed(1) : "—"}</TableCell>
-                    <TableCell className="text-right">{score ? parseFloat(score.complianceScore).toFixed(1) : "—"}</TableCell>
-                    <TableCell>{score?.assessmentDate || "—"}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{score ? `${parseFloat(score.onTimeDeliveryRate).toFixed(1)}%` : "—"}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{score ? parseFloat(score.qualityScore).toFixed(1) : "—"}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{score ? parseFloat(score.priceCompetitiveness).toFixed(1) : "—"}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{score ? parseFloat(score.responsiveness).toFixed(1) : "—"}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{score ? parseFloat(score.complianceScore).toFixed(1) : "—"}</TableCell>
+                    <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{score?.assessmentDate || "—"}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                       <Button
                         size="sm"
                         variant="outline"

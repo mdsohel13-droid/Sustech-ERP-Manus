@@ -186,28 +186,28 @@ export default function MultiCurrencyTab() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Currency</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead className="text-right">Rate (vs USD)</TableHead>
-                <TableHead className="text-right">24h Change</TableHead>
-                <TableHead className="text-right">Equivalent in {currency}</TableHead>
+                <TableHead className="whitespace-normal break-words">Currency</TableHead>
+                <TableHead className="whitespace-normal break-words">Code</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Rate (vs USD)</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">24h Change</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Equivalent in {currency}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {Object.entries(EXCHANGE_RATES).map(([code, data]) => (
                 <TableRow key={code}>
-                  <TableCell className="font-medium">{data.name}</TableCell>
-                  <TableCell><Badge variant="outline">{code}</Badge></TableCell>
-                  <TableCell className="text-right font-mono">{data.rate.toFixed(4)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{data.name}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><Badge variant="outline">{code}</Badge></TableCell>
+                  <TableCell className="break-words text-right font-mono" style={{ overflowWrap: "break-word" }}>{data.rate.toFixed(4)}</TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                     <span className={`font-medium ${data.change24h >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                       {data.change24h >= 0 ? '+' : ''}{data.change24h}%
                     </span>
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="break-words text-right font-mono" style={{ overflowWrap: "break-word" }}>
                     {((EXCHANGE_RATES[currency]?.rate || 110.25) / data.rate).toFixed(4)}
                   </TableCell>
                 </TableRow>

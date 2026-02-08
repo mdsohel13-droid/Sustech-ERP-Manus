@@ -815,24 +815,24 @@ export default function Sales() {
           </div>
 
           <Card className="editorial-card">
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
+                  <TableHead className="whitespace-normal break-words w-12">
                     <Checkbox
                       checked={batchSelection.selectedIds.length === dailySales?.length && dailySales?.length > 0}
                       indeterminate={batchSelection.selectedIds.length > 0 && batchSelection.selectedIds.length < dailySales?.length}
                       onCheckedChange={batchSelection.toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Salesperson</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
-                  <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead className="text-right">Total Amount</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead className="whitespace-normal break-words">Date</TableHead>
+                  <TableHead className="whitespace-normal break-words">Product</TableHead>
+                  <TableHead className="whitespace-normal break-words">Salesperson</TableHead>
+                  <TableHead className="whitespace-normal break-words">Customer</TableHead>
+                  <TableHead className="whitespace-normal break-words text-right">Quantity</TableHead>
+                  <TableHead className="whitespace-normal break-words text-right">Unit Price</TableHead>
+                  <TableHead className="whitespace-normal break-words text-right">Total Amount</TableHead>
+                  <TableHead className="whitespace-normal break-words text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -848,8 +848,8 @@ export default function Sales() {
                             onCheckedChange={() => batchSelection.toggleSelection(String(sale.id))}
                           />
                         </TableCell>
-                        <TableCell>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <InfoPopup
                             trigger={
                               <button 
@@ -909,9 +909,9 @@ export default function Sales() {
                             </div>
                           </InfoPopup>
                         </TableCell>
-                        <TableCell>{sale.salespersonName || "N/A"}</TableCell>
-                        <TableCell>{sale.customerName || "-"}</TableCell>
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{sale.salespersonName || "N/A"}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{sale.customerName || "-"}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }} onClick={(e) => e.stopPropagation()}>
                           {editingCell?.rowId === sale.id && editingCell?.field === 'quantity' ? (
                             <InlineEditCell
                               value={String(sale.quantity)}
@@ -930,7 +930,7 @@ export default function Sales() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }} onClick={(e) => e.stopPropagation()}>
                           {editingCell?.rowId === sale.id && editingCell?.field === 'unitPrice' ? (
                             <InlineEditCell
                               value={String(sale.unitPrice)}
@@ -949,8 +949,8 @@ export default function Sales() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">৳{total.toLocaleString()}</TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>৳{total.toLocaleString()}</TableCell>
+                        <TableCell className="break-words text-center" style={{ overflowWrap: "break-word" }}>
                           <Button variant="ghost" size="sm" onClick={() => {
                             setSelectedTracking(sale);
                             setViewTrackingDialogOpen(true);
@@ -1028,19 +1028,19 @@ export default function Sales() {
           </div>
 
           <Card className="editorial-card">
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Week</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="text-right">Target</TableHead>
-                  <TableHead className="text-right">Actual</TableHead>
-                  <TableHead className="text-right">Achievement</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="text-center">
+                  <TableHead className="whitespace-normal break-words">Week</TableHead>
+                  <TableHead className="whitespace-normal break-words">Product</TableHead>
+                  <TableHead className="whitespace-normal break-words text-right">Target</TableHead>
+                  <TableHead className="whitespace-normal break-words text-right">Actual</TableHead>
+                  <TableHead className="whitespace-normal break-words text-right">Achievement</TableHead>
+                  <TableHead className="whitespace-normal break-words">Notes</TableHead>
+                  <TableHead className="whitespace-normal break-words text-center">
                     <FileText className="h-4 w-4 inline" />
                   </TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead className="whitespace-normal break-words text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1057,9 +1057,9 @@ export default function Sales() {
                           setViewTrackingDialogOpen(true);
                         }}
                       >
-                        <TableCell>{format(new Date(item.weekStartDate), "MMM dd, yyyy")}</TableCell>
-                        <TableCell>{product?.name || `Product ${item.productId}`}</TableCell>
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{format(new Date(item.weekStartDate), "MMM dd, yyyy")}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{product?.name || `Product ${item.productId}`}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }} onClick={(e) => e.stopPropagation()}>
                           {editingCell?.rowId === item.id && editingCell?.field === 'target' ? (
                             <InlineEditCell
                               value={String(item.target)}
@@ -1080,7 +1080,7 @@ export default function Sales() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }} onClick={(e) => e.stopPropagation()}>
                           {editingCell?.rowId === item.id && editingCell?.field === 'actual' ? (
                             <InlineEditCell
                               value={String(item.actual)}
@@ -1101,16 +1101,16 @@ export default function Sales() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <Badge className={achievement >= 100 ? "bg-green-100 text-green-800" : achievement >= 80 ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}>
                             {achievement.toFixed(0)}%
                           </Badge>
                         </TableCell>
-                        <TableCell>{item.notes || "-"}</TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{item.notes || "-"}</TableCell>
+                        <TableCell className="break-words text-center" style={{ overflowWrap: "break-word" }}>
                           <Paperclip className="h-4 w-4 inline text-muted-foreground" />
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="break-words text-center" style={{ overflowWrap: "break-word" }}>
                           <div className="flex gap-2 justify-center">
                             <Button variant="ghost" size="sm" onClick={() => {setSelectedTracking(item); setViewTrackingDialogOpen(true);}} title="Edit">
                               <Edit className="w-4 h-4 text-blue-600" />
@@ -1218,26 +1218,26 @@ export default function Sales() {
             </CardHeader>
             <CardContent>
               {employees && employees.length > 0 ? (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-center">Actions</TableHead>
+                      <TableHead className="whitespace-normal break-words">Name</TableHead>
+                      <TableHead className="whitespace-normal break-words">Email</TableHead>
+                      <TableHead className="whitespace-normal break-words">Status</TableHead>
+                      <TableHead className="whitespace-normal break-words text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {employees.map((emp: any) => (
                       <TableRow key={emp.id}>
-                        <TableCell className="font-medium">{emp.name}</TableCell>
-                        <TableCell>{emp.email || '-'}</TableCell>
-                        <TableCell>
+                        <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{emp.name}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{emp.email || '-'}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <Badge variant={emp.status === 'active' ? 'default' : 'secondary'}>
                             {emp.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="break-words text-center" style={{ overflowWrap: "break-word" }}>
                           <Button variant="ghost" size="sm" onClick={() => window.location.href = '/human-resource'} title="Edit in HR Module">
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -1267,17 +1267,17 @@ export default function Sales() {
 
           <Card className="editorial-card">
             <CardContent className="p-0">
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Salesperson</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead className="text-right">Quantity</TableHead>
-                    <TableHead className="text-right">Total Amount</TableHead>
-                    <TableHead>Archived At</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words">Date</TableHead>
+                    <TableHead className="whitespace-normal break-words">Product</TableHead>
+                    <TableHead className="whitespace-normal break-words">Salesperson</TableHead>
+                    <TableHead className="whitespace-normal break-words">Customer</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Quantity</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Total Amount</TableHead>
+                    <TableHead className="whitespace-normal break-words">Archived At</TableHead>
+                    <TableHead className="whitespace-normal break-words text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1286,16 +1286,16 @@ export default function Sales() {
                       const product = products?.find(p => p.id === sale.productId);
                       return (
                         <TableRow key={sale.id} className="bg-muted/30">
-                          <TableCell>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
-                          <TableCell className="font-medium">{product?.name || sale.productName}</TableCell>
-                          <TableCell>{sale.salespersonName || "N/A"}</TableCell>
-                          <TableCell>{sale.customerName || "-"}</TableCell>
-                          <TableCell className="text-right">{Number(sale.quantity).toLocaleString()}</TableCell>
-                          <TableCell className="text-right font-medium">৳{Number(sale.totalAmount).toLocaleString()}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{sale.date ? format(new Date(sale.date), "MMM dd, yyyy") : "N/A"}</TableCell>
+                          <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{product?.name || sale.productName}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{sale.salespersonName || "N/A"}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{sale.customerName || "-"}</TableCell>
+                          <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{Number(sale.quantity).toLocaleString()}</TableCell>
+                          <TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>৳{Number(sale.totalAmount).toLocaleString()}</TableCell>
+                          <TableCell className="break-words text-sm text-muted-foreground" style={{ overflowWrap: "break-word" }}>
                             {sale.archivedAt ? format(new Date(sale.archivedAt), "MMM dd, yyyy HH:mm") : "-"}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <div className="flex justify-center gap-2">
                               <Button 
                                 variant="ghost" 

@@ -104,20 +104,20 @@ export default function ShipmentsTab() {
             <div>
               <h3 className="font-semibold mb-2">Items</h3>
               {shipmentLines && shipmentLines.length > 0 ? (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead className="text-right">Quantity</TableHead>
-                      <TableHead>Weight (kg)</TableHead>
+                      <TableHead className="whitespace-normal break-words">Product</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Quantity</TableHead>
+                      <TableHead className="whitespace-normal break-words">Weight (kg)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {shipmentLines.map((line) => (
                       <TableRow key={line.id}>
-                        <TableCell className="font-medium">{line.productName}</TableCell>
-                        <TableCell className="text-right">{line.quantity}</TableCell>
-                        <TableCell>{line.weightKg || "—"}</TableCell>
+                        <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{line.productName}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{line.quantity}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{line.weightKg || "—"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -187,30 +187,30 @@ export default function ShipmentsTab() {
       </CardHeader>
       <CardContent>
         {shipments && shipments.length > 0 ? (
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Shipment #</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Carrier</TableHead>
-                <TableHead>Tracking #</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Est. Delivery</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead className="whitespace-normal break-words">Shipment #</TableHead>
+                <TableHead className="whitespace-normal break-words">Type</TableHead>
+                <TableHead className="whitespace-normal break-words">Carrier</TableHead>
+                <TableHead className="whitespace-normal break-words">Tracking #</TableHead>
+                <TableHead className="whitespace-normal break-words">Status</TableHead>
+                <TableHead className="whitespace-normal break-words">Est. Delivery</TableHead>
+                <TableHead className="whitespace-normal break-words">Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {shipments.map((s) => (
                 <TableRow key={s.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailId(s.id)}>
-                  <TableCell className="font-mono text-sm">{s.shipmentNumber}</TableCell>
-                  <TableCell>
+                  <TableCell className="break-words font-mono text-sm" style={{ overflowWrap: "break-word" }}>{s.shipmentNumber}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Badge variant="outline">{s.shipmentType}</Badge>
                   </TableCell>
-                  <TableCell>{s.logisticsProvider || "—"}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.trackingNumber || "—"}</TableCell>
-                  <TableCell><Badge className={statusColors[s.status || "pending"] || "bg-gray-100"}>{s.status}</Badge></TableCell>
-                  <TableCell>{s.expectedDeliveryDate || "—"}</TableCell>
-                  <TableCell>{format(new Date(s.createdAt), "MMM d, yyyy")}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{s.logisticsProvider || "—"}</TableCell>
+                  <TableCell className="break-words font-mono text-xs" style={{ overflowWrap: "break-word" }}>{s.trackingNumber || "—"}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><Badge className={statusColors[s.status || "pending"] || "bg-gray-100"}>{s.status}</Badge></TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{s.expectedDeliveryDate || "—"}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{format(new Date(s.createdAt), "MMM d, yyyy")}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

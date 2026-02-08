@@ -183,29 +183,29 @@ export default function IFRSTab({ stats, balanceSheet, monthlyTrend }: IFRSTabPr
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Standard</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Impact</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Notes</TableHead>
+                <TableHead className="whitespace-normal break-words">Standard</TableHead>
+                <TableHead className="whitespace-normal break-words">Title</TableHead>
+                <TableHead className="whitespace-normal break-words">Impact</TableHead>
+                <TableHead className="whitespace-normal break-words">Status</TableHead>
+                <TableHead className="whitespace-normal break-words">Notes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {IFRS_STANDARDS.map((standard) => (
                 <TableRow key={standard.id}>
-                  <TableCell className="font-bold text-[#0d3b66]">{standard.id}</TableCell>
-                  <TableCell className="font-medium">{standard.title}</TableCell>
-                  <TableCell>
+                  <TableCell className="break-words font-bold text-[#0d3b66]" style={{ overflowWrap: "break-word" }}>{standard.id}</TableCell>
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{standard.title}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Badge variant="outline" className={
                       standard.impact === 'high' ? 'border-red-300 text-red-700' :
                       standard.impact === 'medium' ? 'border-amber-300 text-amber-700' :
                       'border-green-300 text-green-700'
                     }>{standard.impact}</Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Badge className={
                       standard.status === 'compliant' ? 'bg-green-100 text-green-800' :
                       standard.status === 'partial' ? 'bg-amber-100 text-amber-800' :
@@ -214,7 +214,7 @@ export default function IFRSTab({ stats, balanceSheet, monthlyTrend }: IFRSTabPr
                       {standard.status === 'compliant' ? 'Compliant' : standard.status === 'partial' ? 'Partial' : 'Non-Compliant'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500 max-w-xs">{standard.notes}</TableCell>
+                  <TableCell className="break-words text-sm text-slate-500 max-w-xs" style={{ overflowWrap: "break-word" }}>{standard.notes}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -194,31 +194,31 @@ export default function TaxComplianceTab({ stats, monthlyTrend }: TaxComplianceT
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Category</TableHead>
-                <TableHead>Section</TableHead>
-                <TableHead className="text-right">TDS Rate</TableHead>
-                <TableHead className="text-right">Base Amount</TableHead>
-                <TableHead className="text-right">TDS Deducted</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead className="whitespace-normal break-words">Category</TableHead>
+                <TableHead className="whitespace-normal break-words">Section</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">TDS Rate</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Base Amount</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">TDS Deducted</TableHead>
+                <TableHead className="whitespace-normal break-words">Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tdsData.map((item) => (
                 <TableRow key={item.category}>
-                  <TableCell className="font-medium">{item.category}</TableCell>
-                  <TableCell><Badge variant="outline">Sec {item.section}</Badge></TableCell>
-                  <TableCell className="text-right font-mono">{item.rate.toFixed(1)}%</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.baseAmount, currency)}</TableCell>
-                  <TableCell className="text-right font-semibold text-red-600">{formatCurrency(item.tdsAmount, currency)}</TableCell>
-                  <TableCell className="text-xs text-slate-500">{item.description}</TableCell>
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{item.category}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><Badge variant="outline">Sec {item.section}</Badge></TableCell>
+                  <TableCell className="break-words text-right font-mono" style={{ overflowWrap: "break-word" }}>{item.rate.toFixed(1)}%</TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(item.baseAmount, currency)}</TableCell>
+                  <TableCell className="break-words text-right font-semibold text-red-600" style={{ overflowWrap: "break-word" }}>{formatCurrency(item.tdsAmount, currency)}</TableCell>
+                  <TableCell className="break-words text-xs text-slate-500" style={{ overflowWrap: "break-word" }}>{item.description}</TableCell>
                 </TableRow>
               ))}
               <TableRow className="bg-muted/50 font-bold">
                 <TableCell colSpan={4}>Total TDS</TableCell>
-                <TableCell className="text-right text-red-700">{formatCurrency(totalTDS, currency)}</TableCell>
+                <TableCell className="break-words text-right text-red-700" style={{ overflowWrap: "break-word" }}>{formatCurrency(totalTDS, currency)}</TableCell>
                 <TableCell />
               </TableRow>
             </TableBody>
@@ -241,22 +241,22 @@ export default function TaxComplianceTab({ stats, monthlyTrend }: TaxComplianceT
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Requirement</TableHead>
-                <TableHead>Deadline</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="whitespace-normal break-words">Requirement</TableHead>
+                <TableHead className="whitespace-normal break-words">Deadline</TableHead>
+                <TableHead className="whitespace-normal break-words">Due Date</TableHead>
+                <TableHead className="whitespace-normal break-words">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {NBR_COMPLIANCE_CHECKLIST.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.requirement}</TableCell>
-                  <TableCell className="text-sm text-slate-500">{item.deadline}</TableCell>
-                  <TableCell className="text-sm">{new Date(item.dueDate).toLocaleDateString()}</TableCell>
-                  <TableCell>
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{item.requirement}</TableCell>
+                  <TableCell className="break-words text-sm text-slate-500" style={{ overflowWrap: "break-word" }}>{item.deadline}</TableCell>
+                  <TableCell className="break-words text-sm" style={{ overflowWrap: "break-word" }}>{new Date(item.dueDate).toLocaleDateString()}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Badge className={
                       item.status === 'compliant' ? 'bg-green-100 text-green-800' :
                       item.status === 'attention' ? 'bg-amber-100 text-amber-800' :

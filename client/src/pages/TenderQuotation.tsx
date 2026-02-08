@@ -156,18 +156,18 @@ export default function TenderQuotation() {
   };
 
   const renderTable = (data: any[], type: "government_tender" | "private_quotation") => (
-    <Table>
+    <Table className="table-fixed">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[60px]">SL</TableHead>
-          <TableHead>{type === "government_tender" ? "Tender" : "Quotation"} ID</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Client Name</TableHead>
-          <TableHead>Submission Date</TableHead>
-          <TableHead>Follow-up Date</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Estimated Value</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead className="whitespace-normal break-words w-[60px]">SL</TableHead>
+          <TableHead className="whitespace-normal break-words">{type === "government_tender" ? "Tender" : "Quotation"} ID</TableHead>
+          <TableHead className="whitespace-normal break-words">Description</TableHead>
+          <TableHead className="whitespace-normal break-words">Client Name</TableHead>
+          <TableHead className="whitespace-normal break-words">Submission Date</TableHead>
+          <TableHead className="whitespace-normal break-words">Follow-up Date</TableHead>
+          <TableHead className="whitespace-normal break-words">Status</TableHead>
+          <TableHead className="whitespace-normal break-words">Estimated Value</TableHead>
+          <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -184,12 +184,12 @@ export default function TenderQuotation() {
             
             return (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell className="font-mono text-sm"><button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{item.referenceId}</button></TableCell>
+                <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{index + 1}</TableCell>
+                <TableCell className="break-words font-mono text-sm" style={{ overflowWrap: "break-word" }}><button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{item.referenceId}</button></TableCell>
                 <TableCell className="max-w-xs truncate"><button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{item.description}</button></TableCell>
-                <TableCell>{item.clientName}</TableCell>
-                <TableCell>{format(new Date(item.submissionDate), "MMM dd, yyyy")}</TableCell>
-                <TableCell>
+                <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{item.clientName}</TableCell>
+                <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{format(new Date(item.submissionDate), "MMM dd, yyyy")}</TableCell>
+                <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                   {item.followUpDate ? (
                     <div className={`flex items-center gap-1 ${overdueFlag ? "text-orange-600 font-semibold" : ""}`}>
                       {overdueFlag && <AlertTriangle className="h-4 w-4" />}
@@ -199,16 +199,16 @@ export default function TenderQuotation() {
                     <span className="text-muted-foreground">-</span>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                   <Badge className={statusConfig[item.status as keyof typeof statusConfig].color}>
                     <StatusIcon className="h-3 w-3 mr-1" />
                     {statusConfig[item.status as keyof typeof statusConfig].label}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                   {item.estimatedValue ? formatCurrency(Number(item.estimatedValue), item.currency || currency) : "-"}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                   <div className="flex items-center justify-end gap-2">
                     <Button
                       variant="ghost"

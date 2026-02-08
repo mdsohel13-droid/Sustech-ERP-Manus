@@ -304,28 +304,28 @@ export default function SCM() {
             </CardHeader>
             <CardContent>
               {replenishmentAlerts && replenishmentAlerts.length > 0 ? (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead className="text-right">Current Stock</TableHead>
-                      <TableHead className="text-right">Reorder Point</TableHead>
-                      <TableHead className="text-right">Suggested Qty (EOQ)</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="whitespace-normal break-words">Product</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Current Stock</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Reorder Point</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Suggested Qty (EOQ)</TableHead>
+                      <TableHead className="whitespace-normal break-words">Status</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {replenishmentAlerts.map((alert) => (
                       <TableRow key={alert.productId}>
-                        <TableCell className="font-medium">{alert.productName}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{alert.productName}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <span className={alert.currentStock <= 0 ? "text-red-600 font-bold" : ""}>
                             {alert.currentStock}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right">{alert.reorderPoint}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{alert.reorderPoint}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <Badge variant="outline" className="bg-blue-50">
                             {alert.suggestedQty}
                           </Badge>
@@ -335,12 +335,12 @@ export default function SCM() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <Badge className="bg-red-100 text-red-800">
                             Below Reorder
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <Button
                             size="sm"
                             onClick={() => handleCreateReplenishment(alert.productId, 1)}
@@ -378,16 +378,16 @@ export default function SCM() {
             </CardHeader>
             <CardContent>
               {purchaseOrders && purchaseOrders.length > 0 ? (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>PO Number</TableHead>
-                      <TableHead>Vendor</TableHead>
-                      <TableHead>Order Date</TableHead>
-                      <TableHead>Expected Delivery</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Progress</TableHead>
+                      <TableHead className="whitespace-normal break-words">PO Number</TableHead>
+                      <TableHead className="whitespace-normal break-words">Vendor</TableHead>
+                      <TableHead className="whitespace-normal break-words">Order Date</TableHead>
+                      <TableHead className="whitespace-normal break-words">Expected Delivery</TableHead>
+                      <TableHead className="whitespace-normal break-words text-right">Amount</TableHead>
+                      <TableHead className="whitespace-normal break-words">Status</TableHead>
+                      <TableHead className="whitespace-normal break-words">Progress</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -398,25 +398,25 @@ export default function SCM() {
 
                       return (
                         <TableRow key={po.id}>
-                          <TableCell className="font-medium">{po.poNumber}</TableCell>
-                          <TableCell>{vendors?.find(v => v.id === po.vendorId)?.name || "N/A"}</TableCell>
-                          <TableCell>
+                          <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{po.poNumber}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{vendors?.find(v => v.id === po.vendorId)?.name || "N/A"}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             {po.orderDate ? format(new Date(po.orderDate), "MMM dd, yyyy") : "-"}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             {po.expectedDeliveryDate
                               ? format(new Date(po.expectedDeliveryDate), "MMM dd, yyyy")
                               : "-"}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                             {formatCurrency(parseFloat(po.totalAmount || "0"), currency)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <Badge className={poStatusColors[po.status || "draft"]}>
                               {(po.status || "draft").replace("_", " ").toUpperCase()}
                             </Badge>
                           </TableCell>
-                          <TableCell className="w-32">
+                          <TableCell className="break-words w-32" style={{ overflowWrap: "break-word" }}>
                             <Progress value={progress} className="h-2" />
                           </TableCell>
                         </TableRow>

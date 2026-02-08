@@ -440,35 +440,35 @@ export default function IncomeExpenditure() {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Payment Method</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words">Date</TableHead>
+                    <TableHead className="whitespace-normal break-words">Type</TableHead>
+                    <TableHead className="whitespace-normal break-words">Category</TableHead>
+                    <TableHead className="whitespace-normal break-words">Amount</TableHead>
+                    <TableHead className="whitespace-normal break-words">Reference</TableHead>
+                    <TableHead className="whitespace-normal break-words">Payment Method</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allEntries && allEntries.length > 0 ? (
                     allEntries.map((entry) => (
                       <TableRow key={entry.id}>
-                        <TableCell>{entry.date ? format(new Date(entry.date), "MMM dd, yyyy") : "-"}</TableCell>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.date ? format(new Date(entry.date), "MMM dd, yyyy") : "-"}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <Badge variant={entry.type === "income" ? "default" : "destructive"}>
                             {entry.type}
                           </Badge>
                         </TableCell>
-                        <TableCell className="capitalize">{entry.category.replace(/_/g, " ")}</TableCell>
+                        <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{entry.category.replace(/_/g, " ")}</TableCell>
                         <TableCell className={entry.type === "income" ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
                           {formatCurrency(entry.amount, entry.currency || currency)}
                         </TableCell>
-                        <TableCell><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
-                        <TableCell className="capitalize">{entry.paymentMethod?.replace(/_/g, " ") || "-"}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
+                        <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{entry.paymentMethod?.replace(/_/g, " ") || "-"}</TableCell>
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -510,29 +510,29 @@ export default function IncomeExpenditure() {
               <CardDescription>All revenue entries</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words">Date</TableHead>
+                    <TableHead className="whitespace-normal break-words">Category</TableHead>
+                    <TableHead className="whitespace-normal break-words">Amount</TableHead>
+                    <TableHead className="whitespace-normal break-words">Reference</TableHead>
+                    <TableHead className="whitespace-normal break-words">Description</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {incomeEntries.length > 0 ? (
                     incomeEntries.map((entry) => (
                       <TableRow key={entry.id}>
-                        <TableCell>{entry.date ? format(new Date(entry.date), "MMM dd, yyyy") : "-"}</TableCell>
-                        <TableCell className="capitalize">{entry.category.replace(/_/g, " ")}</TableCell>
-                        <TableCell className="text-green-600 font-semibold">
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.date ? format(new Date(entry.date), "MMM dd, yyyy") : "-"}</TableCell>
+                        <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{entry.category.replace(/_/g, " ")}</TableCell>
+                        <TableCell className="break-words text-green-600 font-semibold" style={{ overflowWrap: "break-word" }}>
                           {formatCurrency(entry.amount, entry.currency || currency)}
                         </TableCell>
-                        <TableCell><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
                         <TableCell className="max-w-xs truncate"><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.description || "-"}</button></TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -574,29 +574,29 @@ export default function IncomeExpenditure() {
               <CardDescription>All expense entries</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words">Date</TableHead>
+                    <TableHead className="whitespace-normal break-words">Category</TableHead>
+                    <TableHead className="whitespace-normal break-words">Amount</TableHead>
+                    <TableHead className="whitespace-normal break-words">Reference</TableHead>
+                    <TableHead className="whitespace-normal break-words">Description</TableHead>
+                    <TableHead className="whitespace-normal break-words text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {expenditureEntries.length > 0 ? (
                     expenditureEntries.map((entry) => (
                       <TableRow key={entry.id}>
-                        <TableCell>{entry.date ? format(new Date(entry.date), "MMM dd, yyyy") : "-"}</TableCell>
-                        <TableCell className="capitalize">{entry.category.replace(/_/g, " ")}</TableCell>
-                        <TableCell className="text-red-600 font-semibold">
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.date ? format(new Date(entry.date), "MMM dd, yyyy") : "-"}</TableCell>
+                        <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{entry.category.replace(/_/g, " ")}</TableCell>
+                        <TableCell className="break-words text-red-600 font-semibold" style={{ overflowWrap: "break-word" }}>
                           {formatCurrency(entry.amount, entry.currency || currency)}
                         </TableCell>
-                        <TableCell><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.referenceNumber || "-"}</button></TableCell>
                         <TableCell className="max-w-xs truncate"><button onClick={() => { setEditingEntry(entry); setEntryType(entry.type); setDialogOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left w-full">{entry.description || "-"}</button></TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>
                           <Button 
                             variant="ghost" 
                             size="sm" 

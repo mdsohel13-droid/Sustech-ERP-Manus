@@ -522,21 +522,21 @@ export default function CRM() {
               </Button>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Contact</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words">Name</TableHead>
+                    <TableHead className="whitespace-normal break-words">Company</TableHead>
+                    <TableHead className="whitespace-normal break-words">Source</TableHead>
+                    <TableHead className="whitespace-normal break-words">Status</TableHead>
+                    <TableHead className="whitespace-normal break-words">Last Contact</TableHead>
+                    <TableHead className="whitespace-normal break-words">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredLeads.slice(0, 5).map((lead: any) => (
                     <TableRow key={lead.id}>
-                      <TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                         <button 
                           className="text-blue-600 hover:underline font-medium"
                           onClick={() => { setSelectedLead(lead); setShowLeadDetailDialog(true); }}
@@ -544,16 +544,16 @@ export default function CRM() {
                           {lead.name}
                         </button>
                       </TableCell>
-                      <TableCell>{lead.company || '-'}</TableCell>
-                      <TableCell className="capitalize">{lead.source?.replace('_', ' ') || '-'}</TableCell>
-                      <TableCell>{getLeadStatusBadge(lead.status)}</TableCell>
-                      <TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{lead.company || '-'}</TableCell>
+                      <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{lead.source?.replace('_', ' ') || '-'}</TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getLeadStatusBadge(lead.status)}</TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                         {lead.lastContactDate 
                           ? format(new Date(lead.lastContactDate), 'MM/dd/yyyy h:mm a')
                           : '-'
                         }
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                         <div className="flex items-center gap-1">
                           <Button variant="ghost" size="sm" className="h-7 px-2">
                             <Phone className="w-3 h-3" /> Call
@@ -588,16 +588,16 @@ export default function CRM() {
               </Button>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Opportunity Name</TableHead>
-                    <TableHead>Account</TableHead>
-                    <TableHead>Stage</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Close Date</TableHead>
-                    <TableHead>Owner</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="whitespace-normal break-words">Opportunity Name</TableHead>
+                    <TableHead className="whitespace-normal break-words">Account</TableHead>
+                    <TableHead className="whitespace-normal break-words">Stage</TableHead>
+                    <TableHead className="whitespace-normal break-words">Amount</TableHead>
+                    <TableHead className="whitespace-normal break-words">Close Date</TableHead>
+                    <TableHead className="whitespace-normal break-words">Owner</TableHead>
+                    <TableHead className="whitespace-normal break-words">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -606,7 +606,7 @@ export default function CRM() {
                     const owner = teamMembers.find((e: any) => e.id === opp.ownerId);
                     return (
                       <TableRow key={opp.id}>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <button 
                             className="text-blue-600 hover:underline font-medium"
                             onClick={() => { setSelectedOpportunity(opp); setShowOpportunityDetailDialog(true); }}
@@ -614,16 +614,16 @@ export default function CRM() {
                             {opp.name}
                           </button>
                         </TableCell>
-                        <TableCell>{customer?.name || customer?.company || '-'}</TableCell>
-                        <TableCell>{getOpportunityStage(opp.stage)}</TableCell>
-                        <TableCell>{formatCurrency(Number(opp.amount) || 0, currency)}</TableCell>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{customer?.name || customer?.company || '-'}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getOpportunityStage(opp.stage)}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(opp.amount) || 0, currency)}</TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           {opp.expectedCloseDate 
                             ? format(new Date(opp.expectedCloseDate), 'MM/dd/yyyy')
                             : '-'
                           }
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs">
                               {owner?.name?.charAt(0) || '?'}
@@ -631,7 +631,7 @@ export default function CRM() {
                             <span className="text-sm">{owner?.name?.split(' ')[0] || '-'}</span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                           <Button variant="ghost" size="sm" className="h-7 px-2">
                             <Phone className="w-3 h-3" /> Call
                           </Button>
@@ -680,30 +680,30 @@ export default function CRM() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Source</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Est. Value</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="whitespace-normal break-words">Name</TableHead>
+                        <TableHead className="whitespace-normal break-words">Company</TableHead>
+                        <TableHead className="whitespace-normal break-words">Email</TableHead>
+                        <TableHead className="whitespace-normal break-words">Phone</TableHead>
+                        <TableHead className="whitespace-normal break-words">Source</TableHead>
+                        <TableHead className="whitespace-normal break-words">Status</TableHead>
+                        <TableHead className="whitespace-normal break-words">Est. Value</TableHead>
+                        <TableHead className="whitespace-normal break-words">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredLeads.map((lead: any) => (
                         <TableRow key={lead.id}>
-                          <TableCell className="font-medium">{lead.name}</TableCell>
-                          <TableCell>{lead.company || '-'}</TableCell>
-                          <TableCell>{lead.email || '-'}</TableCell>
-                          <TableCell>{lead.phone || '-'}</TableCell>
-                          <TableCell className="capitalize">{lead.source?.replace('_', ' ') || '-'}</TableCell>
-                          <TableCell>{getLeadStatusBadge(lead.status)}</TableCell>
-                          <TableCell>{lead.estimatedValue ? formatCurrency(Number(lead.estimatedValue), currency) : '-'}</TableCell>
-                          <TableCell>
+                          <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{lead.name}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{lead.company || '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{lead.email || '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{lead.phone || '-'}</TableCell>
+                          <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{lead.source?.replace('_', ' ') || '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getLeadStatusBadge(lead.status)}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{lead.estimatedValue ? formatCurrency(Number(lead.estimatedValue), currency) : '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <div className="flex items-center gap-1">
                               <Button variant="ghost" size="icon" onClick={() => openEditLead(lead)}>
                                 <Edit2 className="w-4 h-4" />
@@ -730,16 +730,16 @@ export default function CRM() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Account</TableHead>
-                        <TableHead>Stage</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Probability</TableHead>
-                        <TableHead>Close Date</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="whitespace-normal break-words">Name</TableHead>
+                        <TableHead className="whitespace-normal break-words">Account</TableHead>
+                        <TableHead className="whitespace-normal break-words">Stage</TableHead>
+                        <TableHead className="whitespace-normal break-words">Amount</TableHead>
+                        <TableHead className="whitespace-normal break-words">Probability</TableHead>
+                        <TableHead className="whitespace-normal break-words">Close Date</TableHead>
+                        <TableHead className="whitespace-normal break-words">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -747,15 +747,15 @@ export default function CRM() {
                         const customer = customers.find((c: any) => c.id === opp.customerId);
                         return (
                           <TableRow key={opp.id}>
-                            <TableCell className="font-medium">{opp.name}</TableCell>
-                            <TableCell>{customer?.name || '-'}</TableCell>
-                            <TableCell>{getOpportunityStage(opp.stage)}</TableCell>
-                            <TableCell>{formatCurrency(Number(opp.amount) || 0, currency)}</TableCell>
-                            <TableCell>{opp.probability}%</TableCell>
-                            <TableCell>
+                            <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{opp.name}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{customer?.name || '-'}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getOpportunityStage(opp.stage)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(opp.amount) || 0, currency)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{opp.probability}%</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               {opp.expectedCloseDate ? format(new Date(opp.expectedCloseDate), 'MM/dd/yyyy') : '-'}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="icon" onClick={() => openEditOpportunity(opp)}>
                                   <Edit2 className="w-4 h-4" />
@@ -780,22 +780,22 @@ export default function CRM() {
                   <CardTitle>Archived Leads</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="whitespace-normal break-words">Name</TableHead>
+                        <TableHead className="whitespace-normal break-words">Company</TableHead>
+                        <TableHead className="whitespace-normal break-words">Status</TableHead>
+                        <TableHead className="whitespace-normal break-words">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {archivedLeads.map((lead: any) => (
                         <TableRow key={lead.id}>
-                          <TableCell className="font-medium">{lead.name}</TableCell>
-                          <TableCell>{lead.company || '-'}</TableCell>
-                          <TableCell>{getLeadStatusBadge(lead.status)}</TableCell>
-                          <TableCell>
+                          <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{lead.name}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{lead.company || '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getLeadStatusBadge(lead.status)}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <Button variant="ghost" size="sm" onClick={() => restoreLead.mutate({ id: lead.id })}>
                               <RotateCcw className="w-4 h-4 mr-1" /> Restore
                             </Button>
@@ -822,24 +822,24 @@ export default function CRM() {
                   <CardDescription>Existing customers from the previous system</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
+                  <Table className="table-fixed">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead className="whitespace-normal break-words">Name</TableHead>
+                        <TableHead className="whitespace-normal break-words">Company</TableHead>
+                        <TableHead className="whitespace-normal break-words">Email</TableHead>
+                        <TableHead className="whitespace-normal break-words">Phone</TableHead>
+                        <TableHead className="whitespace-normal break-words">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {customers.slice(0, 10).map((customer: any) => (
                         <TableRow key={customer.id}>
-                          <TableCell className="font-medium">{customer.name}</TableCell>
-                          <TableCell>{customer.company || '-'}</TableCell>
-                          <TableCell>{customer.email || '-'}</TableCell>
-                          <TableCell>{customer.phone || '-'}</TableCell>
-                          <TableCell>
+                          <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{customer.name}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{customer.company || '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{customer.email || '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{customer.phone || '-'}</TableCell>
+                          <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                             <Badge variant={customer.status === 'hot' ? 'destructive' : customer.status === 'warm' ? 'default' : 'secondary'}>
                               {customer.status}
                             </Badge>

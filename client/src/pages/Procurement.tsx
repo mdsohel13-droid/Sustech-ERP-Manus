@@ -430,24 +430,24 @@ export default function Procurement() {
                     <CardTitle className="text-lg">Recent Purchase Orders</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
+                    <Table className="table-fixed">
                       <TableHeader>
                         <TableRow>
-                          <TableHead>#</TableHead>
-                          <TableHead>PO Number</TableHead>
-                          <TableHead>Vendor</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Expected</TableHead>
-                          <TableHead>Total</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="whitespace-normal break-words">#</TableHead>
+                          <TableHead className="whitespace-normal break-words">PO Number</TableHead>
+                          <TableHead className="whitespace-normal break-words">Vendor</TableHead>
+                          <TableHead className="whitespace-normal break-words">Date</TableHead>
+                          <TableHead className="whitespace-normal break-words">Expected</TableHead>
+                          <TableHead className="whitespace-normal break-words">Total</TableHead>
+                          <TableHead className="whitespace-normal break-words">Status</TableHead>
+                          <TableHead className="whitespace-normal break-words">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredPOs.slice(0, 10).map((po: any, index: number) => (
                           <TableRow key={po.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{index + 1}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <button
                                 onClick={() => { setSelectedPO(po); setShowViewPODialog(true); }}
                                 className="text-blue-600 hover:underline font-medium"
@@ -455,17 +455,17 @@ export default function Procurement() {
                                 {po.poNumber}
                               </button>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <div className="flex items-center gap-2">
                                 <Building2 className="w-4 h-4 text-muted-foreground" />
                                 {getVendorName(po.vendorId)}
                               </div>
                             </TableCell>
-                            <TableCell>{po.orderDate}</TableCell>
-                            <TableCell>{po.expectedDeliveryDate || '-'}</TableCell>
-                            <TableCell className="font-medium">{formatCurrency(Number(po.totalAmount) || 0, currency)}</TableCell>
-                            <TableCell>{getStatusBadge(po.status)}</TableCell>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{po.orderDate}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{po.expectedDeliveryDate || '-'}</TableCell>
+                            <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(po.totalAmount) || 0, currency)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getStatusBadge(po.status)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" onClick={() => { setSelectedPO(po); setShowViewPODialog(true); }}>
                                   <Eye className="w-4 h-4" />
@@ -574,23 +574,23 @@ export default function Procurement() {
                     <CardTitle>All Purchase Orders</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
+                    <Table className="table-fixed">
                       <TableHeader>
                         <TableRow>
-                          <TableHead>PO Number</TableHead>
-                          <TableHead>Vendor</TableHead>
-                          <TableHead>Order Date</TableHead>
-                          <TableHead>Expected Delivery</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Total</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="whitespace-normal break-words">PO Number</TableHead>
+                          <TableHead className="whitespace-normal break-words">Vendor</TableHead>
+                          <TableHead className="whitespace-normal break-words">Order Date</TableHead>
+                          <TableHead className="whitespace-normal break-words">Expected Delivery</TableHead>
+                          <TableHead className="whitespace-normal break-words">Category</TableHead>
+                          <TableHead className="whitespace-normal break-words">Total</TableHead>
+                          <TableHead className="whitespace-normal break-words">Status</TableHead>
+                          <TableHead className="whitespace-normal break-words">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredPOs.map((po: any) => (
                           <TableRow key={po.id}>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <button
                                 onClick={() => { setSelectedPO(po); setShowViewPODialog(true); }}
                                 className="text-blue-600 hover:underline font-medium"
@@ -598,13 +598,13 @@ export default function Procurement() {
                                 {po.poNumber}
                               </button>
                             </TableCell>
-                            <TableCell>{getVendorName(po.vendorId)}</TableCell>
-                            <TableCell>{po.orderDate}</TableCell>
-                            <TableCell>{po.expectedDeliveryDate || '-'}</TableCell>
-                            <TableCell className="capitalize">{po.category?.replace('_', ' ') || '-'}</TableCell>
-                            <TableCell className="font-medium">{formatCurrency(Number(po.totalAmount) || 0, currency)}</TableCell>
-                            <TableCell>{getStatusBadge(po.status)}</TableCell>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getVendorName(po.vendorId)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{po.orderDate}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{po.expectedDeliveryDate || '-'}</TableCell>
+                            <TableCell className="break-words capitalize" style={{ overflowWrap: "break-word" }}>{po.category?.replace('_', ' ') || '-'}</TableCell>
+                            <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(po.totalAmount) || 0, currency)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getStatusBadge(po.status)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" onClick={() => { setSelectedPO(po); setShowViewPODialog(true); }}>
                                   <Eye className="w-4 h-4" />
@@ -636,34 +636,34 @@ export default function Procurement() {
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    <Table>
+                    <Table className="table-fixed">
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Code</TableHead>
-                          <TableHead>Contact</TableHead>
-                          <TableHead>City</TableHead>
-                          <TableHead>Total Orders</TableHead>
-                          <TableHead>Total Spent</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead className="whitespace-normal break-words">Name</TableHead>
+                          <TableHead className="whitespace-normal break-words">Code</TableHead>
+                          <TableHead className="whitespace-normal break-words">Contact</TableHead>
+                          <TableHead className="whitespace-normal break-words">City</TableHead>
+                          <TableHead className="whitespace-normal break-words">Total Orders</TableHead>
+                          <TableHead className="whitespace-normal break-words">Total Spent</TableHead>
+                          <TableHead className="whitespace-normal break-words">Status</TableHead>
+                          <TableHead className="whitespace-normal break-words">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {vendors.map((vendor: any) => (
                           <TableRow key={vendor.id}>
-                            <TableCell className="font-medium">{vendor.name}</TableCell>
-                            <TableCell>{vendor.code || '-'}</TableCell>
-                            <TableCell>
+                            <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{vendor.name}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{vendor.code || '-'}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <div className="text-sm">
                                 {vendor.email && <div>{vendor.email}</div>}
                                 {vendor.phone && <div className="text-muted-foreground">{vendor.phone}</div>}
                               </div>
                             </TableCell>
-                            <TableCell>{vendor.city || '-'}</TableCell>
-                            <TableCell>{vendor.totalOrders || 0}</TableCell>
-                            <TableCell>{formatCurrency(Number(vendor.totalSpent) || 0, currency)}</TableCell>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{vendor.city || '-'}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{vendor.totalOrders || 0}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(vendor.totalSpent) || 0, currency)}</TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <span className={`text-xs px-2 py-1 rounded-full ${
                                 vendor.status === 'active' ? 'bg-green-100 text-green-700' :
                                 vendor.status === 'inactive' ? 'bg-gray-100 text-gray-700' :
@@ -672,7 +672,7 @@ export default function Procurement() {
                                 {vendor.status}
                               </span>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                               <Button variant="ghost" size="sm" onClick={() => archiveVendor.mutate({ id: vendor.id })}>
                                 <Archive className="w-4 h-4" />
                               </Button>
@@ -700,26 +700,26 @@ export default function Procurement() {
                       <CardTitle>Archived Purchase Orders</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Table>
+                      <Table className="table-fixed">
                         <TableHeader>
                           <TableRow>
-                            <TableHead>PO Number</TableHead>
-                            <TableHead>Vendor</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Total</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Actions</TableHead>
+                            <TableHead className="whitespace-normal break-words">PO Number</TableHead>
+                            <TableHead className="whitespace-normal break-words">Vendor</TableHead>
+                            <TableHead className="whitespace-normal break-words">Date</TableHead>
+                            <TableHead className="whitespace-normal break-words">Total</TableHead>
+                            <TableHead className="whitespace-normal break-words">Status</TableHead>
+                            <TableHead className="whitespace-normal break-words">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {archivedPOs.map((po: any) => (
                             <TableRow key={po.id}>
-                              <TableCell className="font-medium">{po.poNumber}</TableCell>
-                              <TableCell>{getVendorName(po.vendorId)}</TableCell>
-                              <TableCell>{po.orderDate}</TableCell>
-                              <TableCell>{formatCurrency(Number(po.totalAmount) || 0, currency)}</TableCell>
-                              <TableCell>{getStatusBadge(po.status)}</TableCell>
-                              <TableCell>
+                              <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{po.poNumber}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getVendorName(po.vendorId)}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{po.orderDate}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(po.totalAmount) || 0, currency)}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{getStatusBadge(po.status)}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                                 <Button variant="ghost" size="sm" onClick={() => restorePO.mutate({ id: po.id })}>
                                   <RotateCcw className="w-4 h-4 mr-1" />
                                   Restore
@@ -744,22 +744,22 @@ export default function Procurement() {
                       <CardTitle>Archived Vendors</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Table>
+                      <Table className="table-fixed">
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>City</TableHead>
-                            <TableHead>Actions</TableHead>
+                            <TableHead className="whitespace-normal break-words">Name</TableHead>
+                            <TableHead className="whitespace-normal break-words">Email</TableHead>
+                            <TableHead className="whitespace-normal break-words">City</TableHead>
+                            <TableHead className="whitespace-normal break-words">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {archivedVendors.map((vendor: any) => (
                             <TableRow key={vendor.id}>
-                              <TableCell className="font-medium">{vendor.name}</TableCell>
-                              <TableCell>{vendor.email || '-'}</TableCell>
-                              <TableCell>{vendor.city || '-'}</TableCell>
-                              <TableCell>
+                              <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{vendor.name}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{vendor.email || '-'}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{vendor.city || '-'}</TableCell>
+                              <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                                 <Button variant="ghost" size="sm" onClick={() => restoreVendor.mutate({ id: vendor.id })}>
                                   <RotateCcw className="w-4 h-4 mr-1" />
                                   Restore

@@ -58,32 +58,32 @@ export default function AuditTrailTab() {
         </CardHeader>
         <CardContent>
           {auditEntries && auditEntries.length > 0 ? (
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>Entity Type</TableHead>
-                  <TableHead>Entity ID</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Hash (first 16)</TableHead>
-                  <TableHead>Previous Hash</TableHead>
+                  <TableHead className="whitespace-normal break-words">Timestamp</TableHead>
+                  <TableHead className="whitespace-normal break-words">Entity Type</TableHead>
+                  <TableHead className="whitespace-normal break-words">Entity ID</TableHead>
+                  <TableHead className="whitespace-normal break-words">Action</TableHead>
+                  <TableHead className="whitespace-normal break-words">Hash (first 16)</TableHead>
+                  <TableHead className="whitespace-normal break-words">Previous Hash</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {auditEntries.map((entry) => (
                   <TableRow key={entry.id}>
-                    <TableCell className="text-xs">{format(new Date(entry.createdAt), "MMM d, yyyy HH:mm:ss")}</TableCell>
-                    <TableCell>
+                    <TableCell className="break-words text-xs" style={{ overflowWrap: "break-word" }}>{format(new Date(entry.createdAt), "MMM d, yyyy HH:mm:ss")}</TableCell>
+                    <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                       <Badge variant="outline">{entry.entityType}</Badge>
                     </TableCell>
-                    <TableCell>{entry.entityId}</TableCell>
-                    <TableCell>
+                    <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{entry.entityId}</TableCell>
+                    <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                       <Badge className={entry.action === "create" ? "bg-green-100 text-green-800" : entry.action === "update" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}>
                         {entry.action}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{entry.dataHash.substring(0, 16)}...</TableCell>
-                    <TableCell className="font-mono text-xs">{entry.previousHash ? `${entry.previousHash.substring(0, 16)}...` : "GENESIS"}</TableCell>
+                    <TableCell className="break-words font-mono text-xs" style={{ overflowWrap: "break-word" }}>{entry.dataHash.substring(0, 16)}...</TableCell>
+                    <TableCell className="break-words font-mono text-xs" style={{ overflowWrap: "break-word" }}>{entry.previousHash ? `${entry.previousHash.substring(0, 16)}...` : "GENESIS"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

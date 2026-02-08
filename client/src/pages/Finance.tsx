@@ -289,15 +289,15 @@ export default function Finance() {
           <Card className="border-0 shadow-sm">
             <CardHeader><CardTitle className="text-lg">Assets</CardTitle></CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableBody>
-                  <TableRow><TableCell className="text-xs font-medium text-slate-500" colSpan={2}>Current Assets</TableCell></TableRow>
-                  <TableRow><TableCell>Cash</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.cash || stats?.currentAssets?.cashBalance || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Bank Balances</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.bank || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Accounts Receivable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.accountsReceivable || stats?.currentAssets?.accountReceivables || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Deposits & Prepayments</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.deposits || stats?.currentAssets?.deposits || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Inventory</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.assets?.currentAssets?.inventory || stats?.currentAssets?.inventory || 0, currency)}</TableCell></TableRow>
-                  <TableRow className="bg-emerald-50"><TableCell className="font-bold">Total Assets</TableCell><TableCell className="text-right font-bold">{formatCurrency(totalAssets, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words text-xs font-medium text-slate-500" style={{ overflowWrap: "break-word" }} colSpan={2}>Current Assets</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Cash</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.assets?.currentAssets?.cash || stats?.currentAssets?.cashBalance || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Bank Balances</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.assets?.currentAssets?.bank || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Accounts Receivable</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.assets?.currentAssets?.accountsReceivable || stats?.currentAssets?.accountReceivables || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Deposits & Prepayments</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.assets?.currentAssets?.deposits || stats?.currentAssets?.deposits || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Inventory</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.assets?.currentAssets?.inventory || stats?.currentAssets?.inventory || 0, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-emerald-50"><TableCell className="break-words font-bold" style={{ overflowWrap: "break-word" }}>Total Assets</TableCell><TableCell className="break-words text-right font-bold" style={{ overflowWrap: "break-word" }}>{formatCurrency(totalAssets, currency)}</TableCell></TableRow>
                 </TableBody>
               </Table>
             </CardContent>
@@ -306,17 +306,17 @@ export default function Finance() {
           <Card className="border-0 shadow-sm">
             <CardHeader><CardTitle className="text-lg">Liabilities & Equity</CardTitle></CardHeader>
             <CardContent>
-              <Table>
+              <Table className="table-fixed">
                 <TableBody>
-                  <TableRow><TableCell className="text-xs font-medium text-slate-500" colSpan={2}>Current Liabilities</TableCell></TableRow>
-                  <TableRow><TableCell>Wages Payable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.wagesPayable || stats?.currentLiabilities?.wagesPayable || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Accounts Payable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.accountsPayable || stats?.currentLiabilities?.accountPayables || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Taxes Payable</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.taxesPayable || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Provisions & Accruals</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.provisions || stats?.currentLiabilities?.provisions || 0, currency)}</TableCell></TableRow>
-                  <TableRow><TableCell>Other Payables</TableCell><TableCell className="text-right font-medium">{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.otherPayable || stats?.currentLiabilities?.otherPayable || 0, currency)}</TableCell></TableRow>
-                  <TableRow className="bg-red-50"><TableCell className="font-semibold">Total Liabilities</TableCell><TableCell className="text-right font-bold">{formatCurrency(totalLiabilities, currency)}</TableCell></TableRow>
-                  <TableRow className="bg-violet-50"><TableCell className="font-semibold">Owner's Equity</TableCell><TableCell className="text-right font-bold">{formatCurrency(equity, currency)}</TableCell></TableRow>
-                  <TableRow className="bg-muted"><TableCell className="font-bold">Total Liabilities + Equity</TableCell><TableCell className="text-right font-bold">{formatCurrency(totalAssets, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words text-xs font-medium text-slate-500" style={{ overflowWrap: "break-word" }} colSpan={2}>Current Liabilities</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Wages Payable</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.wagesPayable || stats?.currentLiabilities?.wagesPayable || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Accounts Payable</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.accountsPayable || stats?.currentLiabilities?.accountPayables || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Taxes Payable</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.taxesPayable || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Provisions & Accruals</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.provisions || stats?.currentLiabilities?.provisions || 0, currency)}</TableCell></TableRow>
+                  <TableRow><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Other Payables</TableCell><TableCell className="break-words text-right font-medium" style={{ overflowWrap: "break-word" }}>{formatCurrency(balanceSheet?.liabilities?.currentLiabilities?.otherPayable || stats?.currentLiabilities?.otherPayable || 0, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-red-50"><TableCell className="break-words font-semibold" style={{ overflowWrap: "break-word" }}>Total Liabilities</TableCell><TableCell className="break-words text-right font-bold" style={{ overflowWrap: "break-word" }}>{formatCurrency(totalLiabilities, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-violet-50"><TableCell className="break-words font-semibold" style={{ overflowWrap: "break-word" }}>Owner's Equity</TableCell><TableCell className="break-words text-right font-bold" style={{ overflowWrap: "break-word" }}>{formatCurrency(equity, currency)}</TableCell></TableRow>
+                  <TableRow className="bg-muted"><TableCell className="break-words font-bold" style={{ overflowWrap: "break-word" }}>Total Liabilities + Equity</TableCell><TableCell className="break-words text-right font-bold" style={{ overflowWrap: "break-word" }}>{formatCurrency(totalAssets, currency)}</TableCell></TableRow>
                 </TableBody>
               </Table>
             </CardContent>
@@ -422,14 +422,14 @@ export default function Finance() {
       <Card className="border-0 shadow-sm">
         <CardHeader><CardTitle className="text-lg">Cash Flow Details</CardTitle></CardHeader>
         <CardContent>
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Month</TableHead>
-                <TableHead className="text-right">Inflow</TableHead>
-                <TableHead className="text-right">Outflow</TableHead>
-                <TableHead className="text-right">Net</TableHead>
-                <TableHead className="text-right">Cumulative</TableHead>
+                <TableHead className="whitespace-normal break-words">Month</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Inflow</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Outflow</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Net</TableHead>
+                <TableHead className="whitespace-normal break-words text-right">Cumulative</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -437,9 +437,9 @@ export default function Finance() {
                 const cumulative = cashFlow.slice(0, idx + 1).reduce((sum, m) => sum + (m.net || 0), 0);
                 return (
                   <TableRow key={idx}>
-                    <TableCell className="font-medium">{row.month}</TableCell>
-                    <TableCell className="text-right text-green-600">{formatCurrency(row.inflow || 0, currency)}</TableCell>
-                    <TableCell className="text-right text-red-600">{formatCurrency(row.outflow || 0, currency)}</TableCell>
+                    <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{row.month}</TableCell>
+                    <TableCell className="break-words text-right text-green-600" style={{ overflowWrap: "break-word" }}>{formatCurrency(row.inflow || 0, currency)}</TableCell>
+                    <TableCell className="break-words text-right text-red-600" style={{ overflowWrap: "break-word" }}>{formatCurrency(row.outflow || 0, currency)}</TableCell>
                     <TableCell className={`text-right font-medium ${(row.net || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(row.net || 0, currency)}</TableCell>
                     <TableCell className={`text-right font-medium ${cumulative >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{formatCurrency(cumulative, currency)}</TableCell>
                   </TableRow>
@@ -560,17 +560,17 @@ export default function Finance() {
         <Card className="border-0 shadow-sm">
           <CardHeader><CardTitle className="text-lg flex items-center gap-2"><CreditCard className="w-5 h-5 text-emerald-500" />AR Aging</CardTitle></CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader><TableRow><TableHead>Aging Bucket</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">%</TableHead></TableRow></TableHeader>
+            <Table className="table-fixed">
+              <TableHeader><TableRow><TableHead className="whitespace-normal break-words">Aging Bucket</TableHead><TableHead className="whitespace-normal break-words text-right">Amount</TableHead><TableHead className="whitespace-normal break-words text-right">%</TableHead></TableRow></TableHeader>
               <TableBody>
                 {agingData.map((row, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>{row.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(row.ar, currency)}</TableCell>
-                    <TableCell className="text-right">{arTotal ? ((row.ar / arTotal) * 100).toFixed(1) : 0}%</TableCell>
+                    <TableCell className="break-words flex items-center gap-2" style={{ overflowWrap: "break-word" }}><span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>{row.name}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(row.ar, currency)}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{arTotal ? ((row.ar / arTotal) * 100).toFixed(1) : 0}%</TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="bg-muted/50 font-bold"><TableCell>Total</TableCell><TableCell className="text-right">{formatCurrency(arTotal, currency)}</TableCell><TableCell className="text-right">100%</TableCell></TableRow>
+                <TableRow className="bg-muted/50 font-bold"><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Total</TableCell><TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(arTotal, currency)}</TableCell><TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>100%</TableCell></TableRow>
               </TableBody>
             </Table>
           </CardContent>
@@ -578,17 +578,17 @@ export default function Finance() {
         <Card className="border-0 shadow-sm">
           <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Wallet className="w-5 h-5 text-red-500" />AP Aging</CardTitle></CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader><TableRow><TableHead>Aging Bucket</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">%</TableHead></TableRow></TableHeader>
+            <Table className="table-fixed">
+              <TableHeader><TableRow><TableHead className="whitespace-normal break-words">Aging Bucket</TableHead><TableHead className="whitespace-normal break-words text-right">Amount</TableHead><TableHead className="whitespace-normal break-words text-right">%</TableHead></TableRow></TableHeader>
               <TableBody>
                 {agingData.map((row, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="flex items-center gap-2"><span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>{row.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(row.ap, currency)}</TableCell>
-                    <TableCell className="text-right">{apTotal ? ((row.ap / apTotal) * 100).toFixed(1) : 0}%</TableCell>
+                    <TableCell className="break-words flex items-center gap-2" style={{ overflowWrap: "break-word" }}><span className="w-3 h-3 rounded-full" style={{ backgroundColor: AGING_COLORS[idx] }}></span>{row.name}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(row.ap, currency)}</TableCell>
+                    <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{apTotal ? ((row.ap / apTotal) * 100).toFixed(1) : 0}%</TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="bg-muted/50 font-bold"><TableCell>Total</TableCell><TableCell className="text-right">{formatCurrency(apTotal, currency)}</TableCell><TableCell className="text-right">100%</TableCell></TableRow>
+                <TableRow className="bg-muted/50 font-bold"><TableCell className="break-words" style={{ overflowWrap: "break-word" }}>Total</TableCell><TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(apTotal, currency)}</TableCell><TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>100%</TableCell></TableRow>
               </TableBody>
             </Table>
           </CardContent>
@@ -598,21 +598,21 @@ export default function Finance() {
       <Card className="border-0 shadow-sm">
         <CardHeader><CardTitle className="text-lg">Recent Receivables</CardTitle></CardHeader>
         <CardContent>
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>Invoice #</TableHead><TableHead>Customer</TableHead><TableHead>Due Date</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead><TableHead>Approval</TableHead><TableHead>Actions</TableHead>
+                <TableHead className="whitespace-normal break-words">Invoice #</TableHead><TableHead className="whitespace-normal break-words">Customer</TableHead><TableHead className="whitespace-normal break-words">Due Date</TableHead><TableHead className="whitespace-normal break-words text-right">Amount</TableHead><TableHead className="whitespace-normal break-words">Status</TableHead><TableHead className="whitespace-normal break-words">Approval</TableHead><TableHead className="whitespace-normal break-words">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {arData.slice(0, 10).map((ar: any) => (
                 <TableRow key={ar.id}>
-                  <TableCell className="font-medium">{ar.invoiceNumber || `INV-${ar.id}`}</TableCell>
-                  <TableCell>{ar.customerName}</TableCell>
-                  <TableCell>{new Date(ar.dueDate).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(ar.amount), currency)}</TableCell>
-                  <TableCell><Badge variant={ar.status === 'paid' ? 'default' : ar.status === 'pending' ? 'secondary' : 'destructive'}>{ar.status}</Badge></TableCell>
-                  <TableCell>
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{ar.invoiceNumber || `INV-${ar.id}`}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{ar.customerName}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{new Date(ar.dueDate).toLocaleDateString()}</TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(ar.amount), currency)}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><Badge variant={ar.status === 'paid' ? 'default' : ar.status === 'pending' ? 'secondary' : 'destructive'}>{ar.status}</Badge></TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <div className="flex items-center gap-1">
                       <Badge className={ar.approval_status === 'approved' ? 'bg-green-100 text-green-800' : ar.approval_status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
                         {ar.approval_status === 'pending_approval' ? 'Pending' : ar.approval_status || 'approved'}
@@ -625,7 +625,7 @@ export default function Finance() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     {(ar.approval_status === 'approved' || !ar.approval_status) && ar.status !== 'paid' && (
                       <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => {
                         setPaymentTarget({ id: ar.id, type: 'ar', name: ar.customerName, amount: Number(ar.amount), paidAmount: Number(ar.paidAmount || 0) });
@@ -796,16 +796,16 @@ export default function Finance() {
       <Card className="border-0 shadow-sm">
         <CardHeader><CardTitle className="text-lg">Forecast Details</CardTitle></CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader><TableRow><TableHead>Month</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">COGS</TableHead><TableHead className="text-right">Gross Profit</TableHead><TableHead>Type</TableHead></TableRow></TableHeader>
+          <Table className="table-fixed">
+            <TableHeader><TableRow><TableHead className="whitespace-normal break-words">Month</TableHead><TableHead className="whitespace-normal break-words text-right">Revenue</TableHead><TableHead className="whitespace-normal break-words text-right">COGS</TableHead><TableHead className="whitespace-normal break-words text-right">Gross Profit</TableHead><TableHead className="whitespace-normal break-words">Type</TableHead></TableRow></TableHeader>
             <TableBody>
               {forecastData.map((row, idx) => (
                 <TableRow key={idx} className={row.projected ? 'bg-blue-50/50' : ''}>
-                  <TableCell className="font-medium">{row.month}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(row.revenue, currency)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(row.cogs, currency)}</TableCell>
-                  <TableCell className="text-right text-emerald-600">{formatCurrency(row.grossProfit, currency)}</TableCell>
-                  <TableCell>{row.projected ? <Badge className="bg-blue-100 text-blue-800">Projected</Badge> : <Badge className="bg-green-100 text-green-800">Actual</Badge>}</TableCell>
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{row.month}</TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(row.revenue, currency)}</TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(row.cogs, currency)}</TableCell>
+                  <TableCell className="break-words text-right text-emerald-600" style={{ overflowWrap: "break-word" }}>{formatCurrency(row.grossProfit, currency)}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>{row.projected ? <Badge className="bg-blue-100 text-blue-800">Projected</Badge> : <Badge className="bg-green-100 text-green-800">Actual</Badge>}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -894,23 +894,23 @@ export default function Finance() {
       <Card className="border-0 shadow-sm">
         <CardHeader><CardTitle className="text-lg">Variance Details</CardTitle></CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader><TableRow><TableHead>Category</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Actual</TableHead><TableHead className="text-right">Variance</TableHead><TableHead className="text-right">% Used</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+          <Table className="table-fixed">
+            <TableHeader><TableRow><TableHead className="whitespace-normal break-words">Category</TableHead><TableHead className="whitespace-normal break-words">Type</TableHead><TableHead className="whitespace-normal break-words text-right">Budget</TableHead><TableHead className="whitespace-normal break-words text-right">Actual</TableHead><TableHead className="whitespace-normal break-words text-right">Variance</TableHead><TableHead className="whitespace-normal break-words text-right">% Used</TableHead><TableHead className="whitespace-normal break-words">Status</TableHead><TableHead className="whitespace-normal break-words">Actions</TableHead></TableRow></TableHeader>
             <TableBody>
               {budgetVariance?.items?.map((item: any) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.category}</TableCell>
-                  <TableCell><Badge variant={item.type === 'income' ? 'default' : 'secondary'}>{item.type}</Badge></TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(item.budgetAmount), currency)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(item.actual), currency)}</TableCell>
+                  <TableCell className="break-words font-medium" style={{ overflowWrap: "break-word" }}>{item.category}</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}><Badge variant={item.type === 'income' ? 'default' : 'secondary'}>{item.type}</Badge></TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(item.budgetAmount), currency)}</TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{formatCurrency(Number(item.actual), currency)}</TableCell>
                   <TableCell className={`text-right font-medium ${Number(item.variance) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{formatCurrency(Number(item.variance), currency)}</TableCell>
-                  <TableCell className="text-right">{item.percentUsed}%</TableCell>
-                  <TableCell>
+                  <TableCell className="break-words text-right" style={{ overflowWrap: "break-word" }}>{item.percentUsed}%</TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Badge className={item.status === 'on_track' ? 'bg-green-100 text-green-800' : item.status === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
                       {item.status === 'on_track' ? 'On Track' : item.status === 'warning' ? 'Warning' : 'Over Budget'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="break-words" style={{ overflowWrap: "break-word" }}>
                     <Button size="sm" variant="ghost" className="h-7 text-xs text-red-600" onClick={() => deleteBudget.mutate({ id: item.id })}><Trash2 className="w-3 h-3" /></Button>
                   </TableCell>
                 </TableRow>

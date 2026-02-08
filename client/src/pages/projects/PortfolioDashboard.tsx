@@ -63,9 +63,10 @@ interface FilterState {
 
 interface PortfolioDashboardProps {
   onOpenFinancials?: (project: any) => void;
+  onOpenDetail?: (project: any) => void;
 }
 
-export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashboardProps) {
+export default function PortfolioDashboard({ onOpenFinancials, onOpenDetail }: PortfolioDashboardProps) {
   const [filters, setFilters] = useState<FilterState>({});
   const [sortCol, setSortCol] = useState<string>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -462,9 +463,13 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
                         <span className="text-[11px] text-gray-500 font-medium">{idx + 1}</span>
                       </td>
                       <td className="py-1.5 px-2">
-                        <div className="text-[11px] text-blue-600 font-medium break-words leading-tight" style={{ wordWrap: "break-word", overflowWrap: "break-word" }}>
+                        <button
+                          className="text-[11px] text-blue-600 font-medium break-words leading-tight text-left hover:underline hover:text-blue-800 cursor-pointer w-full"
+                          style={{ wordWrap: "break-word", overflowWrap: "break-word" }}
+                          onClick={() => onOpenDetail?.(p)}
+                        >
                           {p.name || "—"}
-                        </div>
+                        </button>
                       </td>
                       <td className="py-1.5 px-2">
                         <div className="text-[11px] text-gray-700 break-words leading-tight" style={{ wordWrap: "break-word", overflowWrap: "break-word" }}>
