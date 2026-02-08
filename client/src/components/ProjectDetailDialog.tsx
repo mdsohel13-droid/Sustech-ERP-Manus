@@ -121,14 +121,14 @@ export function ProjectDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full md:max-w-5xl lg:max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-slate-50 to-slate-100">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 pr-4">
-              <DialogTitle className="text-xl font-bold text-slate-800 leading-tight">
+      <DialogContent className="max-w-[95vw] w-full md:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col p-0" showCloseButton={false}>
+        <DialogHeader className="px-6 py-3 border-b bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0 pr-2">
+              <DialogTitle className="text-lg font-bold text-slate-800 leading-tight break-words">
                 {project.name}
               </DialogTitle>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <Badge className={stageColors[project.stage] || "bg-gray-100"}>
                   {stageLabels[project.stage] || project.stage}
                 </Badge>
@@ -137,22 +137,32 @@ export function ProjectDetailDialog({
                 </Badge>
               </div>
             </div>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => {
-                onOpenChange(false);
-                onEdit(project);
-              }}
-              className="flex items-center gap-1"
-            >
-              <Edit className="h-4 w-4" />
-              Edit Project
-            </Button>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEdit(project);
+                }}
+                className="flex items-center gap-1 text-xs"
+              >
+                <Edit className="h-3.5 w-3.5" />
+                Edit Project
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="flex-1 overflow-auto px-6 py-4" style={{ maxHeight: "calc(90vh - 80px)" }}>
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="border shadow-sm">
