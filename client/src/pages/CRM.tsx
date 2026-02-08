@@ -641,12 +641,12 @@ export default function CRM() {
 
           {/* Tabs for More Views */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="leads">All Leads</TabsTrigger>
-              <TabsTrigger value="opportunities">All Opportunities</TabsTrigger>
-              <TabsTrigger value="archive">Archive</TabsTrigger>
-              <TabsTrigger value="customers">Customers</TabsTrigger>
+            <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+              <TabsTrigger value="overview" className="text-xs px-3 py-1.5">Overview</TabsTrigger>
+              <TabsTrigger value="leads" className="text-xs px-3 py-1.5">All Leads</TabsTrigger>
+              <TabsTrigger value="opportunities" className="text-xs px-3 py-1.5">All Opportunities</TabsTrigger>
+              <TabsTrigger value="archive" className="text-xs px-3 py-1.5">Archive</TabsTrigger>
+              <TabsTrigger value="customers" className="text-xs px-3 py-1.5">Customers</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview">

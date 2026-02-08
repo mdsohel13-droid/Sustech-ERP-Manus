@@ -227,21 +227,21 @@ export default function AuditTrailDashboard() {
 
       {/* Tabs */}
       <Tabs defaultValue="activities" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="activities" className="gap-2">
-            <FileText className="w-4 h-4" />
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="activities" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <FileText className="h-3.5 w-3.5" />
             Recent Activities
           </TabsTrigger>
-          <TabsTrigger value="users" className="gap-2">
-            <User className="w-4 h-4" />
+          <TabsTrigger value="users" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <User className="h-3.5 w-3.5" />
             User Activity
           </TabsTrigger>
-          <TabsTrigger value="failures" className="gap-2">
-            <AlertCircle className="w-4 h-4" />
+          <TabsTrigger value="failures" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <AlertCircle className="h-3.5 w-3.5" />
             Failed Activities
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <Clock className="w-4 h-4" />
+          <TabsTrigger value="analytics" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Clock className="h-3.5 w-3.5" />
             Analytics
           </TabsTrigger>
         </TabsList>

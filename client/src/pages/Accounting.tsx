@@ -446,21 +446,21 @@ export default function Accounting() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-muted/50 p-1 gap-1">
-          <TabsTrigger value="overview" className="flex items-center gap-2 px-4">
-            <FileText className="h-4 w-4" />
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="overview" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <FileText className="h-3.5 w-3.5" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="income-expense" className="flex items-center gap-2 px-4">
-            <CreditCard className="h-4 w-4" />
+          <TabsTrigger value="income-expense" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <CreditCard className="h-3.5 w-3.5" />
             Income & Expense
           </TabsTrigger>
-          <TabsTrigger value="journal" className="flex items-center gap-2 px-4">
-            <BookOpen className="h-4 w-4" />
+          <TabsTrigger value="journal" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <BookOpen className="h-3.5 w-3.5" />
             Journal Entries
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2 px-4">
-            <Settings className="h-4 w-4" />
+          <TabsTrigger value="settings" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Settings className="h-3.5 w-3.5" />
             Settings
           </TabsTrigger>
         </TabsList>

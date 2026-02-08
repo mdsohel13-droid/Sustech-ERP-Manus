@@ -728,15 +728,15 @@ export default function Products() {
           <div className="lg:col-span-3 space-y-4">
             {/* Main Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            <TabsTrigger value="warehouses">Warehouses</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="units">Units</TabsTrigger>
-            <TabsTrigger value="brands">Brands</TabsTrigger>
-            <TabsTrigger value="warranties">Warranties</TabsTrigger>
-            <TabsTrigger value="archive">Archive</TabsTrigger>
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+            <TabsTrigger value="products" className="text-xs px-3 py-1.5">Products</TabsTrigger>
+            <TabsTrigger value="inventory" className="text-xs px-3 py-1.5">Inventory</TabsTrigger>
+            <TabsTrigger value="warehouses" className="text-xs px-3 py-1.5">Warehouses</TabsTrigger>
+            <TabsTrigger value="categories" className="text-xs px-3 py-1.5">Categories</TabsTrigger>
+            <TabsTrigger value="units" className="text-xs px-3 py-1.5">Units</TabsTrigger>
+            <TabsTrigger value="brands" className="text-xs px-3 py-1.5">Brands</TabsTrigger>
+            <TabsTrigger value="warranties" className="text-xs px-3 py-1.5">Warranties</TabsTrigger>
+            <TabsTrigger value="archive" className="text-xs px-3 py-1.5">Archive</TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}

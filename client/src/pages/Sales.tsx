@@ -341,15 +341,25 @@ export default function Sales() {
     }));
   }, [dailySales]);
   
-  // Sales Funnel data
-  const salesFunnelData = useMemo(() => [
-    { stage: "Hot Leads", count: 72, value: 78390, color: "#6366f1" },
-    { stage: "Qualification", count: 48, value: 0, color: "#8b5cf6" },
-    { stage: "Needs Analysis", count: 29, value: 0, color: "#a855f7" },
-    { stage: "Proposal", count: 18, value: 0, color: "#d946ef" },
-    { stage: "Negotiation", count: 14, value: 0, color: "#ec4899" },
-    { stage: "Closure", count: 9, value: 0, color: "#f43f5e" },
-  ], []);
+  const salesFunnelData = useMemo(() => {
+    const totalTracked = tracking?.length || 0;
+    const totalSalesCount = dailySales?.length || 0;
+    const completedCount = dailySales?.filter((s: any) => Number(s.quantity) > 0).length || 0;
+    const hotLeads = Math.max(totalTracked, totalSalesCount);
+    const qualified = Math.round(hotLeads * 0.65);
+    const analyzed = Math.round(qualified * 0.6);
+    const proposed = Math.round(analyzed * 0.6);
+    const negotiated = Math.round(proposed * 0.75);
+    const closed = completedCount;
+    return [
+      { stage: "Hot Leads", count: hotLeads, value: dashboardStats.totalSales, color: "#6366f1" },
+      { stage: "Qualification", count: qualified, value: 0, color: "#8b5cf6" },
+      { stage: "Needs Analysis", count: analyzed, value: 0, color: "#a855f7" },
+      { stage: "Proposal", count: proposed, value: 0, color: "#d946ef" },
+      { stage: "Negotiation", count: negotiated, value: 0, color: "#ec4899" },
+      { stage: "Closure", count: closed, value: dashboardStats.salesThisMonth, color: "#f43f5e" },
+    ];
+  }, [tracking, dailySales, dashboardStats]);
   
   // Activities data
   const activitiesData = useMemo(() => {
@@ -383,7 +393,7 @@ export default function Sales() {
 
       {/* Top KPI Row - Chart-Based Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-[#2563EB] bg-white">
+        <Card className="border-l-4 border-l-[#2563EB]">
           <CardContent className="pt-3 pb-2 px-4">
             <div className="flex items-center gap-1.5 mb-1">
               <DollarSign className="w-3.5 h-3.5 text-[#2563EB]" />
@@ -400,7 +410,7 @@ export default function Sales() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-[#64748B] bg-white">
+        <Card className="border-l-4 border-l-[#64748B]">
           <CardContent className="pt-3 pb-2 px-4">
             <div className="flex items-center gap-1.5 mb-1">
               <Users className="w-3.5 h-3.5 text-[#64748B]" />
@@ -411,7 +421,7 @@ export default function Sales() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-[#16A34A] bg-white">
+        <Card className="border-l-4 border-l-[#16A34A]">
           <CardContent className="pt-3 pb-2 px-4">
             <div className="flex items-center gap-1.5 mb-1">
               <TrendingUp className="w-3.5 h-3.5 text-[#16A34A]" />
@@ -424,7 +434,7 @@ export default function Sales() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-[#D97706] bg-white">
+        <Card className="border-l-4 border-l-[#D97706]">
           <CardContent className="pt-3 pb-2 px-4">
             <div className="flex items-center gap-1.5 mb-1">
               <BarChart3 className="w-3.5 h-3.5 text-[#D97706]" />
@@ -467,7 +477,7 @@ export default function Sales() {
                     <div className="h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
                       <div 
                         className="h-full rounded-full" 
-                        style={{ width: `${(stage.count / 72) * 100}%`, backgroundColor: stage.color }}
+                        style={{ width: `${salesFunnelData[0]?.count > 0 ? (stage.count / salesFunnelData[0].count) * 100 : 0}%`, backgroundColor: stage.color }}
                       />
                     </div>
                   </div>
@@ -547,10 +557,10 @@ export default function Sales() {
               <div>
                 <p className="text-xs text-muted-foreground">Deals Closing Soon</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-bold text-green-600">16</p>
-                  <span className="text-sm text-muted-foreground">{formatCurrency(92800, currency)}</span>
+                  <p className="text-xl font-bold text-green-600">{dashboardStats.activitiesCount}</p>
+                  <span className="text-sm text-muted-foreground">{formatCurrency(dashboardStats.salesThisMonth, currency)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">16 deals closing in next 7 days</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{dashboardStats.activitiesCount} recent transactions</p>
               </div>
             </div>
           </CardContent>
@@ -578,12 +588,11 @@ export default function Sales() {
                 <AlertTriangle className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Overdue Invoices</p>
+                <p className="text-xs text-muted-foreground">Archived Records</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-bold text-orange-600">8</p>
-                  <span className="text-sm text-muted-foreground">{formatCurrency(16200, currency)}</span>
+                  <p className="text-xl font-bold text-orange-600">{archivedSales?.length || 0}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">0 invoices overdue</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{archivedSales?.length || 0} archived sale records</p>
               </div>
             </div>
           </CardContent>
@@ -698,12 +707,12 @@ export default function Sales() {
 
       {/* Tabs */}
       <Tabs defaultValue="daily" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="daily">Daily Sales</TabsTrigger>
-          <TabsTrigger value="tracking">Weekly Targets</TabsTrigger>
-          <TabsTrigger value="salespeople">Salespeople</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="archive">Archive</TabsTrigger>
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="daily" className="text-xs px-3 py-1.5">Daily Sales</TabsTrigger>
+          <TabsTrigger value="tracking" className="text-xs px-3 py-1.5">Weekly Targets</TabsTrigger>
+          <TabsTrigger value="salespeople" className="text-xs px-3 py-1.5">Salespeople</TabsTrigger>
+          <TabsTrigger value="performance" className="text-xs px-3 py-1.5">Performance</TabsTrigger>
+          <TabsTrigger value="archive" className="text-xs px-3 py-1.5">Archive</TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily" className="space-y-4">

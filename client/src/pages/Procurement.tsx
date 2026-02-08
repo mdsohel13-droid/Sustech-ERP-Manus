@@ -405,11 +405,11 @@ export default function Procurement() {
             {/* Tabs and Filter Bar */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <TabsList>
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="orders">All Orders</TabsTrigger>
-                  <TabsTrigger value="vendors">Vendors</TabsTrigger>
-                  <TabsTrigger value="archive">Archive</TabsTrigger>
+                <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+                  <TabsTrigger value="overview" className="text-xs px-3 py-1.5">Overview</TabsTrigger>
+                  <TabsTrigger value="orders" className="text-xs px-3 py-1.5">All Orders</TabsTrigger>
+                  <TabsTrigger value="vendors" className="text-xs px-3 py-1.5">Vendors</TabsTrigger>
+                  <TabsTrigger value="archive" className="text-xs px-3 py-1.5">Archive</TabsTrigger>
                 </TabsList>
                 
                 <div className="flex items-center gap-2">

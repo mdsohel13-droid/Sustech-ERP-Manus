@@ -96,29 +96,29 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="general">
-            <Building2 className="h-4 w-4 mr-2" />
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="general" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Building2 className="h-3.5 w-3.5" />
             General
           </TabsTrigger>
-          <TabsTrigger value="currency">
-            <Globe className="h-4 w-4 mr-2" />
+          <TabsTrigger value="currency" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Globe className="h-3.5 w-3.5" />
             Currency
           </TabsTrigger>
-          <TabsTrigger value="theme">
-            <Palette className="h-4 w-4 mr-2" />
+          <TabsTrigger value="theme" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Palette className="h-3.5 w-3.5" />
             Theme
           </TabsTrigger>
-          <TabsTrigger value="archive">
-            <Archive className="h-4 w-4 mr-2" />
+          <TabsTrigger value="archive" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Archive className="h-3.5 w-3.5" />
             Archive
           </TabsTrigger>
-          <TabsTrigger value="language">
-            <Globe className="h-4 w-4 mr-2" />
+          <TabsTrigger value="language" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Globe className="h-3.5 w-3.5" />
             Language
           </TabsTrigger>
-          <TabsTrigger value="notifications">
-            <Bell className="h-4 w-4 mr-2" />
+          <TabsTrigger value="notifications" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Bell className="h-3.5 w-3.5" />
             Notifications
           </TabsTrigger>
         </TabsList>

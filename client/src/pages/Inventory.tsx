@@ -650,10 +650,10 @@ export default function Inventory() {
 
         {/* Tabs */}
         <Tabs defaultValue="stock" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="stock">Stock Levels</TabsTrigger>
-            <TabsTrigger value="movements">Stock Movements</TabsTrigger>
-            <TabsTrigger value="warehouses">Warehouses</TabsTrigger>
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+            <TabsTrigger value="stock" className="text-xs px-3 py-1.5">Stock Levels</TabsTrigger>
+            <TabsTrigger value="movements" className="text-xs px-3 py-1.5">Stock Movements</TabsTrigger>
+            <TabsTrigger value="warehouses" className="text-xs px-3 py-1.5">Warehouses</TabsTrigger>
           </TabsList>
 
           {/* Stock Levels Tab */}

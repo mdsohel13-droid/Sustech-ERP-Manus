@@ -500,21 +500,21 @@ export default function ActionTracker() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="actions" className="flex items-center gap-1.5">
-            <Target className="h-4 w-4" />
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="actions" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Target className="h-3.5 w-3.5" />
             Actions
           </TabsTrigger>
-          <TabsTrigger value="decisions" className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4" />
+          <TabsTrigger value="decisions" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <CheckCircle2 className="h-3.5 w-3.5" />
             Decisions
           </TabsTrigger>
-          <TabsTrigger value="issues" className="flex items-center gap-1.5">
-            <AlertTriangle className="h-4 w-4" />
+          <TabsTrigger value="issues" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <AlertTriangle className="h-3.5 w-3.5" />
             Issues
           </TabsTrigger>
-          <TabsTrigger value="opportunities" className="flex items-center gap-1.5">
-            <Lightbulb className="h-4 w-4" />
+          <TabsTrigger value="opportunities" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Lightbulb className="h-3.5 w-3.5" />
             Opportunities
           </TabsTrigger>
         </TabsList>

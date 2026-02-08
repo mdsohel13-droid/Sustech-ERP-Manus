@@ -84,30 +84,30 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Users</span>
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="users" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Users className="h-3.5 w-3.5" />
+            Users
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Security</span>
+          <TabsTrigger value="security" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Shield className="h-3.5 w-3.5" />
+            Security
           </TabsTrigger>
-          <TabsTrigger value="display" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Display</span>
+          <TabsTrigger value="display" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Palette className="h-3.5 w-3.5" />
+            Display
           </TabsTrigger>
-          <TabsTrigger value="sessions" className="flex items-center gap-2">
-            <Monitor className="h-4 w-4" />
-            <span className="hidden sm:inline">Sessions</span>
+          <TabsTrigger value="sessions" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Monitor className="h-3.5 w-3.5" />
+            Sessions
           </TabsTrigger>
-          <TabsTrigger value="audit" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            <span className="hidden sm:inline">Audit</span>
+          <TabsTrigger value="audit" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Activity className="h-3.5 w-3.5" />
+            Audit
           </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center gap-2">
-            <Settings2 className="h-4 w-4" />
-            <span className="hidden sm:inline">System</span>
+          <TabsTrigger value="system" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Settings2 className="h-3.5 w-3.5" />
+            System
           </TabsTrigger>
         </TabsList>
 

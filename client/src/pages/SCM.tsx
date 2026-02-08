@@ -281,37 +281,37 @@ export default function SCM() {
       </div>
 
       <Tabs defaultValue="replenishment" className="space-y-4">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="replenishment" className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Replenishment Alerts
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="replenishment" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Replenishment
           </TabsTrigger>
-          <TabsTrigger value="purchase-orders" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
+          <TabsTrigger value="purchase-orders" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <ShoppingCart className="h-3.5 w-3.5" />
             Purchase Orders
           </TabsTrigger>
-          <TabsTrigger value="atp" className="flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            ATP Calculator
+          <TabsTrigger value="atp" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Calculator className="h-3.5 w-3.5" />
+            ATP
           </TabsTrigger>
-          <TabsTrigger value="sales-orders" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
+          <TabsTrigger value="sales-orders" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <FileText className="h-3.5 w-3.5" />
             Sales Orders
           </TabsTrigger>
-          <TabsTrigger value="rfq" className="flex items-center gap-2">
-            <ScrollText className="h-4 w-4" />
+          <TabsTrigger value="rfq" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <ScrollText className="h-3.5 w-3.5" />
             RFQ
           </TabsTrigger>
-          <TabsTrigger value="shipments" className="flex items-center gap-2">
-            <Truck className="h-4 w-4" />
+          <TabsTrigger value="shipments" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Truck className="h-3.5 w-3.5" />
             Shipments
           </TabsTrigger>
-          <TabsTrigger value="supplier-risk" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
+          <TabsTrigger value="supplier-risk" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Shield className="h-3.5 w-3.5" />
             Supplier Risk
           </TabsTrigger>
-          <TabsTrigger value="audit-trail" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
+          <TabsTrigger value="audit-trail" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <ClipboardList className="h-3.5 w-3.5" />
             Audit Trail
           </TabsTrigger>
         </TabsList>
