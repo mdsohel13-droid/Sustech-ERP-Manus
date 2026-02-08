@@ -366,16 +366,43 @@ export default function Projects() {
                     </div>
 
                     <div className="flex-1 grid grid-cols-5 gap-3 w-full self-center">
-                      {stageData.map((d) => (
-                        <div key={d.stage} className="border rounded-lg p-3 bg-white">
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: STAGE_DONUT_COLORS[d.stage] }} />
-                            <p className="text-[11px] font-medium text-gray-600 leading-tight truncate">{d.name}</p>
+                      {stageData.map((d) => {
+                        const pct = totalValue > 0 ? (d.value / totalValue) * 100 : 0;
+                        const miniData = [
+                          { name: "filled", value: d.value || 0.001 },
+                          { name: "empty", value: Math.max(0, totalValue - d.value) || 0.001 },
+                        ];
+                        return (
+                          <div key={d.stage} className="border rounded-lg p-2 bg-white flex flex-col items-center">
+                            <p className="text-[10px] font-medium text-gray-500 leading-tight text-center mb-1 truncate w-full">{d.name}</p>
+                            <div className="w-[90px] h-[90px] relative">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={miniData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={28}
+                                    outerRadius={40}
+                                    startAngle={90}
+                                    endAngle={-270}
+                                    dataKey="value"
+                                    stroke="none"
+                                  >
+                                    <Cell fill={STAGE_DONUT_COLORS[d.stage]} />
+                                    <Cell fill="#F1F5F9" />
+                                  </Pie>
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-[11px] font-bold text-gray-700">{pct.toFixed(0)}%</span>
+                              </div>
+                            </div>
+                            <p className="text-xs font-bold text-gray-800 mt-1">{formatCurrency(d.value, currency)}</p>
+                            <p className="text-[10px] text-gray-400">{d.count} project{d.count !== 1 ? "s" : ""}</p>
                           </div>
-                          <p className="text-sm font-bold text-gray-800">{formatCurrency(d.value, currency)}</p>
-                          <p className="text-[10px] text-gray-400 mt-0.5">{d.count} project{d.count !== 1 ? "s" : ""}</p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </CardContent>
