@@ -313,10 +313,10 @@ export default function Projects() {
             const totalValue = stageData.reduce((s, d) => s + d.value, 0);
             const totalProjects = stageData.reduce((s, d) => s + d.count, 0);
 
-            const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
-              if (percent < 0.05) return null;
+            const renderLabel = ({ cx, cy, midAngle, outerRadius, percent, index }: any) => {
+              if (percent < 0.03) return null;
               const RADIAN = Math.PI / 180;
-              const radius = outerRadius + 20;
+              const radius = outerRadius + 16;
               const x = cx + radius * Math.cos(-midAngle * RADIAN);
               const y = cy + radius * Math.sin(-midAngle * RADIAN);
               return (
@@ -327,54 +327,59 @@ export default function Projects() {
             };
 
             return (
-              <div className="flex flex-col md:flex-row items-center gap-4">
-                <Card className="border shadow-sm flex-shrink-0">
-                  <CardContent className="p-4 flex flex-col items-center">
-                    <p className="text-xs font-semibold text-gray-500 mb-1">Pipeline by Stage</p>
-                    {totalValue > 0 ? (
-                      <ResponsiveContainer width={220} height={220}>
-                        <PieChart>
-                          <Pie
-                            data={stageData.filter(d => d.value > 0)}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={50}
-                            outerRadius={80}
-                            paddingAngle={2}
-                            dataKey="value"
-                            nameKey="name"
-                            label={renderLabel}
-                            labelLine={false}
-                          >
-                            {stageData.filter(d => d.value > 0).map((entry) => (
-                              <Cell key={entry.stage} fill={STAGE_DONUT_COLORS[entry.stage]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value: number) => [formatCurrency(value, currency), ""]} contentStyle={{ fontSize: "12px", padding: "6px 10px" }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="w-[220px] h-[220px] flex items-center justify-center text-sm text-gray-400">No data</div>
-                    )}
-                    <div className="text-center -mt-2">
-                      <p className="text-lg font-bold text-gray-800">{formatCurrency(totalValue, currency)}</p>
-                      <p className="text-[10px] text-gray-500">{totalProjects} project{totalProjects !== 1 ? "s" : ""} total</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full">
-                  {stageData.map((d) => (
-                    <div key={d.stage} className="flex items-center gap-2 p-2 rounded-lg border bg-white">
-                      <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: STAGE_DONUT_COLORS[d.stage] }} />
-                      <div className="min-w-0">
-                        <p className="text-[10px] text-gray-500 leading-tight">{d.name}</p>
-                        <p className="text-sm font-bold text-gray-800">{formatCurrency(d.value, currency)}</p>
-                        <p className="text-[10px] text-gray-400">{d.count} project{d.count !== 1 ? "s" : ""}</p>
+              <Card className="border shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row items-start gap-6">
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <p className="text-xs font-semibold text-gray-500 mb-1">Pipeline by Stage</p>
+                      {totalValue > 0 ? (
+                        <div className="w-[180px] h-[180px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={stageData.filter(d => d.value > 0)}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={42}
+                                outerRadius={68}
+                                paddingAngle={2}
+                                dataKey="value"
+                                nameKey="name"
+                                label={renderLabel}
+                                labelLine={false}
+                              >
+                                {stageData.filter(d => d.value > 0).map((entry) => (
+                                  <Cell key={entry.stage} fill={STAGE_DONUT_COLORS[entry.stage]} />
+                                ))}
+                              </Pie>
+                              <Tooltip formatter={(value: number) => [formatCurrency(value, currency), ""]} contentStyle={{ fontSize: "12px", padding: "6px 10px" }} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className="w-[180px] h-[180px] flex items-center justify-center text-sm text-gray-400">No data</div>
+                      )}
+                      <div className="text-center mt-1">
+                        <p className="text-base font-bold text-gray-800">{formatCurrency(totalValue, currency)}</p>
+                        <p className="text-[10px] text-gray-500">{totalProjects} project{totalProjects !== 1 ? "s" : ""} total</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+
+                    <div className="flex-1 grid grid-cols-5 gap-3 w-full self-center">
+                      {stageData.map((d) => (
+                        <div key={d.stage} className="border rounded-lg p-3 bg-white">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: STAGE_DONUT_COLORS[d.stage] }} />
+                            <p className="text-[11px] font-medium text-gray-600 leading-tight truncate">{d.name}</p>
+                          </div>
+                          <p className="text-sm font-bold text-gray-800">{formatCurrency(d.value, currency)}</p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">{d.count} project{d.count !== 1 ? "s" : ""}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })()}
 
