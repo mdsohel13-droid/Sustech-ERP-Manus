@@ -362,7 +362,8 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
           <div className="overflow-x-auto">
             <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
               <colgroup>
-                <col style={{ width: "220px" }} />
+                <col style={{ width: "40px" }} />
+                <col style={{ width: "210px" }} />
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "100px" }} />
                 <col style={{ width: "90px" }} />
@@ -378,6 +379,9 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
               </colgroup>
               <thead>
                 <tr className="bg-gray-100 border-b border-gray-300">
+                  <th className="text-center text-[11px] font-semibold text-gray-700 py-2 px-1 whitespace-normal break-words">
+                    SL
+                  </th>
                   <th className="text-left text-[11px] font-semibold text-gray-700 py-2 px-2 cursor-pointer hover:bg-gray-200 whitespace-normal break-words" onClick={() => toggleSort("name")}>
                     Project <SortIcon col="name" />
                   </th>
@@ -422,13 +426,16 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
               <tbody>
                 {filteredTableData.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="text-center py-8 text-gray-400 text-sm">
+                    <td colSpan={14} className="text-center py-8 text-gray-400 text-sm">
                       No projects match the current filters
                     </td>
                   </tr>
                 ) : (
                   filteredTableData.map((p, idx) => (
                     <tr key={p.id} className={`border-b border-gray-200 hover:bg-blue-50/50 ${idx % 2 === 1 ? "bg-gray-50/30" : ""}`}>
+                      <td className="py-1.5 px-1 text-center">
+                        <span className="text-[11px] text-gray-500 font-medium">{idx + 1}</span>
+                      </td>
                       <td className="py-1.5 px-2">
                         <div className="text-[11px] text-blue-600 font-medium break-words leading-tight" style={{ wordWrap: "break-word", overflowWrap: "break-word" }}>
                           {p.name || "—"}
