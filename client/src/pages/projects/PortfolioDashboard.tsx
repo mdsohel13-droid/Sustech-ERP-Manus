@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { ChevronUp, ChevronDown, RotateCcw, Wallet, SlidersHorizontal } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ChevronUp, ChevronDown, RotateCcw, Wallet, SlidersHorizontal, Search } from "lucide-react";
 import { format } from "date-fns";
 
 const CHART_COLORS = [
@@ -69,6 +70,7 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
   const [sortCol, setSortCol] = useState<string>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showFilters, setShowFilters] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data, isLoading } = trpc.projects.getPortfolioDashboard.useQuery(
     Object.fromEntries(Object.entries(filters).filter(([, v]) => v))
@@ -86,6 +88,17 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
   const filteredTableData = useMemo(() => {
     if (!data?.projects) return [];
     let list = [...data.projects];
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      list = list.filter((p: any) =>
+        (p.name || "").toLowerCase().includes(term) ||
+        (p.projectManager || "").toLowerCase().includes(term) ||
+        (p.projectStatus || "").toLowerCase().includes(term) ||
+        (p.activeStage || "").toLowerCase().includes(term) ||
+        (p.portfolio || "").toLowerCase().includes(term) ||
+        (p.program || "").toLowerCase().includes(term)
+      );
+    }
     list.sort((a: any, b: any) => {
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortCol === "durationDays" || sortCol === "progressPercentage" || sortCol === "totalTasks" || sortCol === "lateTasks" || sortCol === "issuesCount") {
@@ -101,7 +114,7 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
       return aVal.localeCompare(bVal) * dir;
     });
     return list;
-  }, [data?.projects, sortCol, sortDir]);
+  }, [data?.projects, sortCol, sortDir, searchTerm]);
 
   const toggleSort = (col: string) => {
     if (sortCol === col) {
@@ -359,6 +372,18 @@ export default function PortfolioDashboard({ onOpenFinancials }: PortfolioDashbo
 
       <Card className="shadow-sm border">
         <CardContent className="p-0">
+          <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50/50">
+            <p className="text-xs font-semibold text-gray-700">Project Details</p>
+            <div className="relative w-56">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+              <Input
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-7 text-xs pl-8 pr-2 bg-white"
+              />
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
               <colgroup>
