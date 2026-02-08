@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit2, Trash2, Eye, MoreHorizontal, Search, Calendar, Filter, FileText, Building2, Clock, CheckCircle, Archive, RotateCcw, UserPlus } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, MoreHorizontal, Search, Calendar, Filter, FileText, Building2, Clock, CheckCircle, Archive, RotateCcw, UserPlus, TrendingUp, AlertTriangle } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, parseISO, isAfter, isBefore, addDays } from 'date-fns';
 import { toast } from 'sonner';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -132,11 +133,27 @@ export default function TenderQuotationEnhanced() {
       return isBefore(followUp, addDays(today, 7)) && t.status !== 'win' && t.status !== 'loss' && t.status !== 'po_received';
     });
 
+    const statusBreakdown = [
+      { name: 'Won/PO', value: wonPoReceived.length, fill: '#10B981' },
+      { name: 'Submitted', value: activeItems.filter((t: any) => t.status === 'submitted').length, fill: '#F59E0B' },
+      { name: 'Preparing', value: activeItems.filter((t: any) => t.status === 'preparing').length, fill: '#6366F1' },
+      { name: 'Not Started', value: activeItems.filter((t: any) => t.status === 'not_started').length, fill: '#94A3B8' },
+      { name: 'Lost', value: activeItems.filter((t: any) => t.status === 'loss').length, fill: '#EF4444' },
+    ];
+
+    const distributionData = [
+      { name: 'Gov. Tenders', value: govTenders.length, fill: '#3B82F6' },
+      { name: 'Pvt. Quotations', value: privateQuotations.length, fill: '#8B5CF6' },
+    ];
+
     return {
       governmentTenders: govTenders.length,
       privateQuotations: privateQuotations.length,
       wonPoReceived: wonPoReceived.length,
       pendingFollowUp: pendingFollowUp.length,
+      totalActive: activeItems.length,
+      statusBreakdown,
+      distributionData,
     };
   }, [allTenderQuotations]);
 
@@ -574,38 +591,143 @@ export default function TenderQuotationEnhanced() {
         </DropdownMenu>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Dashboard - Chart-Based Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <Card className="border-l-4 border-l-[#3B82F6]">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <FileText className="w-3.5 h-3.5 text-[#3B82F6]" />
+              <p className="text-xs text-muted-foreground">Government Tenders</p>
+            </div>
+            <p className="text-xl font-bold text-[#3B82F6]">{dashboardStats.governmentTenders}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Active tenders</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-[#8B5CF6]">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Building2 className="w-3.5 h-3.5 text-[#8B5CF6]" />
+              <p className="text-xs text-muted-foreground">Private Quotations</p>
+            </div>
+            <p className="text-xl font-bold text-[#8B5CF6]">{dashboardStats.privateQuotations}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Active quotations</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-1">Distribution</p>
+            <div className="flex items-center gap-3">
+              <div className="w-16 h-16">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dashboardStats.distributionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={16}
+                      outerRadius={28}
+                      dataKey="value"
+                      strokeWidth={2}
+                    >
+                      {dashboardStats.distributionData.map((entry: any, idx: number) => (
+                        <Cell key={idx} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
+                  <span className="text-[10px] text-muted-foreground">Tenders</span>
+                  <span className="text-xs font-bold ml-auto">{dashboardStats.governmentTenders}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
+                  <span className="text-[10px] text-muted-foreground">Quotations</span>
+                  <span className="text-xs font-bold ml-auto">{dashboardStats.privateQuotations}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-1">Status Overview</p>
+            <div style={{ height: 60 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dashboardStats.statusBreakdown} barSize={14}>
+                  <XAxis dataKey="name" tick={{ fontSize: 8 }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip />
+                  <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                    {dashboardStats.statusBreakdown.map((entry: any, idx: number) => (
+                      <Cell key={idx} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-4 text-white shadow-md">
-          <p className="text-xs opacity-90 uppercase tracking-wide">Government Tenders</p>
-          <p className="text-3xl font-bold mt-1">{dashboardStats.governmentTenders}</p>
-          <p className="text-xs opacity-75 mt-1">Active tenders</p>
-        </div>
-        <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg p-4 text-white shadow-md">
-          <p className="text-xs opacity-90 uppercase tracking-wide">Private Quotations</p>
-          <p className="text-3xl font-bold mt-1">{dashboardStats.privateQuotations}</p>
-          <p className="text-xs opacity-75 mt-1">Active quotations</p>
-        </div>
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white shadow-md">
-          <p className="text-xs opacity-90 uppercase tracking-wide">Won/PO Received</p>
-          <p className="text-3xl font-bold mt-1">{dashboardStats.wonPoReceived}</p>
-          <p className="text-xs opacity-75 mt-1">Successful bids</p>
-        </div>
-        <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-lg p-4 text-white shadow-md">
-          <p className="text-xs opacity-90 uppercase tracking-wide">Pending Follow-Up</p>
-          <p className="text-3xl font-bold mt-1">{dashboardStats.pendingFollowUp}</p>
-          <p className="text-xs opacity-75 mt-1">Awaiting response</p>
-        </div>
+        <Card className="border-l-4 border-l-[#10B981]">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <CheckCircle className="w-3.5 h-3.5 text-[#10B981]" />
+              <p className="text-xs text-muted-foreground">Won / PO Received</p>
+            </div>
+            <p className="text-xl font-bold text-[#10B981]">{dashboardStats.wonPoReceived}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Successful bids</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-[#F59E0B]">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <AlertTriangle className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <p className="text-xs text-muted-foreground">Pending Follow-Up</p>
+            </div>
+            <p className="text-xl font-bold text-[#F59E0B]">{dashboardStats.pendingFollowUp}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Awaiting response</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-[#6366F1]">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <TrendingUp className="w-3.5 h-3.5 text-[#6366F1]" />
+              <p className="text-xs text-muted-foreground">Total Active</p>
+            </div>
+            <p className="text-xl font-bold text-[#6366F1]">{dashboardStats.totalActive}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">All active items</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-[#94A3B8]">
+          <CardContent className="pt-3 pb-2 px-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Archive className="w-3.5 h-3.5 text-[#94A3B8]" />
+              <p className="text-xs text-muted-foreground">Archived</p>
+            </div>
+            <p className="text-xl font-bold text-[#94A3B8]">{archivedItems.length}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Completed items</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabs & Filters */}
       <div className="flex items-center justify-between">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-auto">
-          <TabsList>
-            <TabsTrigger value="tenders" className="px-6">Tenders</TabsTrigger>
-            <TabsTrigger value="quotations" className="px-6">Quotations</TabsTrigger>
-            <TabsTrigger value="archive" className="px-6">
-              <Archive className="h-4 w-4 mr-1" />
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+            <TabsTrigger value="tenders" className="text-xs px-3 py-1.5">Tenders</TabsTrigger>
+            <TabsTrigger value="quotations" className="text-xs px-3 py-1.5">Quotations</TabsTrigger>
+            <TabsTrigger value="archive" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+              <Archive className="h-3.5 w-3.5" />
               Archive ({archivedItems.length})
             </TabsTrigger>
           </TabsList>

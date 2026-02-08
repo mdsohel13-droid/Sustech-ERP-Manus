@@ -428,30 +428,64 @@ export default function SalesEnhanced() {
 
       {/* ============ DASHBOARD INFOGRAPHICS - 35% ============ */}
       <div className="space-y-3">
-        {/* Top KPI Row - Compact Colorful Cards */}
+        {/* Top KPI Row - Chart-Based Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-3 text-white shadow-md">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <DollarSign className="w-3 h-3 opacity-75" />
-              <p className="text-xs opacity-90">Total Sales</p>
-            </div>
-            <p className="text-2xl font-bold">{formatCurrency(dashboardStats.totalSales, currency)}</p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-3 text-white shadow-md">
-            <p className="text-xs opacity-90">Unique Customers</p>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <p className="text-2xl font-bold">{dashboardStats.openOpportunities}</p>
-              <span className="text-[10px] bg-white/20 px-1 py-0.5 rounded">{dashboardStats.activitiesCount > 0 ? Math.round((dashboardStats.openOpportunities / dashboardStats.activitiesCount) * 100) : 0}%</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-3 text-white shadow-md">
-            <p className="text-xs opacity-90">Sales This Month</p>
-            <p className="text-2xl font-bold mt-0.5">{formatCurrency(dashboardStats.salesThisMonth, currency)}</p>
-          </div>
-          <div className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-lg p-3 text-white shadow-md">
-            <p className="text-xs opacity-90">Revenue This Quarter</p>
-            <p className="text-2xl font-bold mt-0.5">{formatCurrency(dashboardStats.revenueThisQuarter, currency)}</p>
-          </div>
+          <Card className="border-l-4 border-l-[#2563EB]">
+            <CardContent className="pt-3 pb-2 px-4">
+              <div className="flex items-center gap-1.5 mb-1">
+                <DollarSign className="w-3.5 h-3.5 text-[#2563EB]" />
+                <p className="text-xs text-muted-foreground">Total Sales</p>
+              </div>
+              <p className="text-xl font-bold text-[#2563EB]">{formatCurrency(dashboardStats.totalSales, currency)}</p>
+              <div className="mt-1">
+                <ResponsiveContainer width="100%" height={32}>
+                  <AreaChart data={salesPerformanceData}>
+                    <Area type="monotone" dataKey="revenue" stroke="#2563EB" fill="rgba(37,99,235,0.12)" strokeWidth={1.5} dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-[#8B5CF6]">
+            <CardContent className="pt-3 pb-2 px-4">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Users className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                <p className="text-xs text-muted-foreground">Unique Customers</p>
+              </div>
+              <p className="text-xl font-bold text-[#8B5CF6]">{dashboardStats.openOpportunities}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {dashboardStats.activitiesCount > 0 ? `${Math.round((dashboardStats.openOpportunities / dashboardStats.activitiesCount) * 100)}% of transactions` : 'No data yet'}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-[#16A34A]">
+            <CardContent className="pt-3 pb-2 px-4">
+              <div className="flex items-center gap-1.5 mb-1">
+                <TrendingUp className="w-3.5 h-3.5 text-[#16A34A]" />
+                <p className="text-xs text-muted-foreground">Sales This Month</p>
+              </div>
+              <p className="text-xl font-bold text-[#16A34A]">{formatCurrency(dashboardStats.salesThisMonth, currency)}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {dashboardStats.totalSales > 0 ? `${((dashboardStats.salesThisMonth / dashboardStats.totalSales) * 100).toFixed(1)}% of total` : 'No sales yet'}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-[#D97706]">
+            <CardContent className="pt-3 pb-2 px-4">
+              <div className="flex items-center gap-1.5 mb-1">
+                <BarChart3 className="w-3 h-3 text-[#D97706]" />
+                <p className="text-xs text-muted-foreground">Revenue This Quarter</p>
+              </div>
+              <p className="text-xl font-bold text-[#D97706]">{formatCurrency(dashboardStats.revenueThisQuarter, currency)}</p>
+              <div className="mt-1">
+                <ResponsiveContainer width="100%" height={32}>
+                  <LineChart data={salesPerformanceData}>
+                    <Line type="monotone" dataKey="revenue" stroke="#D97706" strokeWidth={1.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Mini Charts Row + Status Cards */}
@@ -498,21 +532,21 @@ export default function SalesEnhanced() {
 
           {/* Key Status Indicators - Using Dynamic Data */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-purple-500">
+            <div className="border rounded-lg p-2.5 border-l-4 border-l-purple-500">
               <p className="text-[10px] text-muted-foreground">Top Salesperson</p>
               <p className="text-xs font-medium truncate">{dashboardStats.topSalesperson?.name || "N/A"}</p>
               <p className="text-sm font-bold text-purple-600">{formatCurrency(dashboardStats.topSalesperson?.revenue || 0, currency)}</p>
             </div>
-            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-green-500">
+            <div className="border rounded-lg p-2.5 border-l-4 border-l-green-500">
               <p className="text-[10px] text-muted-foreground">Deals Closing (7 days)</p>
               <p className="text-xs font-medium">{dashboardStats.dealsClosing} deals</p>
               <p className="text-sm font-bold text-green-600">{formatCurrency(dashboardStats.dealsClosingValue, currency)}</p>
             </div>
-            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-blue-500">
+            <div className="border rounded-lg p-2.5 border-l-4 border-l-blue-500">
               <p className="text-[10px] text-muted-foreground">Forecast</p>
               <p className="text-sm font-bold text-blue-600">{formatCurrency(dashboardStats.forecast, currency)}</p>
             </div>
-            <div className="bg-white border rounded-lg p-2.5 border-l-4 border-l-orange-500">
+            <div className="border rounded-lg p-2.5 border-l-4 border-l-orange-500">
               <p className="text-[10px] text-muted-foreground">Transactions</p>
               <p className="text-xs font-medium">{dashboardStats.activitiesCount} records</p>
               <p className="text-sm font-bold text-orange-600">{formatCurrency(dashboardStats.totalSales, currency)}</p>
@@ -524,16 +558,16 @@ export default function SalesEnhanced() {
       {/* ============ DATA ENTRY & TRACKING - 65% ============ */}
       {/* Main Content Tabs */}
       <Tabs defaultValue="daily" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="daily">
-            <Calendar className="h-4 w-4 mr-2" />
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="daily" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Calendar className="h-3.5 w-3.5" />
             Daily Sales
           </TabsTrigger>
-          <TabsTrigger value="weekly">Weekly Targets</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly Targets</TabsTrigger>
-          <TabsTrigger value="salespeople">Salespeople</TabsTrigger>
-          <TabsTrigger value="archive">Archive</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="weekly" className="text-xs px-3 py-1.5">Weekly Targets</TabsTrigger>
+          <TabsTrigger value="monthly" className="text-xs px-3 py-1.5">Monthly Targets</TabsTrigger>
+          <TabsTrigger value="salespeople" className="text-xs px-3 py-1.5">Salespeople</TabsTrigger>
+          <TabsTrigger value="archive" className="text-xs px-3 py-1.5">Archive</TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs px-3 py-1.5">Analytics</TabsTrigger>
         </TabsList>
 
         {/* Daily Sales Tab */}
@@ -794,22 +828,31 @@ export default function SalesEnhanced() {
         <TabsContent value="salespeople" className="space-y-4">
           {/* Salesperson Performance Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg p-3 text-white shadow-md">
-              <p className="text-xs opacity-90">Active Salespeople</p>
-              <p className="text-2xl font-bold">{salespeople?.filter((p: any) => p.status === 'active').length || 0}</p>
-            </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg p-3 text-white shadow-md">
-              <p className="text-xs opacity-90">Total Team Sales</p>
-              <p className="text-2xl font-bold">{formatCurrency(dashboardStats.totalSales, currency)}</p>
-            </div>
-            <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg p-3 text-white shadow-md">
-              <p className="text-xs opacity-90">Avg. Per Person</p>
-              <p className="text-2xl font-bold">{formatCurrency(salespeople?.length ? dashboardStats.totalSales / salespeople.length : 0, currency)}</p>
-            </div>
-            <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-lg p-3 text-white shadow-md">
-              <p className="text-xs opacity-90">Top Performer</p>
-              <p className="text-lg font-bold truncate">{dashboardStats.topSalesperson?.name || "N/A"}</p>
-            </div>
+            <Card className="border-l-4 border-l-indigo-500">
+              <CardContent className="pt-3 pb-2 px-4">
+                <p className="text-xs text-muted-foreground">Active Salespeople</p>
+                <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">{salespeople?.filter((p: any) => p.status === 'active').length || 0}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">of {salespeople?.length || 0} total</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-emerald-500">
+              <CardContent className="pt-3 pb-2 px-4">
+                <p className="text-xs text-muted-foreground">Total Team Sales</p>
+                <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(dashboardStats.totalSales, currency)}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-cyan-500">
+              <CardContent className="pt-3 pb-2 px-4">
+                <p className="text-xs text-muted-foreground">Avg. Per Person</p>
+                <p className="text-xl font-bold text-cyan-600 dark:text-cyan-400">{formatCurrency(salespeople?.length ? dashboardStats.totalSales / salespeople.length : 0, currency)}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-rose-500">
+              <CardContent className="pt-3 pb-2 px-4">
+                <p className="text-xs text-muted-foreground">Top Performer</p>
+                <p className="text-lg font-bold text-rose-600 dark:text-rose-400 truncate">{dashboardStats.topSalesperson?.name || "N/A"}</p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Salesperson Performance Table with Target Analysis */}
