@@ -275,7 +275,7 @@ export default function Projects() {
         </TabsList>
 
         <TabsContent value="dashboard">
-          <PortfolioDashboard />
+          <PortfolioDashboard onOpenFinancials={(project) => { setSelectedProject(project); setFinancialsOpen(true); }} />
         </TabsContent>
 
         <TabsContent value="active" className="space-y-6">
