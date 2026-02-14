@@ -16,22 +16,26 @@ export default function RunningProjectsTable({ projects, totalProjects, formatCu
 
   const getStageStyle = (stage: string) => {
     switch (stage) {
-      case "execution": return "bg-blue-100 text-blue-700 border-blue-200";
-      case "won": return "bg-emerald-100 text-emerald-700 border-emerald-200";
-      case "proposal": return "bg-amber-100 text-amber-700 border-amber-200";
-      case "lead": return "bg-purple-100 text-purple-700 border-purple-200";
-      case "testing": return "bg-cyan-100 text-cyan-700 border-cyan-200";
+      case "initiation": return "bg-blue-100 text-blue-700 border-blue-200";
+      case "planning": return "bg-amber-100 text-amber-700 border-amber-200";
+      case "execution": return "bg-purple-100 text-purple-700 border-purple-200";
+      case "monitoring": return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "closure_technical": return "bg-teal-100 text-teal-700 border-teal-200";
+      case "payment_due": return "bg-orange-100 text-orange-700 border-orange-200";
+      case "financial_closure": return "bg-slate-100 text-slate-700 border-slate-200";
       default: return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
   const getStageLabel = (stage: string) => {
     switch (stage) {
+      case "initiation": return "Initiation";
+      case "planning": return "Planning";
       case "execution": return "Execution";
-      case "won": return "Won/Contracted";
-      case "proposal": return "Proposal";
-      case "lead": return "Lead";
-      case "testing": return "Testing";
+      case "monitoring": return "Monitoring & Control";
+      case "closure_technical": return "Closure (Technical)";
+      case "payment_due": return "Payment Due";
+      case "financial_closure": return "Financial Closure";
       default: return stage;
     }
   };

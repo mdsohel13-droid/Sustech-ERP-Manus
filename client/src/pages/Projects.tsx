@@ -11,50 +11,59 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown, Archive, ArchiveRestore, Eye, BarChart3, Paperclip } from "lucide-react";
+import { Plus, GripVertical, Calendar, DollarSign, LayoutGrid, List, ArrowUpDown, Wallet, Search, TrendingUp, FileText, Briefcase, CheckCircle, ClipboardList, MoreHorizontal, Edit, Trash2, ChevronDown, Archive, ArchiveRestore, Eye, BarChart3, Paperclip, PlayCircle, Settings, ShieldCheck, CreditCard, Lock } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import PortfolioDashboard from "@/pages/projects/PortfolioDashboard";
 import { formatCurrency } from "@/lib/currencyUtils";
 import { ProjectFinancials } from "@/components/ProjectFinancials";
 import { AttachmentUpload } from "@/components/AttachmentUpload";
 import { ProjectDetailDialog } from "@/components/ProjectDetailDialog";
+import { ProjectTodoChecklist } from "@/components/ProjectTodoChecklist";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format } from "date-fns";
 import { useAuth } from "@/_core/hooks/useAuth";
 
-type ProjectStage = "lead" | "proposal" | "won" | "execution" | "testing";
+type ProjectStage = "initiation" | "planning" | "execution" | "monitoring" | "closure_technical" | "payment_due" | "financial_closure";
 
 const stageLabels: Record<ProjectStage, string> = {
-  lead: "Leads/Inquiry",
-  proposal: "Proposal Submitted",
-  won: "Won/Contracted",
-  execution: "Execution Phase",
-  testing: "Testing/Handover",
+  initiation: "Initiation",
+  planning: "Planning",
+  execution: "Execution",
+  monitoring: "Monitoring & Control",
+  closure_technical: "Closure (Technical)",
+  payment_due: "Payment Due",
+  financial_closure: "Financial Closure",
 };
 
 const stageColors: Record<ProjectStage, { bg: string; badge: string }> = {
-  lead: { bg: "bg-gradient-to-r from-blue-500 to-blue-600", badge: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
-  proposal: { bg: "bg-gradient-to-r from-amber-500 to-amber-600", badge: "bg-amber-100 text-amber-700 hover:bg-amber-100" },
-  won: { bg: "bg-gradient-to-r from-emerald-500 to-emerald-600", badge: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100" },
+  initiation: { bg: "bg-gradient-to-r from-blue-500 to-blue-600", badge: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
+  planning: { bg: "bg-gradient-to-r from-amber-500 to-amber-600", badge: "bg-amber-100 text-amber-700 hover:bg-amber-100" },
   execution: { bg: "bg-gradient-to-r from-purple-500 to-purple-600", badge: "bg-purple-100 text-purple-700 hover:bg-purple-100" },
-  testing: { bg: "bg-gradient-to-r from-slate-500 to-slate-600", badge: "bg-slate-100 text-slate-700 hover:bg-slate-100" },
+  monitoring: { bg: "bg-gradient-to-r from-emerald-500 to-emerald-600", badge: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100" },
+  closure_technical: { bg: "bg-gradient-to-r from-teal-500 to-teal-600", badge: "bg-teal-100 text-teal-700 hover:bg-teal-100" },
+  payment_due: { bg: "bg-gradient-to-r from-orange-500 to-orange-600", badge: "bg-orange-100 text-orange-700 hover:bg-orange-100" },
+  financial_closure: { bg: "bg-gradient-to-r from-slate-500 to-slate-600", badge: "bg-slate-100 text-slate-700 hover:bg-slate-100" },
 };
 
 const stageIcons: Record<ProjectStage, React.ReactNode> = {
-  lead: <ClipboardList className="h-5 w-5" />,
-  proposal: <FileText className="h-5 w-5" />,
-  won: <Briefcase className="h-5 w-5" />,
-  execution: <DollarSign className="h-5 w-5" />,
-  testing: <CheckCircle className="h-5 w-5" />,
+  initiation: <PlayCircle className="h-5 w-5" />,
+  planning: <ClipboardList className="h-5 w-5" />,
+  execution: <Settings className="h-5 w-5" />,
+  monitoring: <Eye className="h-5 w-5" />,
+  closure_technical: <ShieldCheck className="h-5 w-5" />,
+  payment_due: <CreditCard className="h-5 w-5" />,
+  financial_closure: <Lock className="h-5 w-5" />,
 };
 
 const STAGE_DONUT_COLORS: Record<ProjectStage, string> = {
-  lead: "#3B82F6",
-  proposal: "#F59E0B",
-  won: "#10B981",
+  initiation: "#3B82F6",
+  planning: "#F59E0B",
   execution: "#8B5CF6",
-  testing: "#64748B",
+  monitoring: "#10B981",
+  closure_technical: "#14B8A6",
+  payment_due: "#F97316",
+  financial_closure: "#64748B",
 };
 
 export default function Projects() {
@@ -227,7 +236,7 @@ export default function Projects() {
   }, [projects]);
 
   const projectedProfitMargin = useMemo(() => {
-    const testingValue = stats.find((s) => s.stage === 'testing')?.totalValue || 0;
+    const testingValue = stats.find((s) => s.stage === 'financial_closure')?.totalValue || 0;
     if (totalPipelineValue === 0) return 0;
     return ((testingValue / totalPipelineValue) * 100).toFixed(1);
   }, [stats, totalPipelineValue]);
@@ -300,7 +309,7 @@ export default function Projects() {
 
         <TabsContent value="active" className="space-y-6">
           {(() => {
-            const stageData = (["lead", "proposal", "won", "execution", "testing"] as ProjectStage[]).map((stage) => {
+            const stageData = (["initiation", "planning", "execution", "monitoring", "closure_technical", "payment_due", "financial_closure"] as ProjectStage[]).map((stage) => {
               const stageStat = stats?.find((s) => s.stage === stage);
               const count = projects?.filter(p => p.stage === stage).length || 0;
               return {
@@ -365,7 +374,7 @@ export default function Projects() {
                       </div>
                     </div>
 
-                    <div className="flex-1 grid grid-cols-5 gap-3 w-full self-center">
+                    <div className="flex-1 grid grid-cols-7 gap-2 w-full self-center">
                       {stageData.map((d) => {
                         const pct = totalValue > 0 ? (d.value / totalValue) * 100 : 0;
                         const miniData = [
@@ -411,8 +420,8 @@ export default function Projects() {
           })()}
 
       {viewMode === 'kanban' && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {(["lead", "proposal", "won", "execution", "testing"] as ProjectStage[]).map((stage) => (
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
+          {(["initiation", "planning", "execution", "monitoring", "closure_technical", "payment_due", "financial_closure"] as ProjectStage[]).map((stage) => (
             <div key={stage} className="bg-muted/30 rounded-lg p-4 min-h-[400px]" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, stage)}>
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <Badge className={stageColors[stage].badge}>{stageLabels[stage]}</Badge>
@@ -690,143 +699,157 @@ export default function Projects() {
       </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingProject(null); }}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="max-w-[90vw] w-[90vw] max-h-[90vh] overflow-hidden flex flex-col p-0">
           <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
             <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
               <DialogTitle>{editingProject ? "Edit" : "Create New"} Project</DialogTitle>
               <DialogDescription>{editingProject ? "Update project details" : "Add a new project to the pipeline"}</DialogDescription>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="grid gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="name" className="text-xs">Project Name *</Label>
-                    <Input id="name" name="name" defaultValue={editingProject?.name} required className="text-sm" />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="customerName" className="text-xs">Customer Name *</Label>
-                    <Input id="customerName" name="customerName" defaultValue={editingProject?.customerName} required className="text-sm" />
-                  </div>
-                </div>
+            <div className="flex-1 overflow-hidden">
+              <div className={`flex h-full ${editingProject ? '' : ''}`}>
+                <div className={`${editingProject ? 'flex-1 min-w-0' : 'w-full'} overflow-y-auto px-6 py-4`}>
+                  <div className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="name" className="text-xs">Project Name *</Label>
+                        <Input id="name" name="name" defaultValue={editingProject?.name} required className="text-sm" />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="customerName" className="text-xs">Customer Name *</Label>
+                        <Input id="customerName" name="customerName" defaultValue={editingProject?.customerName} required className="text-sm" />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="value" className="text-xs">Project Value</Label>
+                        <Input id="value" name="value" type="number" step="0.01" min="0" defaultValue={editingProject?.value} placeholder="0.00" className="text-sm" />
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="value" className="text-xs">Project Value</Label>
-                    <Input id="value" name="value" type="number" step="0.01" min="0" defaultValue={editingProject?.value} placeholder="0.00" className="text-sm" />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="priority" className="text-xs">Priority</Label>
-                    <Select name="priority" defaultValue={editingProject?.priority || "medium"}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="startDate" className="text-xs">Start Date</Label>
-                    <Input id="startDate" name="startDate" type="date" defaultValue={editingProject?.startDate ? format(new Date(editingProject.startDate), "yyyy-MM-dd") : ""} className="text-sm" />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="expectedCloseDate" className="text-xs">Expected Close Date</Label>
-                    <Input id="expectedCloseDate" name="expectedCloseDate" type="date" defaultValue={editingProject?.expectedCloseDate ? format(new Date(editingProject.expectedCloseDate), "yyyy-MM-dd") : ""} className="text-sm" />
-                  </div>
-                </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="priority" className="text-xs">Priority</Label>
+                        <Select name="priority" defaultValue={editingProject?.priority || "medium"}>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="startDate" className="text-xs">Start Date</Label>
+                        <Input id="startDate" name="startDate" type="date" defaultValue={editingProject?.startDate ? format(new Date(editingProject.startDate), "yyyy-MM-dd") : ""} className="text-sm" />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="expectedCloseDate" className="text-xs">Expected Close Date</Label>
+                        <Input id="expectedCloseDate" name="expectedCloseDate" type="date" defaultValue={editingProject?.expectedCloseDate ? format(new Date(editingProject.expectedCloseDate), "yyyy-MM-dd") : ""} className="text-sm" />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="stage" className="text-xs">Pipeline Stage</Label>
+                        <Select name="stage" defaultValue={editingProject?.stage || "initiation"}>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="initiation">Initiation</SelectItem>
+                            <SelectItem value="planning">Planning</SelectItem>
+                            <SelectItem value="execution">Execution</SelectItem>
+                            <SelectItem value="monitoring">Monitoring & Control</SelectItem>
+                            <SelectItem value="closure_technical">Closure (Technical)</SelectItem>
+                            <SelectItem value="payment_due">Payment Due</SelectItem>
+                            <SelectItem value="financial_closure">Financial Closure</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="health" className="text-xs">Health</Label>
+                        <Select name="health" defaultValue={editingProject?.health || "green"}>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="green">Green (On Track)</SelectItem>
+                            <SelectItem value="yellow">Yellow (At Risk)</SelectItem>
+                            <SelectItem value="red">Red (Critical)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="stage" className="text-xs">Pipeline Stage</Label>
-                    <Select name="stage" defaultValue={editingProject?.stage || "lead"}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="lead">Leads/Inquiry</SelectItem>
-                        <SelectItem value="proposal">Proposal Submitted</SelectItem>
-                        <SelectItem value="won">Won/Contracted</SelectItem>
-                        <SelectItem value="execution">Execution Phase</SelectItem>
-                        <SelectItem value="testing">Testing/Handover</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="projectStatus" className="text-xs">Project Status</Label>
-                    <Select name="projectStatus" defaultValue={editingProject?.projectStatus || "not_started"}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not_started">Not Started</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="activeStage" className="text-xs">Active Stage</Label>
-                    <Select name="activeStage" defaultValue={editingProject?.activeStage || "initiate"}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="initiate">Initiate</SelectItem>
-                        <SelectItem value="plan">Plan</SelectItem>
-                        <SelectItem value="execute">Execute</SelectItem>
-                        <SelectItem value="monitor">Monitor</SelectItem>
-                        <SelectItem value="close">Close</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="health" className="text-xs">Health</Label>
-                    <Select name="health" defaultValue={editingProject?.health || "green"}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="green">Green (On Track)</SelectItem>
-                        <SelectItem value="yellow">Yellow (At Risk)</SelectItem>
-                        <SelectItem value="red">Red (Critical)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="projectStatus" className="text-xs">Project Status</Label>
+                        <Select name="projectStatus" defaultValue={editingProject?.projectStatus || "not_started"}>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="not_started">Not Started</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="on_hold">On Hold</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="activeStage" className="text-xs">Active Stage</Label>
+                        <Select name="activeStage" defaultValue={editingProject?.activeStage || "initiate"}>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="initiate">Initiate</SelectItem>
+                            <SelectItem value="plan">Plan</SelectItem>
+                            <SelectItem value="execute">Execute</SelectItem>
+                            <SelectItem value="monitor">Monitor</SelectItem>
+                            <SelectItem value="close">Close</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="projectType" className="text-xs">Project Type</Label>
+                        <Select name="projectType" defaultValue={editingProject?.projectType || "operational"}>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="strategic">Strategic</SelectItem>
+                            <SelectItem value="improvement">Improvement</SelectItem>
+                            <SelectItem value="operational">Operational</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="projectManager" className="text-xs">Project Manager</Label>
+                        <Input id="projectManager" name="projectManager" defaultValue={editingProject?.projectManager || ""} placeholder="Manager name" className="text-sm" />
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="projectType" className="text-xs">Project Type</Label>
-                    <Select name="projectType" defaultValue={editingProject?.projectType || "operational"}>
-                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="strategic">Strategic</SelectItem>
-                        <SelectItem value="improvement">Improvement</SelectItem>
-                        <SelectItem value="operational">Operational</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="projectManager" className="text-xs">Project Manager</Label>
-                    <Input id="projectManager" name="projectManager" defaultValue={editingProject?.projectManager || ""} placeholder="Manager name" className="text-sm" />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="portfolio" className="text-xs">Portfolio</Label>
-                    <Input id="portfolio" name="portfolio" defaultValue={editingProject?.portfolio || ""} placeholder="Portfolio name" className="text-sm" />
-                  </div>
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="portfolio" className="text-xs">Portfolio</Label>
+                        <Input id="portfolio" name="portfolio" defaultValue={editingProject?.portfolio || ""} placeholder="Portfolio name" className="text-sm" />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="program" className="text-xs">Program</Label>
+                        <Input id="program" name="program" defaultValue={editingProject?.program || ""} placeholder="Program name" className="text-sm" />
+                      </div>
+                    </div>
 
-                <div className="grid gap-1.5">
-                  <Label htmlFor="program" className="text-xs">Program</Label>
-                  <Input id="program" name="program" defaultValue={editingProject?.program || ""} placeholder="Program name" className="text-sm" />
-                </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="description" className="text-xs">Description</Label>
+                      <Textarea id="description" name="description" rows={3} defaultValue={editingProject?.description || ""} placeholder="Enter project details..." className="text-sm" />
+                    </div>
 
-                <div className="grid gap-1.5">
-                  <Label htmlFor="description" className="text-xs">Description</Label>
-                  <Textarea id="description" name="description" rows={3} defaultValue={editingProject?.description || ""} placeholder="Enter project details..." className="text-sm" />
+                    {editingProject && (
+                      <div className="grid gap-2 pt-3 border-t">
+                        <Label className="text-xs flex items-center gap-1.5">
+                          <Paperclip className="h-3.5 w-3.5" />
+                          Attachments (with short-note)
+                        </Label>
+                        <AttachmentUpload entityType="project" entityId={editingProject.id} />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {editingProject && (
-                  <div className="grid gap-2 pt-3 border-t">
-                    <Label className="text-xs flex items-center gap-1.5">
-                      <Paperclip className="h-3.5 w-3.5" />
-                      Attachments (with short-note)
-                    </Label>
-                    <AttachmentUpload entityType="project" entityId={editingProject.id} />
+                  <div className="w-[340px] flex-shrink-0 border-l overflow-y-auto px-4 py-4 bg-muted/30">
+                    <ProjectTodoChecklist
+                      projectId={editingProject.id}
+                      currentStage={editingProject.stage}
+                    />
                   </div>
                 )}
               </div>

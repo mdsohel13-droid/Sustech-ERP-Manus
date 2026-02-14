@@ -58,19 +58,23 @@ interface ProjectDetailDialogProps {
 }
 
 const stageLabels: Record<string, string> = {
-  lead: "Lead",
-  proposal: "Proposal",
-  won: "Won/Contracted",
+  initiation: "Initiation",
+  planning: "Planning",
   execution: "Execution",
-  testing: "Testing/Completion",
+  monitoring: "Monitoring & Control",
+  closure_technical: "Closure (Technical)",
+  payment_due: "Payment Due",
+  financial_closure: "Financial Closure",
 };
 
 const stageColors: Record<string, string> = {
-  lead: "bg-blue-100 text-blue-800",
-  proposal: "bg-amber-100 text-amber-800",
-  won: "bg-green-100 text-green-800",
+  initiation: "bg-blue-100 text-blue-800",
+  planning: "bg-amber-100 text-amber-800",
   execution: "bg-purple-100 text-purple-800",
-  testing: "bg-teal-100 text-teal-800",
+  monitoring: "bg-green-100 text-green-800",
+  closure_technical: "bg-teal-100 text-teal-800",
+  payment_due: "bg-orange-100 text-orange-800",
+  financial_closure: "bg-slate-100 text-slate-800",
 };
 
 const priorityColors: Record<string, string> = {

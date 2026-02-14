@@ -17,21 +17,26 @@ export default function ProjectCardsGrid({ projects, formatCurrency }: ProjectCa
 
   const getProjectStatus = (stage: string) => {
     switch (stage) {
-      case "execution": return { label: "In Progress", color: "bg-blue-100 text-blue-700", dotColor: "bg-blue-500" };
-      case "won": return { label: "On Track", color: "bg-emerald-100 text-emerald-700", dotColor: "bg-emerald-500" };
-      case "proposal": return { label: "Proposal", color: "bg-amber-100 text-amber-700", dotColor: "bg-amber-500" };
-      case "lead": return { label: "New Lead", color: "bg-purple-100 text-purple-700", dotColor: "bg-purple-500" };
-      case "testing": return { label: "At Risk", color: "bg-red-100 text-red-700", dotColor: "bg-red-500" };
+      case "initiation": return { label: "Initiation", color: "bg-blue-100 text-blue-700", dotColor: "bg-blue-500" };
+      case "planning": return { label: "Planning", color: "bg-amber-100 text-amber-700", dotColor: "bg-amber-500" };
+      case "execution": return { label: "Execution", color: "bg-purple-100 text-purple-700", dotColor: "bg-purple-500" };
+      case "monitoring": return { label: "Monitoring", color: "bg-emerald-100 text-emerald-700", dotColor: "bg-emerald-500" };
+      case "closure_technical": return { label: "Closure", color: "bg-teal-100 text-teal-700", dotColor: "bg-teal-500" };
+      case "payment_due": return { label: "Payment Due", color: "bg-orange-100 text-orange-700", dotColor: "bg-orange-500" };
+      case "financial_closure": return { label: "Fin. Closure", color: "bg-slate-100 text-slate-700", dotColor: "bg-slate-500" };
       default: return { label: stage, color: "bg-gray-100 text-gray-700", dotColor: "bg-gray-500" };
     }
   };
 
   const getProgress = (stage: string) => {
     switch (stage) {
-      case "won": return 92;
-      case "execution": return 60;
-      case "proposal": return 35;
-      case "lead": return 15;
+      case "initiation": return 10;
+      case "planning": return 25;
+      case "execution": return 50;
+      case "monitoring": return 70;
+      case "closure_technical": return 85;
+      case "payment_due": return 92;
+      case "financial_closure": return 100;
       default: return 25;
     }
   };

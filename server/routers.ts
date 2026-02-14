@@ -672,7 +672,7 @@ export const appRouter = router({
       .input(z.object({
         name: z.string(),
         customerName: z.string(),
-        stage: z.enum(["lead", "proposal", "won", "execution", "testing"]).optional(),
+        stage: z.enum(["initiation", "planning", "execution", "monitoring", "closure_technical", "payment_due", "financial_closure"]).optional(),
         value: z.string().optional(),
         description: z.string().optional(),
         startDate: z.string().optional(),
@@ -716,7 +716,7 @@ export const appRouter = router({
         id: z.number(),
         name: z.string().optional(),
         customerName: z.string().optional(),
-        stage: z.enum(["lead", "proposal", "won", "execution", "testing"]).optional(),
+        stage: z.enum(["initiation", "planning", "execution", "monitoring", "closure_technical", "payment_due", "financial_closure"]).optional(),
         value: z.string().optional(),
         description: z.string().optional(),
         startDate: z.string().optional(),
@@ -788,6 +788,41 @@ export const appRouter = router({
     getStats: protectedProcedure.query(async () => {
       return await db.getProjectStats();
     }),
+
+    getTodos: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getProjectTodos(input.projectId);
+      }),
+
+    initTodos: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+        todos: z.array(z.object({
+          stage: z.string(),
+          title: z.string(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.upsertProjectTodos(input.projectId, input.todos);
+      }),
+
+    updateTodo: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        isCompleted: z.boolean().optional(),
+        comment: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { id, isCompleted, comment } = input;
+        const updateData: { isCompleted?: boolean; comment?: string | null; completedBy?: number | null } = {};
+        if (comment !== undefined) updateData.comment = comment;
+        if (isCompleted !== undefined) {
+          updateData.isCompleted = isCompleted;
+          updateData.completedBy = isCompleted ? ctx.user.id : null;
+        }
+        return await db.updateProjectTodo(id, updateData);
+      }),
 
     getPortfolioDashboard: protectedProcedure
       .input(z.object({
@@ -2294,7 +2329,7 @@ Provide 2-3 actionable business insights.`;
             const projectResult = await db.createProject({
               name: tender.description,
               customerName: tender.clientName,
-              stage: "won",
+              stage: "execution",
               value: tender.estimatedValue || "0",
               currency: tender.currency,
               startDate: new Date() as any,

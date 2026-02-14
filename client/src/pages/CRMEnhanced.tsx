@@ -458,12 +458,22 @@ export default function CRMEnhanced() {
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-gray-600">{formatCurrency(parseFloat(project.value || '0'), currency)}</span>
                         <Badge className={
-                          project.stage === 'won' ? 'bg-green-100 text-green-800' :
+                          project.stage === 'monitoring' ? 'bg-green-100 text-green-800' :
                           project.stage === 'execution' ? 'bg-blue-100 text-blue-800' :
-                          project.stage === 'proposal' ? 'bg-yellow-100 text-yellow-800' :
+                          project.stage === 'planning' ? 'bg-yellow-100 text-yellow-800' :
+                          project.stage === 'closure_technical' ? 'bg-teal-100 text-teal-800' :
+                          project.stage === 'payment_due' ? 'bg-orange-100 text-orange-800' :
+                          project.stage === 'financial_closure' ? 'bg-slate-100 text-slate-800' :
                           'bg-gray-100 text-gray-800'
                         }>
-                          {project.stage}
+                          {project.stage === 'initiation' ? 'Initiation' :
+                           project.stage === 'planning' ? 'Planning' :
+                           project.stage === 'execution' ? 'Execution' :
+                           project.stage === 'monitoring' ? 'Monitoring' :
+                           project.stage === 'closure_technical' ? 'Closure' :
+                           project.stage === 'payment_due' ? 'Payment Due' :
+                           project.stage === 'financial_closure' ? 'Fin. Closure' :
+                           project.stage}
                         </Badge>
                       </div>
                     </div>

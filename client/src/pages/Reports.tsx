@@ -113,7 +113,7 @@ export default function Reports() {
 
   const projectStatusData = useMemo(() => {
     if (!projects) return [];
-    const stages = ['proposal', 'planning', 'in_progress', 'testing', 'completed'];
+    const stages = ['initiation', 'planning', 'execution', 'monitoring', 'closure_technical', 'payment_due', 'financial_closure'];
     return stages.map(stage => ({
       stage: stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
       count: projects.filter(p => p.stage === stage).length
@@ -320,7 +320,7 @@ export default function Reports() {
               <Card>
                 <CardContent className="pt-6">
                   <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">{projects?.filter(p => p.stage === 'won').length || 0}</p>
+                  <p className="text-2xl font-bold text-green-600">{projects?.filter(p => p.stage === 'financial_closure').length || 0}</p>
                 </CardContent>
               </Card>
               <Card>

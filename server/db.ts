@@ -14,6 +14,7 @@ import {
   weeklySalesTargets,
   monthlySalesTargets,
   projects, InsertProject,
+  projectTodos, InsertProjectTodo,
   customers, InsertCustomer,
   customerInteractions, InsertCustomerInteraction,
   crmLeads, InsertCrmLead,
@@ -4737,6 +4738,53 @@ export async function updateEmployeeTracker(employeeId: number, data: Partial<In
     const [tracker] = await db.insert(employeeTracker).values({ employeeId, ...data } as InsertEmployeeTracker).returning();
     return tracker;
   }
+}
+
+// Project Todos
+export async function getProjectTodos(projectId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(projectTodos).where(eq(projectTodos.projectId, projectId)).orderBy(asc(projectTodos.stage), asc(projectTodos.id));
+}
+
+export async function upsertProjectTodos(projectId: number, todos: { stage: string; title: string; isCompleted?: boolean; comment?: string | null }[]) {
+  const db = await getDb();
+  if (!db) return [];
+  const existing = await db.select().from(projectTodos).where(eq(projectTodos.projectId, projectId));
+  const existingMap = new Map(existing.map(t => [`${t.stage}:${t.title}`, t]));
+  
+  const results = [];
+  for (const todo of todos) {
+    const key = `${todo.stage}:${todo.title}`;
+    const ex = existingMap.get(key);
+    if (ex) {
+      results.push(ex);
+    } else {
+      const [inserted] = await db.insert(projectTodos).values({
+        projectId,
+        stage: todo.stage as any,
+        title: todo.title,
+        isCompleted: todo.isCompleted || false,
+        comment: todo.comment || null,
+      }).returning();
+      results.push(inserted);
+    }
+  }
+  return results;
+}
+
+export async function updateProjectTodo(id: number, data: { isCompleted?: boolean; comment?: string | null; completedBy?: number | null }) {
+  const db = await getDb();
+  if (!db) return null;
+  const updateData: any = { ...data, updatedAt: new Date() };
+  if (data.isCompleted) {
+    updateData.completedAt = new Date();
+  } else if (data.isCompleted === false) {
+    updateData.completedAt = null;
+    updateData.completedBy = null;
+  }
+  const [result] = await db.update(projectTodos).set(updateData).where(eq(projectTodos.id, id)).returning();
+  return result;
 }
 
 // Seed function to ensure required users exist
