@@ -3,7 +3,7 @@ import { integer, pgEnum, pgTable, text, timestamp, varchar, decimal, boolean, d
 // Define enums
 export const userRoleEnum = pgEnum("user_role", ["admin", "manager", "viewer", "user"]);
 export const statusEnum = pgEnum("status", ["pending", "overdue", "paid"]);
-export const projectStageEnum = pgEnum("project_stage", ["initiation", "planning", "execution", "monitoring", "closure_technical", "payment_due", "financial_closure"]);
+// project_stage enum removed - using varchar for flexible stage values
 export const projectHealthEnum = pgEnum("project_health", ["green", "yellow", "red"]);
 export const projectTypeEnum2 = pgEnum("project_type_v2", ["strategic", "improvement", "operational"]);
 export const projectStatusEnum = pgEnum("project_status", ["not_started", "in_progress", "on_hold", "completed", "cancelled"]);
@@ -164,7 +164,7 @@ export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   customerName: varchar("customerName", { length: 255 }).notNull(),
-  stage: projectStageEnum("stage").default("initiation").notNull(),
+  stage: varchar("stage", { length: 50 }).default("initiation").notNull(),
   value: decimal("value", { precision: 15, scale: 2 }),
   currency: varchar("currency", { length: 3 }).default("BDT").notNull(),
   description: text("description"),
@@ -200,7 +200,7 @@ export type InsertProject = typeof projects.$inferInsert;
 export const projectTodos = pgTable("project_todos", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull(),
-  stage: projectStageEnum("stage").notNull(),
+  stage: varchar("stage", { length: 50 }).notNull(),
   title: varchar("title", { length: 500 }).notNull(),
   isCompleted: boolean("is_completed").default(false).notNull(),
   comment: text("comment"),
